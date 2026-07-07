@@ -241,7 +241,6 @@ body {
    Carrousel de terrains + barre de recherche + nouvelles sections
    ========================================================= */
 
-
 /* --- Chiffres clés --- */
 .kd-stats{
   display:flex; justify-content:center; gap:60px; padding:20px 0 50px; flex-wrap:wrap; text-align:center;
@@ -564,19 +563,46 @@ body {
   #kd-next{ right:4px; }
   .kd-steps{ grid-template-columns:1fr; }
 }
+
+/* =========================================================
+   CORRECTIONS DE LA BARRE DE RECHERCHE POUR LE RESPONSIVE
+   ========================================================= */
 @media (max-width:800px){
-  .kd-search-bar{ flex-wrap:wrap; border-radius:14px; }
-  .kd-search-field{ flex:1 1 50%; border-bottom:1px solid var(--green-line); }
-  .kd-search-btn{ flex:1 1 100%; padding:14px; border-radius:0 0 12px 12px; }
+  .kd-search-bar{ 
+    flex-direction: column; /* Force l'affichage vertical propre */
+    border-radius: 14px; 
+  }
+  .kd-search-field{ 
+    width: 100%;
+    flex: none; 
+    border-right: none; /* Enlève la bordure latérale desktop */
+    border-bottom: 1px solid var(--green-line); /* Ajoute la séparation horizontale */
+  }
+  .kd-search-field:first-child{ 
+    border-radius: 12px 12px 0 0; /* Corrige l'arrondi uniquement en haut */
+  }
+  .kd-search-btn{ 
+    width: 100%;
+    flex: none; 
+    padding: 14px; 
+    border-radius: 0 0 12px 12px; /* Bouton prend tout le bas proprement */
+  }
 }
+
 @media (max-width:600px){
   .kd-slide{ flex:0 0 88%; }
   .site-layout{ padding: 0 16px; }
   .kd-slider-title{ font-size:26px; }
   .kd-nav-btn{ width:40px; height:40px; font-size:17px; }
   .kd-stats{ gap:30px; }
-  .kd-search-field{ flex:1 1 100%; }
-  .kd-search-field-main{ flex:1 1 100%; }
+  
+  /* Reset des largeurs pour s'aligner avec la structure colonne */
+  .kd-search-field,
+  .kd-search-field-main { 
+    width: 100%;
+    flex: none;
+  }
+  
   .kd-date-panel{ width:calc(100vw - 48px); max-width:300px; left:0; }
   .kd-chips-panel{ width:calc(100vw - 48px); max-width:280px; }
   .kd-carousel{ padding:0 4px; }

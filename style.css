@@ -79,6 +79,8 @@ body {
   display: flex;
   list-style: none;
   gap: 28px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .nav-links a {
@@ -227,8 +229,10 @@ body {
 @media (max-width: 768px) {
   .navbar, .footer { flex-direction: column; gap: 20px; text-align: center; }
   .nav-menu { flex-direction: column; gap: 20px; }
+  .nav-links{ gap: 14px 20px; }
   .hero-title { font-size: 3rem; }
   .terrains-grid { grid-template-columns: 1fr; }
+  .btn-explore{ padding: 14px 22px; font-size: 0.9rem; }
 }
 
 /* =========================================================

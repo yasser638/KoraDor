@@ -2,12 +2,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // === Remplace ce tableau par tes vrais terrains ===
   const allTerrains = [
-    { nom:"Terrain Al Amal",      quartier:"Sidi Maarouf", prix:250, dispo:true,  note:4.5, avis:28, nbTerrains:2, photo:"https://fr.reformsports.com/oachoata/2020/09/mini-futbol-sahasi-ozellikleri-ve-olculeri.jpg" },
-    { nom:"Complexe Anfa Foot",   quartier:"Anfa",         prix:300, dispo:true,  note:4.8, avis:52, nbTerrains:4, photo:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT80W-XTaACYEw02TDddAE3yQ5p4IKdnMui9M5_e-5KhGbMrRYErTatqw&s=10" },
-    { nom:"Green Arena",          quartier:"Bourgogne",    prix:220, dispo:false, note:4.1, avis:19, nbTerrains:3, photo:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTBNI-zlqi0Zoe7VFz1mUnzssjXQmFcqAlViDB4larZV6jHGrG9R6mYN5E&s=10" },
-    { nom:"Stade Hay Hassani",    quartier:"Hay Hassani",  prix:180, dispo:true,  note:3.9, avis:34, nbTerrains:1, photo:"https://www.hatkosport.com/wp-content/uploads/2020/03/outdoor-field.jpg" },
-    { nom:"City Foot Maarif",     quartier:"Maarif",       prix:280, dispo:true,  note:4.6, avis:41, nbTerrains:5, photo:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoI5T_63KeH8gmjYqne64wWZTEgvG6yz_kNyEAEwTC9kDv3B7TlofT8w-f&s=10" },
-    { nom:"Terrain Oasis Club",   quartier:"Oasis",        prix:240, dispo:false, note:4.3, avis:23, nbTerrains:2, photo:"https://quintessia.ma/wp-content/uploads/2024/11/WhatsApp-Image-2024-10-15-a-11.05.40_5ce343f8.jpg" }
+    { nom:"Terrain Al Amal",      quartier:"Sidi Maarouf", prix:250, dispo:true,  note:4.5, avis:28, nbTerrains:2, photo:"images/al-amal.jpg" },
+    { nom:"Complexe Anfa Foot",   quartier:"Anfa",         prix:300, dispo:true,  note:4.8, avis:52, nbTerrains:4, photo:"images/anfa-foot.jpg" },
+    { nom:"Green Arena",          quartier:"Bourgogne",    prix:220, dispo:false, note:4.1, avis:19, nbTerrains:3, photo:"images/green-arena.jpg" },
+    { nom:"Stade Hay Hassani",    quartier:"Hay Hassani",  prix:180, dispo:true,  note:3.9, avis:34, nbTerrains:1, photo:"images/hay-hassani.jpg" },
+    { nom:"City Foot Maarif",     quartier:"Maarif",       prix:280, dispo:true,  note:4.6, avis:41, nbTerrains:5, photo:"images/city-foot.jpg" },
+    { nom:"Terrain Oasis Club",   quartier:"Oasis",        prix:240, dispo:false, note:4.3, avis:23, nbTerrains:2, photo:"images/oasis-club.jpg" }
   ];
 
   function renderStars(note){
@@ -103,6 +103,8 @@ document.addEventListener('DOMContentLoaded', function () {
   // === Recherche par quartier ===
   const chips = document.querySelectorAll('.kd-chip');
   const quartierValueEl = document.getElementById('kd-quartier-value');
+  const quartierWrap = document.querySelector('.kd-quartier-wrap');
+  const chipsPanel = document.getElementById('kd-chips');
   const searchBtn = document.getElementById('kd-search-btn');
   let selectedQuartier = '';
 
@@ -115,17 +117,36 @@ document.addEventListener('DOMContentLoaded', function () {
     resetTimer();
   }
 
+  function closeAllSearchPanels(){
+    document.querySelectorAll('.kd-chips-panel.open, .kd-date-panel.open').forEach(p => p.classList.remove('open'));
+  }
+
+  // tap sur le champ = ouvre/ferme son panneau (utile sur mobile, où le survol ne marche pas)
+  if (quartierWrap && chipsPanel) {
+    quartierWrap.addEventListener('click', (e) => {
+      const wasOpen = chipsPanel.classList.contains('open');
+      closeAllSearchPanels();
+      if (!wasOpen) chipsPanel.classList.add('open');
+      e.stopPropagation();
+    });
+  }
+
   chips.forEach(chip => {
-    chip.addEventListener('click', () => {
+    chip.addEventListener('click', (e) => {
+      e.stopPropagation();
       chips.forEach(c => c.classList.remove('active'));
       chip.classList.add('active');
       applySearch(chip.dataset.quartier);
+      closeAllSearchPanels();
     });
   });
 
   if (searchBtn) {
     searchBtn.addEventListener('click', () => applySearch(selectedQuartier));
   }
+
+  // referme tous les panneaux si on tape ailleurs sur la page
+  document.addEventListener('click', closeAllSearchPanels);
 
   // === Carrousel : boutons + auto-défilement ===
   const nextBtn = document.getElementById('kd-next');
@@ -269,10 +290,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (searchSelectedDate && cellDate.getTime() === searchSelectedDate.getTime()) {
           btn.classList.add('selected');
         }
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
           searchSelectedDate = cellDate;
           renderSearchCalendar();
           searchDateValueEl.textContent = cellDate.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
+          closeAllSearchPanels();
         });
       }
       searchCalGrid.appendChild(btn);
@@ -285,22 +308,44 @@ document.addEventListener('DOMContentLoaded', function () {
       `<button type="button" class="kd-time-slot${h === searchSelectedTime ? ' selected' : ''}" data-time="${h}">${h}</button>`
     ).join('');
     searchTimeGrid.querySelectorAll('.kd-time-slot').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         searchSelectedTime = btn.dataset.time;
         renderSearchTimeSlots();
         searchTimeValueEl.textContent = searchSelectedTime;
+        closeAllSearchPanels();
       });
     });
   }
 
-  if (searchCalPrev) searchCalPrev.addEventListener('click', () => {
+  if (searchCalPrev) searchCalPrev.addEventListener('click', (e) => {
+    e.stopPropagation();
     searchViewMonth--; if (searchViewMonth < 0) { searchViewMonth = 11; searchViewYear--; }
     renderSearchCalendar();
   });
-  if (searchCalNext) searchCalNext.addEventListener('click', () => {
+  if (searchCalNext) searchCalNext.addEventListener('click', (e) => {
+    e.stopPropagation();
     searchViewMonth++; if (searchViewMonth > 11) { searchViewMonth = 0; searchViewYear++; }
     renderSearchCalendar();
   });
+
+  // tap sur Date / Heure = ouvre/ferme son panneau (utile sur mobile)
+  if (searchDateWrap && searchCalPanel) {
+    searchDateWrap.addEventListener('click', (e) => {
+      const wasOpen = searchCalPanel.classList.contains('open');
+      closeAllSearchPanels();
+      if (!wasOpen) searchCalPanel.classList.add('open');
+      e.stopPropagation();
+    });
+  }
+  if (searchTimeWrap && searchTimePanel) {
+    searchTimeWrap.addEventListener('click', (e) => {
+      const wasOpen = searchTimePanel.classList.contains('open');
+      closeAllSearchPanels();
+      if (!wasOpen) searchTimePanel.classList.add('open');
+      e.stopPropagation();
+    });
+  }
 
   renderSearchCalendar();
   renderSearchTimeSlots();

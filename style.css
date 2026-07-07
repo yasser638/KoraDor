@@ -283,7 +283,8 @@ body {
   box-shadow:0 10px 30px rgba(30,70,32,0.15); z-index:30;
 }
 .kd-quartier-wrap:hover .kd-chips-panel,
-.kd-chips-panel:hover{ display:flex; }
+.kd-chips-panel:hover,
+.kd-chips-panel.open{ display:flex; }
 .kd-chip{
   font-family:inherit; font-size:12.5px; font-weight:600; color:var(--green-mid);
   background:var(--cream-2); border:1px solid transparent; border-radius:20px;
@@ -300,7 +301,8 @@ body {
   box-shadow:0 14px 34px rgba(30,70,32,0.16);
 }
 .kd-date-wrap:hover .kd-date-panel,
-.kd-date-panel:hover{ display:block; }
+.kd-date-panel:hover,
+.kd-date-panel.open{ display:block; }
 .kd-time-panel{ width:260px; }
 
 .kd-cal-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }

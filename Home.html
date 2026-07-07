@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Korador — Réservez vos terrains de foot à Casablanca</title>
+  <meta name="description" content="Réservez un terrain de foot à Casablanca en 3 clics : trouvez un créneau, rassemblez votre équipe ou rejoignez-en une, et jouez.">
+  <meta property="og:title" content="Korador — Réservez vos terrains de foot à Casablanca">
+  <meta property="og:description" content="Trouvez votre créneau, rassemblez votre équipe et jouez.">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="site-layout">
+
+    <nav class="navbar">
+      <div class="brand">
+        <span class="logo-ball"></span>
+        <h2>Kora<span class="accent">dor</span></h2>
+      </div>
+      <div class="nav-menu">
+        <ul class="nav-links">
+          <li><a href="index.html" class="active">Accueil</a></li>
+          <li><a href="terrains.html">Terrains</a></li>
+          <li><a href="about.html">À propos</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+        <button class="btn-login">Se connecter</button>
+      </div>
+    </nav>
+
+    <main class="hero-block">
+      <div class="hero-content">
+        <h1 class="hero-title">Kora<span class="accent">dor</span></h1>
+        <p class="hero-subtitle">
+          Réservez vos terrains facilement à Casablanca.<br>
+          Trouvez votre créneau, rassemblez votre équipe et jouez.
+        </p>
+        <a href="#kd-terrains" class="btn-explore">
+          Explorer les terrains
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
+      </div>
+    </main>
+
+    <!-- ===== Chiffres clés ===== -->
+    <section class="kd-stats kd-fade">
+      <div class="kd-stat"><div class="kd-stat-num"><span class="kd-count" data-target="30">0</span>+</div><div class="kd-stat-label">terrains partenaires</div></div>
+      <div class="kd-stat"><div class="kd-stat-num"><span class="kd-count" data-target="1200">0</span>+</div><div class="kd-stat-label">matchs réservés</div></div>
+      <div class="kd-stat"><div class="kd-stat-num">Casablanca</div><div class="kd-stat-label">et environs</div></div>
+    </section>
+
+    <!-- ===== Barre de recherche ===== -->
+    <section class="kd-slider-section kd-fade" id="kd-terrains">
+      <div class="kd-search-bar">
+        <div class="kd-search-field kd-search-field-main kd-quartier-wrap">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+          <div>
+            <div class="kd-field-label">Quartier</div>
+            <div class="kd-field-input" id="kd-quartier-value">Tous les quartiers</div>
+          </div>
+
+          <div class="kd-chips-panel" id="kd-chips">
+            <button type="button" class="kd-chip active" data-quartier="">Tous</button>
+            <button type="button" class="kd-chip" data-quartier="Sidi Maarouf">Sidi Maarouf</button>
+            <button type="button" class="kd-chip" data-quartier="Anfa">Anfa</button>
+            <button type="button" class="kd-chip" data-quartier="Bourgogne">Bourgogne</button>
+            <button type="button" class="kd-chip" data-quartier="Hay Hassani">Hay Hassani</button>
+            <button type="button" class="kd-chip" data-quartier="Maarif">Maarif</button>
+            <button type="button" class="kd-chip" data-quartier="Oasis">Oasis</button>
+          </div>
+        </div>
+
+        <div class="kd-search-field kd-date-wrap" id="kd-search-date-wrap">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <div>
+            <div class="kd-field-label">Date</div>
+            <div class="kd-field-input" id="kd-search-date-value">jj/mm/aaaa</div>
+          </div>
+
+          <div class="kd-date-panel" id="kd-search-cal-panel">
+            <div class="kd-cal-header">
+              <button type="button" id="kd-search-cal-prev" class="kd-cal-nav" aria-label="Mois précédent">&#8249;</button>
+              <span id="kd-search-cal-month-label" class="kd-cal-month-label"></span>
+              <button type="button" id="kd-search-cal-next" class="kd-cal-nav" aria-label="Mois suivant">&#8250;</button>
+            </div>
+            <div class="kd-cal-weekdays">
+              <span>lun</span><span>mar</span><span>mer</span><span>jeu</span><span>ven</span><span>sam</span><span>dim</span>
+            </div>
+            <div class="kd-cal-grid" id="kd-search-cal-grid"></div>
+          </div>
+        </div>
+
+        <div class="kd-search-field kd-date-wrap" id="kd-search-time-wrap">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 15"></polyline></svg>
+          <div>
+            <div class="kd-field-label">Heure</div>
+            <div class="kd-field-input" id="kd-search-time-value">19:00</div>
+          </div>
+
+          <div class="kd-date-panel kd-time-panel" id="kd-search-time-panel">
+            <div class="kd-time-grid" id="kd-search-time-grid"></div>
+          </div>
+        </div>
+
+        <button class="kd-search-btn" id="kd-search-btn">Rechercher</button>
+      </div>
+
+      <div class="kd-slider-header">
+        <div>
+          <span class="kd-eyebrow">En ce moment</span>
+          <h2 class="kd-slider-title">Terrains disponibles</h2>
+        </div>
+      </div>
+
+      <div class="kd-carousel">
+        <button class="kd-nav-btn" id="kd-prev" aria-label="Terrain précédent">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </button>
+        <button class="kd-nav-btn" id="kd-next" aria-label="Terrain suivant">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+
+        <div class="kd-viewport">
+          <div class="kd-track" id="kd-track"><!-- généré en JS --></div>
+        </div>
+      </div>
+
+      <div class="kd-dots" id="kd-dots"></div>
+    </section>
+
+    <!-- ===== Comment ça marche ===== -->
+    <section class="kd-howitworks kd-fade">
+      <h2 class="kd-slider-title" style="margin-bottom:36px;">Comment ça marche</h2>
+      <div class="kd-steps">
+        <div class="kd-step">
+          <div class="kd-step-num">1</div>
+          <h3>Trouvez un terrain</h3>
+          <p>Filtrez par quartier, date et heure pour voir ce qui est libre près de chez vous.</p>
+        </div>
+        <div class="kd-step">
+          <div class="kd-step-num">2</div>
+          <h3>Choisissez votre créneau</h3>
+          <p>Sélectionnez le terrain exact, la date et l'heure qui vous conviennent en quelques clics.</p>
+        </div>
+        <div class="kd-step">
+          <div class="kd-step-num">3</div>
+          <h3>Payez et jouez</h3>
+          <p>Le capitaine règle en ligne pour verrouiller le créneau. Fini les désistements.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="partners-section">
+      </section>
+
+    <!-- ===== Témoignages ===== -->
+    <section class="kd-howitworks kd-fade">
+      <span class="kd-eyebrow">Ils ont joué avec Korador</span>
+      <h2 class="kd-slider-title" style="margin-bottom:36px;">Ce qu'ils en disent</h2>
+      <div class="kd-steps">
+        <div class="kd-step kd-testimonial">
+          <div class="kd-testimonial-stars">★★★★★</div>
+          <p>"Plus jamais de terrain annulé au dernier moment. On réserve, on paie, et le créneau est garanti."</p>
+          <div class="kd-testimonial-author">
+            <div class="kd-avatar-circle">Y</div>
+            <div><strong>Yassine</strong><span>Sidi Maarouf</span></div>
+          </div>
+        </div>
+        <div class="kd-step kd-testimonial">
+          <div class="kd-testimonial-stars">★★★★★</div>
+          <p>"Réservation faite en moins d'une minute, et le terrain était exactement comme sur les photos."</p>
+          <div class="kd-testimonial-author">
+            <div class="kd-avatar-circle">Y</div>
+            <div><strong>Yasser</strong><span>Anfa</span></div>
+          </div>
+        </div>
+        <div class="kd-step kd-testimonial">
+          <div class="kd-testimonial-stars">★★★★★</div>
+          <p>"Simple, rapide, et le complexe est toujours au courant quand on arrive. Ça change tout."</p>
+          <div class="kd-testimonial-author">
+            <div class="kd-avatar-circle">M</div>
+            <div><strong>Mehdi</strong><span>Maarif</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FAQ ===== -->
+    <section class="kd-howitworks kd-fade" style="padding-top:0;">
+      <span class="kd-eyebrow">Questions fréquentes</span>
+      <h2 class="kd-slider-title" style="margin-bottom:30px;">Encore des doutes ?</h2>
+      <div class="kd-faq" id="kd-faq">
+        <div class="kd-faq-item">
+          <button type="button" class="kd-faq-question">
+            Que se passe-t-il si j'annule ma réservation ?
+            <span class="kd-faq-icon">+</span>
+          </button>
+          <div class="kd-faq-answer">
+            <p>Selon le délai avant le créneau, des frais d'annulation peuvent s'appliquer. Plus tu annules tôt, moins il y a de frais — les détails exacts s'affichent avant confirmation.</p>
+          </div>
+        </div>
+        <div class="kd-faq-item">
+          <button type="button" class="kd-faq-question">
+            Le paiement en ligne est-il sécurisé ?
+            <span class="kd-faq-icon">+</span>
+          </button>
+          <div class="kd-faq-answer">
+            <p>Oui, le paiement passera par un prestataire marocain certifié. Aucune donnée bancaire n'est stockée par Korador.</p>
+          </div>
+        </div>
+        <div class="kd-faq-item">
+          <button type="button" class="kd-faq-question">
+            Et si quelqu'un réserve le même créneau sur place ?
+            <span class="kd-faq-icon">+</span>
+          </button>
+          <div class="kd-faq-answer">
+            <p>Impossible : dès qu'une réservation est prise physiquement, le gardien la verrouille immédiatement dans son appli, et le créneau disparaît instantanément de Korador.</p>
+          </div>
+        </div>
+        <div class="kd-faq-item">
+          <button type="button" class="kd-faq-question">
+            Est-ce que je peux réserver un terrain précis dans un complexe ?
+            <span class="kd-faq-icon">+</span>
+          </button>
+          <div class="kd-faq-answer">
+            <p>Oui, tu choisis le terrain exact (Terrain 1, 2, 3...) directement dans le récapitulatif de réservation.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p class="copyright">© 2026 Korador. Tous droits réservés.</p>
+      <div class="kd-social">
+        <a href="#" aria-label="Instagram" class="insta-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1"></circle></svg>
+        </a>
+        <a href="#" aria-label="TikTok" class="insta-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path></svg>
+        </a>
+        <a href="#" aria-label="WhatsApp" class="insta-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 0 1-12.8 7.3L3 20l1.3-5A8.5 8.5 0 1 1 21 11.5z"></path></svg>
+        </a>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- ===== Modale de réservation (multi-étapes) ===== -->
+  <div class="kd-modal-overlay" id="kd-modal-overlay">
+    <div class="kd-modal kd-modal-stepper">
+      <button class="kd-modal-close" id="kd-modal-close" aria-label="Fermer">&times;</button>
+
+      <div class="kd-stepper-layout">
+        <aside class="kd-stepper-sidebar">
+          <div class="kd-step-item active" data-step="1">
+            <span class="kd-step-dot">1</span>
+            <span>Activité et terrain</span>
+          </div>
+          <div class="kd-step-item" data-step="2">
+            <span class="kd-step-dot">2</span>
+            <span>Date et heure</span>
+          </div>
+          <div class="kd-step-item" data-step="3">
+            <span class="kd-step-dot">3</span>
+            <span>Vos informations</span>
+          </div>
+        </aside>
+
+        <div class="kd-stepper-content">
+
+          <div class="kd-step-panel" data-panel="1">
+            <h3>Sélectionnez une activité</h3>
+            <label class="kd-form-label">Activité</label>
+            <div class="kd-locked-field">⚽ Football</div>
+
+            <label class="kd-form-label">Terrain</label>
+            <select id="kd-modal-terrain-select" class="kd-form-select"></select>
+
+            <div class="kd-form-label" id="kd-modal-subterrain-label" hidden>Quel terrain veux-tu réserver ?</div>
+            <select id="kd-modal-subterrain-select" class="kd-form-select" hidden></select>
+
+            <div class="kd-modal-row"><span>Quartier</span><strong id="kd-modal-quartier"></strong></div>
+            <div class="kd-modal-row"><span>Prix</span><strong id="kd-modal-prix"></strong></div>
+            <div class="kd-modal-row"><span>Note</span><strong id="kd-modal-note"></strong></div>
+          </div>
+
+          <div class="kd-step-panel" data-panel="2" hidden>
+            <h3>Choisissez un créneau</h3>
+
+            <div class="kd-cal-header">
+              <button type="button" id="kd-cal-prev" class="kd-cal-nav" aria-label="Mois précédent">&#8249;</button>
+              <span id="kd-cal-month-label" class="kd-cal-month-label"></span>
+              <button type="button" id="kd-cal-next" class="kd-cal-nav" aria-label="Mois suivant">&#8250;</button>
+            </div>
+
+            <div class="kd-cal-weekdays">
+              <span>lun</span><span>mar</span><span>mer</span><span>jeu</span><span>ven</span><span>sam</span><span>dim</span>
+            </div>
+            <div class="kd-cal-grid" id="kd-cal-grid"></div>
+
+            <div class="kd-form-label">Heure</div>
+            <div class="kd-time-grid" id="kd-time-grid"></div>
+          </div>
+
+          <div class="kd-step-panel" data-panel="3" hidden>
+            <h3>Vos informations</h3>
+            <label class="kd-form-label">Nom complet</label>
+            <input type="text" id="kd-modal-name" class="kd-form-input" placeholder="Ton nom">
+            <label class="kd-form-label">Téléphone</label>
+            <input type="tel" id="kd-modal-phone" class="kd-form-input" placeholder="06 XX XX XX XX">
+          </div>
+
+          <div class="kd-stepper-footer">
+            <button class="kd-btn-back" id="kd-step-back" hidden>Retour</button>
+            <button class="kd-btn-next" id="kd-step-next">Continuer</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="reveal.js"></script>
+  <script src="script.js"></script>
+
+</body>
+</html>

@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
     { nom:"Green Arena",          quartier:"Bourgogne",    prix:220, dispo:false, note:4.1, avis:19, nbTerrains:3, photo:"https://github.com/yasser638/KoraDor/blob/main/mini-futbol-sahasi-ozellikleri-ve-olculeri.jpg?raw=true" },
     { nom:"Stade Hay Hassani",    quartier:"Hay Hassani",  prix:180, dispo:true,  note:3.9, avis:34, nbTerrains:1, photo:"https://github.com/yasser638/KoraDor/blob/main/images%20(2).jpg?raw=true" },
     { nom:"City Foot Maarif",     quartier:"Maarif",       prix:280, dispo:true,  note:4.6, avis:41, nbTerrains:5, photo:"https://github.com/yasser638/KoraDor/blob/main/images.jpg?raw=true" },
-    { nom:"Terrain Oasis Club",   quartier:"Oasis",        prix:240, dispo:false, note:4.3, avis:23, nbTerrains:2, photo:"images/oasis-club.jpg" }
+    { nom:"Terrain Oasis Club",   quartier:"Oasis",        prix:240, dispo:false, note:4.3, avis:23, nbTerrains:2, photo:"https://github.com/yasser638/KoraDor/blob/main/outdoor-field.jpg?raw=true" }
   ];
 
   function renderStars(note){

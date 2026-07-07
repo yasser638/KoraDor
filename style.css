@@ -16,10 +16,17 @@
   scroll-behavior: smooth;
 }
 
+html{
+  overflow-x: hidden;
+  width: 100%;
+}
+
 body {
   background-color: var(--cream);
   color: var(--green-dark);
   min-height: 100vh;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 .site-layout {
@@ -559,6 +566,11 @@ body {
   .kd-slider-title{ font-size:26px; }
   .kd-nav-btn{ width:40px; height:40px; font-size:17px; }
   .kd-stats{ gap:30px; }
+  .kd-search-field{ flex:1 1 100%; }
+  .kd-search-field-main{ flex:1 1 100%; }
+  .kd-date-panel{ width:calc(100vw - 48px); max-width:300px; left:0; }
+  .kd-chips-panel{ width:calc(100vw - 48px); max-width:280px; }
+  .kd-carousel{ padding:0 4px; }
 }
 
 /* --- Carte des terrains --- */

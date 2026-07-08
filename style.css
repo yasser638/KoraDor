@@ -346,12 +346,12 @@ body {
 .kd-nav-btn{
   position:absolute; top:50%; transform:translateY(-50%); z-index:5;
   width:48px; height:48px; border-radius:50%; border:1px solid var(--green-line);
-  background:transparent; color:var(--green-dark); font-size:20px;
+  background:#fff; color:var(--green-dark); font-size:20px;
   display:flex; align-items:center; justify-content:center; cursor:pointer;
-  box-shadow:none;
-  transition:background .2s, transform .2s, box-shadow .2s;
+  box-shadow:0 4px 14px rgba(30,70,32,0.14);
+  transition:background .2s, transform .2s;
 }
-.kd-nav-btn:hover{ background:var(--green-dark); color:var(--cream); box-shadow:0 4px 14px rgba(30,70,32,0.14); }
+.kd-nav-btn:hover{ background:var(--green-dark); color:var(--cream); }
 .kd-nav-btn:active{ transform:translateY(-50%) scale(0.94); }
 #kd-prev{ left:-22px; }
 #kd-next{ right:-22px; }
@@ -596,7 +596,7 @@ body {
   .kd-carousel{ padding:0 4px; }
 
   /* Flèches : toujours visibles, en plus du swipe tactile */
-  .kd-nav-btn{ width:40px; height:40px; font-size:17px; }
+  .kd-nav-btn{ width:40px; height:40px; font-size:17px; top:75px; transform:translateY(-50%); }
   #kd-prev{ left:8px; }
   #kd-next{ right:8px; }
 }

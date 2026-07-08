@@ -23,6 +23,15 @@
     right: 10px;
   }
 }
+@media (max-width: 600px) {
+  #kd-prev {
+    left: 10px;
+  }
+
+  #kd-next {
+    right: 10px;
+  }
+}
 @media(max-width :768px)
 {
   .card{

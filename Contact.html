@@ -21,7 +21,7 @@
           <li><a href="index.html">Accueil</a></li>
           <li><a href="terrains.html">Terrains</a></li>
           <li><a href="About.html">À propos</a></li>
-          <li><a href="contact.html" class="active">Contact</a></li>
+          <li><a href="Contact.html" class="active">Contact</a></li>
         </ul>
         <button class="btn-login">Se connecter</button>
       </div>
@@ -38,15 +38,15 @@
 
       <div class="kd-contact-layout kd-fade">
 
-        <form class="kd-contact-form" id="kd-contact-form">
+        <form class="kd-contact-form" id="kd-contact-form" autocomplete="on">
           <label class="kd-form-label">Nom complet</label>
-          <input type="text" id="kd-c-name" class="kd-form-input" placeholder="Ton nom" required>
+          <input type="text" id="kd-c-name" name="name" class="kd-form-input" placeholder="Ton nom" autocomplete="name" required>
 
           <label class="kd-form-label">Email</label>
-          <input type="email" id="kd-c-email" class="kd-form-input" placeholder="toi@exemple.com" required>
+          <input type="email" id="kd-c-email" name="email" class="kd-form-input" placeholder="toi@exemple.com" autocomplete="email" inputmode="email" required>
 
           <label class="kd-form-label">Téléphone</label>
-          <input type="tel" id="kd-c-phone" class="kd-form-input" placeholder="06 XX XX XX XX">
+          <input type="tel" id="kd-c-phone" name="tel" class="kd-form-input" placeholder="06 XX XX XX XX" autocomplete="tel" inputmode="tel" pattern="[0-9+ ]*">
 
           <label class="kd-form-label">Sujet</label>
           <select id="kd-c-subject" class="kd-form-select">

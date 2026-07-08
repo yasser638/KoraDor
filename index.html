@@ -23,8 +23,8 @@
         <ul class="nav-links">
           <li><a href="index.html" class="active">Accueil</a></li>
           <li><a href="terrains.html">Terrains</a></li>
-          <li><a href="About.html">À propos</a></li>
-          <li><a href="Contact.html">Contact</a></li>
+          <li><a href="about.html">À propos</a></li>
+          <li><a href="contact.html">Contact</a></li>
         </ul>
         <button class="btn-login">Se connecter</button>
       </div>
@@ -314,6 +314,10 @@
             <input type="text" id="kd-modal-name" class="kd-form-input" placeholder="Ton nom">
             <label class="kd-form-label">Téléphone</label>
             <input type="tel" id="kd-modal-phone" class="kd-form-input" placeholder="06 XX XX XX XX">
+            <label class="kd-form-label">CIN</label>
+            <input type="text" id="kd-modal-cin" class="kd-form-input" placeholder="AB123456">
+            <label class="kd-form-label">Email</label>
+            <input type="email" id="kd-modal-email" class="kd-form-input" placeholder="toi@gmail.com">
           </div>
 
           <div class="kd-stepper-footer">
@@ -326,6 +330,7 @@
     </div>
   </div>
 
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="reveal.js"></script>
   <script src="script.js"></script>
 

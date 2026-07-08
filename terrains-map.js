@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }).addTo(map);
 
   const listEl = document.getElementById('kd-map-list');
+  const markerRefs = []; // { terrain, marker }
 
   terrains.forEach(t => {
     const badgeIcon = L.divIcon({
@@ -44,6 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
         <a href="index.html#reserve=${encodeURIComponent(t.nom)}">Réserver ce terrain</a>
       </div>
     `);
+    markerRefs.push({ terrain: t, marker });
 
     if (listEl) {
       const card = document.createElement('div');
@@ -63,5 +65,46 @@ document.addEventListener('DOMContentLoaded', function () {
       listEl.appendChild(card);
     }
   });
+
+  // === Recherche d'un terrain par nom ou quartier ===
+  const searchInput = document.getElementById('kd-map-search');
+  const searchMsg = document.getElementById('kd-map-search-msg');
+
+  function normalize(str){
+    return str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const q = normalize(e.target.value.trim());
+
+      if (q === '') {
+        searchMsg.hidden = true;
+        map.setView([33.5731, -7.6298], 12);
+        return;
+      }
+
+      const matches = markerRefs.filter(({ terrain }) =>
+        normalize(terrain.nom).includes(q) || normalize(terrain.quartier).includes(q)
+      );
+
+      if (matches.length === 0) {
+        searchMsg.hidden = false;
+        searchMsg.textContent = 'Aucun terrain ne correspond à ta recherche.';
+        return;
+      }
+
+      searchMsg.hidden = true;
+
+      if (matches.length === 1) {
+        const { terrain, marker } = matches[0];
+        map.setView([terrain.lat, terrain.lng], 15);
+        marker.openPopup();
+      } else {
+        const bounds = L.latLngBounds(matches.map(({ terrain }) => [terrain.lat, terrain.lng]));
+        map.fitBounds(bounds, { padding: [60, 60] });
+      }
+    });
+  }
 
 });

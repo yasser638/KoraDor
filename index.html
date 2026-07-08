@@ -311,13 +311,13 @@
           <div class="kd-step-panel" data-panel="3" hidden>
             <h3>Vos informations</h3>
             <label class="kd-form-label">Nom complet</label>
-            <input type="text" id="kd-modal-name" class="kd-form-input" placeholder="Ton nom">
+            <input type="text" id="kd-modal-name" name="name" class="kd-form-input" placeholder="Ton nom" autocomplete="name">
             <label class="kd-form-label">Téléphone</label>
-            <input type="tel" id="kd-modal-phone" class="kd-form-input" placeholder="06 XX XX XX XX">
+            <input type="tel" id="kd-modal-phone" name="tel" class="kd-form-input" placeholder="06 XX XX XX XX" autocomplete="tel" inputmode="tel" pattern="[0-9+ ]*">
             <label class="kd-form-label">CIN</label>
-            <input type="text" id="kd-modal-cin" class="kd-form-input" placeholder="AB123456">
+            <input type="text" id="kd-modal-cin" name="cin" class="kd-form-input" placeholder="AB123456" autocomplete="off">
             <label class="kd-form-label">Email</label>
-            <input type="email" id="kd-modal-email" class="kd-form-input" placeholder="toi@gmail.com">
+            <input type="email" id="kd-modal-email" name="email" class="kd-form-input" placeholder="toi@gmail.com" autocomplete="email" inputmode="email">
           </div>
 
           <div class="kd-stepper-footer">

@@ -41,8 +41,12 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
+    // évite qu'une seule carte reste minuscule à gauche avec un grand vide à droite
+    const effectiveVisible = Math.min(visibleCount(), terrains.length);
+    const slideBasis = 100 / effectiveVisible;
+
     track.innerHTML = terrains.map((t, i) => `
-      <div class="kd-slide">
+      <div class="kd-slide" style="flex:0 0 ${slideBasis}%;">
         <div class="kd-card">
           <div class="kd-card-img">
             ${t.photo ? `<img src="${t.photo}" alt="${t.nom}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">

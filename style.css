@@ -23,37 +23,6 @@
     right: 10px;
   }
 }
-@media (max-width: 600px) {
-  #kd-prev {
-    left: 10px;
-  }
-
-  #kd-next {
-    right: 10px;
-  }
-}
-@media(max-width :768px)
-{
-  .card{
-    width:100% ;
-  }
-.grid{
-  grid-template-columns :1fr ;
-}
-  .button{
-    width:100%;
-  }
-}
-@media (max-width:600px){
-  .kd-slide{
-    flex: 0 0 100%;
-    padding: 0;
-  }
-
-  .kd-nav-btn{
-    display: none;
-  }
-}
 * {
   box-sizing: border-box;
   margin: 0;

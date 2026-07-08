@@ -85,12 +85,19 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  function update(){
-    if (terrains.length === 0) return;
-    const slideWidth = 100 / visibleCount();
-    track.style.transform = `translateX(-${index * slideWidth}%)`;
-    [...dotsWrap.children].forEach((d,i) => d.classList.toggle('active', i === index));
-  }
+ function update(){
+  if (terrains.length === 0) return;
+
+  const firstSlide = track.querySelector('.kd-slide');
+  if (!firstSlide) return;
+
+  const slideWidth = firstSlide.getBoundingClientRect().width;
+  track.style.transform = `translateX(-${index * slideWidth}px)`;
+
+  [...dotsWrap.children].forEach((d,i) =>
+    d.classList.toggle('active', i === index)
+  );
+}
 
   function next(){ if (terrains.length === 0) return; index = (index + 1) % slideCount(); update(); }
   function prev(){ if (terrains.length === 0) return; index = (index - 1 + slideCount()) % slideCount(); update(); }

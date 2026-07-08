@@ -7,6 +7,22 @@
   --green-line:#d9d3b4;
   --text-soft:#4C5A3F;
 }
+@media (max-width: 600px) {
+  .kd-nav-btn {
+    display: flex;
+    width: 40px;
+    height: 40px;
+    z-index: 100;
+  }
+
+  #kd-prev {
+    left: 10px;
+  }
+
+  #kd-next {
+    right: 10px;
+  }
+}
 @media(max-width :768px)
 {
   .card{

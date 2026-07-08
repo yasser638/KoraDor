@@ -2,12 +2,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // === Remplace ce tableau par tes vrais terrains ===
   const allTerrains = [
-    { nom:"Terrain Al Amal",      quartier:"Sidi Maarouf", prix:250, dispo:true,  note:4.5, avis:28, nbTerrains:2, photo:"https://github.com/yasser638/KoraDor/blob/main/WhatsApp-Image-2024-10-15-a-11.05.40_5ce343f8.jpg?raw=true" },
-    { nom:"Complexe Anfa Foot",   quartier:"Anfa",         prix:300, dispo:true,  note:4.8, avis:52, nbTerrains:4, photo:"https://github.com/yasser638/KoraDor/blob/main/images%20(1).jpg?raw=true" },
-    { nom:"Green Arena",          quartier:"Bourgogne",    prix:220, dispo:false, note:4.1, avis:19, nbTerrains:3, photo:"https://github.com/yasser638/KoraDor/blob/main/images%20(2).jpg?raw=true" },
-    { nom:"Stade Hay Hassani",    quartier:"Hay Hassani",  prix:180, dispo:true,  note:3.9, avis:34, nbTerrains:1, photo:"https://github.com/yasser638/KoraDor/blob/main/images.jpg?raw=true" },
-    { nom:"City Foot Maarif",     quartier:"Maarif",       prix:280, dispo:true,  note:4.6, avis:41, nbTerrains:5, photo:"https://github.com/yasser638/KoraDor/blob/main/mini-futbol-sahasi-ozellikleri-ve-olculeri.jpg?raw=true" },
-    { nom:"Terrain Oasis Club",   quartier:"Oasis",        prix:240, dispo:false, note:4.3, avis:23, nbTerrains:2, photo:"https://github.com/yasser638/KoraDor/blob/main/outdoor-field.jpg?raw=true" }
+    { nom:"Terrain Al Amal",      quartier:"Sidi Maarouf", prix:250, dispo:true,  note:4.5, avis:28, nbTerrains:2, photo:"images/al-amal.jpg" },
+    { nom:"Complexe Anfa Foot",   quartier:"Anfa",         prix:300, dispo:true,  note:4.8, avis:52, nbTerrains:4, photo:"images/anfa-foot.jpg" },
+    { nom:"Green Arena",          quartier:"Bourgogne",    prix:220, dispo:false, note:4.1, avis:19, nbTerrains:3, photo:"images/green-arena.jpg" },
+    { nom:"Stade Hay Hassani",    quartier:"Hay Hassani",  prix:180, dispo:true,  note:3.9, avis:34, nbTerrains:1, photo:"images/hay-hassani.jpg" },
+    { nom:"City Foot Maarif",     quartier:"Maarif",       prix:280, dispo:true,  note:4.6, avis:41, nbTerrains:5, photo:"images/city-foot.jpg" },
+    { nom:"Terrain Oasis Club",   quartier:"Oasis",        prix:240, dispo:false, note:4.3, avis:23, nbTerrains:2, photo:"images/oasis-club.jpg" }
   ];
 
   function renderStars(note){
@@ -85,19 +85,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
- function update(){
-  if (terrains.length === 0) return;
-
-  const firstSlide = track.querySelector('.kd-slide');
-  if (!firstSlide) return;
-
-  const slideWidth = firstSlide.offsetWidth;
-  track.style.transform = `translateX(-${index * slideWidth}px)`;
-
-  [...dotsWrap.children].forEach((d,i) =>
-    d.classList.toggle('active', i === index)
-  );
-}
+  function update(){
+    if (terrains.length === 0) return;
+    const firstSlide = track.querySelector('.kd-slide');
+    if (!firstSlide) return;
+    const slideWidth = firstSlide.offsetWidth;
+    track.style.transform = `translateX(-${index * slideWidth}px)`;
+    [...dotsWrap.children].forEach((d,i) =>
+      d.classList.toggle('active', i === index)
+    );
+  }
 
   function next(){ if (terrains.length === 0) return; index = (index + 1) % slideCount(); update(); }
   function prev(){ if (terrains.length === 0) return; index = (index - 1 + slideCount()) % slideCount(); update(); }
@@ -452,6 +449,23 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => stepNextBtn.classList.remove('kd-shake'), 400);
         return;
       }
+
+      if (currentStep === 3) {
+        const nameInput = document.getElementById('kd-modal-name');
+        const phoneInput = document.getElementById('kd-modal-phone');
+        const nomOk = nameInput && nameInput.value.trim() !== '';
+        const telOk = phoneInput && phoneInput.value.trim() !== '';
+
+        if (!nomOk) nameInput.classList.add('kd-input-error'); else nameInput.classList.remove('kd-input-error');
+        if (!telOk) phoneInput.classList.add('kd-input-error'); else phoneInput.classList.remove('kd-input-error');
+
+        if (!nomOk || !telOk) {
+          stepNextBtn.classList.add('kd-shake');
+          setTimeout(() => stepNextBtn.classList.remove('kd-shake'), 400);
+          return;
+        }
+      }
+
       if (currentStep < totalSteps) {
         goToStep(currentStep + 1);
       } else {

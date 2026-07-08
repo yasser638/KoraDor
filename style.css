@@ -7,7 +7,18 @@
   --green-line:#d9d3b4;
   --text-soft:#4C5A3F;
 }
-
+@media(max-width :768px)
+{
+  .card{
+    width:100% ;
+  }
+.grid{
+  grid-template-columns :1fr ;
+}
+  .button{
+    width:100%;
+  }
+}
 * {
   box-sizing: border-box;
   margin: 0;

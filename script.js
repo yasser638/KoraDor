@@ -442,6 +442,12 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  // === Initialise EmailJS ===
+  // Remplace "TA_CLE_PUBLIQUE" par ta vraie clé publique EmailJS (Account > General)
+  if (typeof emailjs !== 'undefined') {
+    emailjs.init({ publicKey: 'TA_CLE_PUBLIQUE' });
+  }
+
   if (stepNextBtn) {
     stepNextBtn.addEventListener('click', () => {
       if (currentStep === 2 && (!selectedDate || !selectedTime)) {
@@ -453,13 +459,19 @@ document.addEventListener('DOMContentLoaded', function () {
       if (currentStep === 3) {
         const nameInput = document.getElementById('kd-modal-name');
         const phoneInput = document.getElementById('kd-modal-phone');
-        const nomOk = nameInput && nameInput.value.trim() !== '';
-        const telOk = phoneInput && phoneInput.value.trim() !== '';
+        const cinInput = document.getElementById('kd-modal-cin');
+        const emailInput = document.getElementById('kd-modal-email');
 
-        if (!nomOk) nameInput.classList.add('kd-input-error'); else nameInput.classList.remove('kd-input-error');
-        if (!telOk) phoneInput.classList.add('kd-input-error'); else phoneInput.classList.remove('kd-input-error');
+        const champs = [nameInput, phoneInput, cinInput, emailInput];
+        let tousValides = true;
 
-        if (!nomOk || !telOk) {
+        champs.forEach(input => {
+          const valide = input && input.value.trim() !== '';
+          input.classList.toggle('kd-input-error', !valide);
+          if (!valide) tousValides = false;
+        });
+
+        if (!tousValides) {
           stepNextBtn.classList.add('kd-shake');
           setTimeout(() => stepNextBtn.classList.remove('kd-shake'), 400);
           return;
@@ -471,10 +483,42 @@ document.addEventListener('DOMContentLoaded', function () {
       } else {
         const t = allTerrains[parseInt(terrainSelect.value, 10)];
         const subtxt = t.nbTerrains > 1 ? ` (Terrain ${subterrainSelect.value})` : '';
-        const dateTxt = selectedDate ? selectedDate.toLocaleDateString('fr-FR', { day:'numeric', month:'long' }) : '—';
+        const dateTxt = selectedDate ? selectedDate.toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '—';
         const timeTxt = selectedTime || '—';
-        alert(`Réservation confirmée pour ${t.nom}${subtxt} le ${dateTxt} à ${timeTxt} ! (démo — à relier à un vrai système de paiement)`);
-        closeBookingModal();
+
+        const nom = document.getElementById('kd-modal-name').value.trim();
+        const telephone = document.getElementById('kd-modal-phone').value.trim();
+        const cin = document.getElementById('kd-modal-cin').value.trim();
+        const email = document.getElementById('kd-modal-email').value.trim();
+
+        const detailsReservation = {
+          to_email: email,
+          client_nom: nom,
+          client_telephone: telephone,
+          client_cin: cin,
+          terrain_nom: t.nom + subtxt,
+          terrain_quartier: t.quartier,
+          terrain_prix: t.prix + ' DH / heure',
+          date_reservation: dateTxt,
+          heure_reservation: timeTxt
+        };
+
+        if (typeof emailjs !== 'undefined') {
+          // Remplace "SERVICE_ID" et "TEMPLATE_ID" par les tiens (EmailJS > Email Services / Email Templates)
+          emailjs.send('SERVICE_ID', 'TEMPLATE_ID', detailsReservation)
+            .then(() => {
+              alert(`Réservation confirmée pour ${t.nom}${subtxt} le ${dateTxt} à ${timeTxt} ! Un email de confirmation a été envoyé à ${email}.`);
+              closeBookingModal();
+            })
+            .catch((err) => {
+              console.error('Erreur envoi email :', err);
+              alert(`Réservation confirmée pour ${t.nom}${subtxt} le ${dateTxt} à ${timeTxt} ! (l'email n'a pas pu être envoyé, vérifie la config EmailJS)`);
+              closeBookingModal();
+            });
+        } else {
+          alert(`Réservation confirmée pour ${t.nom}${subtxt} le ${dateTxt} à ${timeTxt} ! (démo — EmailJS non chargé)`);
+          closeBookingModal();
+        }
       }
     });
   }

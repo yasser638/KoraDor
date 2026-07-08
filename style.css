@@ -569,13 +569,23 @@ body {
   .kd-search-btn{ flex:1 1 100%; padding:14px; border-radius:0 0 12px 12px; }
 }
 @media (max-width:600px){
-  .kd-slide{ flex:0 0 88%; }
+  .kd-slide{ flex:0 0 88% !important; }
   .site-layout{ padding: 0 16px; }
   .kd-slider-title{ font-size:26px; }
   .kd-nav-btn{ width:40px; height:40px; font-size:17px; }
   .kd-stats{ gap:30px; }
-  .kd-search-field{ flex:1 1 100%; }
-  .kd-search-field-main{ flex:1 1 100%; }
+
+  /* Empilement forcé de la barre de recherche : chaque champ = un bloc plein écran */
+  .kd-search-bar{ display:block !important; width:100% !important; }
+  .kd-search-field{
+    display:flex !important; width:100% !important; max-width:100% !important;
+    flex:none !important; border-right:none !important;
+    border-bottom:1px solid var(--green-line) !important; box-sizing:border-box !important;
+  }
+  .kd-search-field-main{ flex:none !important; width:100% !important; }
+  .kd-search-field:first-child{ border-radius:12px 12px 0 0 !important; }
+  .kd-search-btn{ display:block !important; width:100% !important; border-radius:0 0 12px 12px !important; padding:14px !important; }
+
   .kd-date-panel{ width:calc(100vw - 48px); max-width:300px; left:0; }
   .kd-chips-panel{ width:calc(100vw - 48px); max-width:280px; }
   .kd-carousel{ padding:0 4px; }

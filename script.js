@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  function update(){
+ function update(){
   if (terrains.length === 0) return;
 
   const firstSlide = track.querySelector('.kd-slide');
@@ -98,6 +98,14 @@ document.addEventListener('DOMContentLoaded', function () {
     d.classList.toggle('active', i === index)
   );
 }
+
+  function next(){ if (terrains.length === 0) return; index = (index + 1) % slideCount(); update(); }
+  function prev(){ if (terrains.length === 0) return; index = (index - 1 + slideCount()) % slideCount(); update(); }
+
+  function resetTimer(){
+    clearInterval(timer);
+    timer = setInterval(next, 3500);
+  }
 
   // === Recherche par quartier ===
   const chips = document.querySelectorAll('.kd-chip');

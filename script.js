@@ -85,13 +85,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
- function update(){
+function update(){
   if (terrains.length === 0) return;
 
   const firstSlide = track.querySelector('.kd-slide');
   if (!firstSlide) return;
 
-  const slideWidth = firstSlide.getBoundingClientRect().width;
+  const slideWidth = firstSlide.offsetWidth;
   track.style.transform = `translateX(-${index * slideWidth}px)`;
 
   [...dotsWrap.children].forEach((d,i) =>

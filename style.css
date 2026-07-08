@@ -597,6 +597,18 @@ body {
 .kd-map-popup strong{ color:var(--green-dark); font-size:14px; }
 .kd-map-popup a{ color:var(--green-mid); font-weight:600; }
 
+.kd-map-search-wrap{
+  position:relative; max-width:420px; display:flex; align-items:center; gap:10px;
+  background:#fff; border:2px solid var(--green-mid); border-radius:12px; padding:12px 16px;
+}
+.kd-map-search-wrap svg{ color:var(--green-mid); flex-shrink:0; }
+.kd-map-search-input{
+  border:none; outline:none; background:transparent; font-family:inherit;
+  font-size:14.5px; color:var(--green-dark); width:100%;
+}
+.kd-map-search-input::placeholder{ color:var(--text-soft); }
+.kd-map-search-msg{ font-size:13px; color:var(--text-soft); margin-top:8px; }
+
 .kd-map-list{ display:flex; flex-direction:column; gap:10px; margin-bottom:60px; }
 .kd-map-list-item{
   display:flex; align-items:center; justify-content:space-between; gap:16px;

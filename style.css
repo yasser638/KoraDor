@@ -737,6 +737,7 @@ select.kd-form-select{
   font-size:14px; margin-top:14px; background:var(--cream-2); padding:12px 16px; border-radius:10px;
   animation:kd-slide-up-fade .4s ease;
 }
+.kd-contact-success-msg[hidden]{ display:none; }
 .kd-contact-success-msg svg{ flex-shrink:0; color:var(--green-mid); }
 
 @keyframes kd-slide-up-fade{

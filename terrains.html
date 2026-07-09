@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Korador — Carte des terrains</title>
+  <title>Korador — Tous nos terrains à Casablanca</title>
+  <meta name="description" content="Parcours tous les terrains de foot partenaires de Korador à Casablanca : quartier, prix, avis et localisation sur la carte.">
   <link rel="stylesheet" href="style.css?v=3">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -21,7 +22,7 @@
         <ul class="nav-links">
           <li><a href="index.html">Accueil</a></li>
           <li><a href="terrains.html" class="active">Terrains</a></li>
-          <li><a href="About.html">À propos</a></li>
+          <li><a href="about.html">À propos</a></li>
           <li><a href="contact.html">Contact</a></li>
         </ul>
         <button class="btn-login">Se connecter</button>
@@ -29,19 +30,45 @@
     </nav>
 
     <main>
-      <div style="padding:40px 0 8px;">
-        <span class="kd-eyebrow">Carte</span>
-        <h1 class="kd-slider-title">Où se trouvent nos terrains</h1>
-        <p style="color:var(--text-soft); margin-top:8px; max-width:560px;">Clique sur un point pour voir le détail du terrain et son prix.</p>
-      </div>
 
-      <div class="kd-map-search-wrap">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        <input type="text" id="kd-map-search" class="kd-map-search-input" placeholder="Chercher un terrain (nom ou quartier)...">
-      </div>
+      <!-- ===== Hero de la page ===== -->
+      <section class="kd-terrains-hero kd-fade">
+        <span class="kd-eyebrow">Nos terrains</span>
+        <h1 class="kd-slider-title" style="font-size:38px;">Trouve le terrain parfait à Casablanca</h1>
+        <p class="kd-terrains-hero-sub">Filtre par quartier, compare les prix et les avis, puis réserve en quelques secondes.</p>
+        <div class="kd-terrains-hero-stats">
+          <div><strong id="kd-count-total">6</strong><span>terrains</span></div>
+          <div><strong id="kd-count-dispo">4</strong><span>disponibles</span></div>
+          <div><strong>4.5</strong><span>note moyenne</span></div>
+        </div>
+      </section>
+
+      <!-- ===== Barre de filtre ===== -->
+      <section class="kd-filter-bar kd-fade">
+        <div class="kd-map-search-wrap">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="kd-map-search" class="kd-map-search-input" placeholder="Chercher un terrain (nom ou quartier)...">
+        </div>
+        <div class="kd-filter-chips" id="kd-filter-chips">
+          <button type="button" class="kd-chip active" data-quartier="">Tous les quartiers</button>
+        </div>
+      </section>
+
       <p id="kd-map-search-msg" class="kd-map-search-msg" hidden></p>
 
-      <div id="kd-map" style="height:480px; border-radius:16px; margin:16px 0 50px; border:1px solid var(--green-line);"></div>
+      <!-- ===== Grille de tous les terrains ===== -->
+      <section class="kd-terrains-grid-section kd-fade">
+        <div class="kd-terrains-grid" id="kd-terrains-grid"><!-- généré en JS --></div>
+      </section>
+
+      <!-- ===== Carte interactive ===== -->
+      <section class="kd-fade" style="margin-bottom:60px;">
+        <div class="kd-map-header">
+          <span class="kd-eyebrow">Localisation</span>
+          <h2 class="kd-slider-title" style="font-size:26px;">Où se trouvent-ils exactement</h2>
+        </div>
+        <div id="kd-map"></div>
+      </section>
 
     </main>
 
@@ -63,6 +90,7 @@
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="reveal.js"></script>
   <script src="terrains-map.js"></script>
 
 </body>

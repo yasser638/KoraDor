@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
   let terrains = allTerrains;
   let selectedQuartier = '';
-  let searchQuery = '';
 
   // ---------- Étoiles ----------
   function renderStars(note){
@@ -24,10 +23,6 @@ document.addEventListener('DOMContentLoaded', function () {
       </span>`;
   }
 
-  function normalize(str){
-    return str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  }
-
   // ---------- En-tête (chiffres) ----------
   function updateHeroStats(){
     const totalEl = document.getElementById('kd-count-total');
@@ -36,12 +31,14 @@ document.addEventListener('DOMContentLoaded', function () {
     if (dispoEl) dispoEl.textContent = allTerrains.filter(t => t.dispo).length;
   }
 
-  // ---------- Puces de quartier (générées depuis les données) ----------
-  const chipsWrap = document.getElementById('kd-filter-chips');
+  // ---------- Puces de quartier (panneau, comme sur l'accueil) ----------
+  const chipsWrap = document.getElementById('kd-t-chips');
+  const quartierValueEl = document.getElementById('kd-t-quartier-value');
+
   function renderChips(){
     if (!chipsWrap) return;
     const quartiers = [...new Set(allTerrains.map(t => t.quartier))];
-    chipsWrap.innerHTML = `<button type="button" class="kd-chip active" data-quartier="">Tous les quartiers</button>` +
+    chipsWrap.innerHTML = `<button type="button" class="kd-chip active" data-quartier="">Tous</button>` +
       quartiers.map(q => `<button type="button" class="kd-chip" data-quartier="${q}">${q}</button>`).join('');
 
     chipsWrap.querySelectorAll('.kd-chip').forEach(chip => {
@@ -49,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function () {
         chipsWrap.querySelectorAll('.kd-chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
         selectedQuartier = chip.dataset.quartier;
-        applyFilters();
+        quartierValueEl.textContent = selectedQuartier === '' ? 'Tous les quartiers' : selectedQuartier;
       });
     });
   }
@@ -147,16 +144,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // ---------- Filtrage combiné (quartier + recherche texte) ----------
+  // ---------- Filtrage par quartier (déclenché par "Rechercher") ----------
   const searchMsg = document.getElementById('kd-map-search-msg');
 
   function applyFilters(){
-    terrains = allTerrains.filter(t => {
-      const matchQuartier = selectedQuartier === '' || t.quartier === selectedQuartier;
-      const matchSearch = searchQuery === '' ||
-        normalize(t.nom).includes(searchQuery) || normalize(t.quartier).includes(searchQuery);
-      return matchQuartier && matchSearch;
-    });
+    terrains = selectedQuartier === '' ? allTerrains : allTerrains.filter(t => t.quartier === selectedQuartier);
 
     if (searchMsg) {
       searchMsg.hidden = terrains.length !== 0;
@@ -167,13 +159,91 @@ document.addEventListener('DOMContentLoaded', function () {
     updateMapForFilter();
   }
 
-  const searchInput = document.getElementById('kd-map-search');
-  if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-      searchQuery = normalize(e.target.value.trim());
-      applyFilters();
+  const searchBtn = document.getElementById('kd-t-search-btn');
+  if (searchBtn) searchBtn.addEventListener('click', applyFilters);
+
+  // ---------- Calendrier + créneaux horaires (visuel, cohérent avec l'accueil) ----------
+  const calGrid = document.getElementById('kd-t-cal-grid');
+  const calMonthLabel = document.getElementById('kd-t-cal-month-label');
+  const calPrev = document.getElementById('kd-t-cal-prev');
+  const calNext = document.getElementById('kd-t-cal-next');
+  const dateValueEl = document.getElementById('kd-t-date-value');
+  const timeGrid = document.getElementById('kd-t-time-grid');
+  const timeValueEl = document.getElementById('kd-t-time-value');
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  let viewYear = today.getFullYear();
+  let viewMonth = today.getMonth();
+  let tSelectedDate = null;
+  let tSelectedTime = null;
+
+  const moisNoms = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  const heures = ['08:00','09:00','10:00','11:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00'];
+
+  function renderTCalendar(){
+    if (!calGrid) return;
+    calMonthLabel.textContent = `${moisNoms[viewMonth]} ${viewYear}`;
+    calGrid.innerHTML = '';
+
+    const firstDay = new Date(viewYear, viewMonth, 1);
+    const startOffset = (firstDay.getDay() + 6) % 7;
+    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+    for (let i = 0; i < startOffset; i++) {
+      const filler = document.createElement('button');
+      filler.className = 'kd-cal-day other-month';
+      filler.disabled = true;
+      calGrid.appendChild(filler);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cellDate = new Date(viewYear, viewMonth, d);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'kd-cal-day';
+      btn.textContent = d;
+
+      if (cellDate < today) {
+        btn.classList.add('disabled');
+        btn.disabled = true;
+      } else {
+        if (tSelectedDate && cellDate.getTime() === tSelectedDate.getTime()) btn.classList.add('selected');
+        btn.addEventListener('click', () => {
+          tSelectedDate = cellDate;
+          renderTCalendar();
+          dateValueEl.textContent = cellDate.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
+        });
+      }
+      calGrid.appendChild(btn);
+    }
+  }
+
+  function renderTTimeSlots(){
+    if (!timeGrid) return;
+    timeGrid.innerHTML = heures.map(h =>
+      `<button type="button" class="kd-time-slot${h === tSelectedTime ? ' selected' : ''}" data-time="${h}">${h}</button>`
+    ).join('');
+    timeGrid.querySelectorAll('.kd-time-slot').forEach(btn => {
+      btn.addEventListener('click', () => {
+        tSelectedTime = btn.dataset.time;
+        renderTTimeSlots();
+        timeValueEl.textContent = tSelectedTime;
+      });
     });
   }
+
+  if (calPrev) calPrev.addEventListener('click', () => {
+    viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+    renderTCalendar();
+  });
+  if (calNext) calNext.addEventListener('click', () => {
+    viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+    renderTCalendar();
+  });
+
+  renderTCalendar();
+  renderTTimeSlots();
 
   // ---------- Initialisation ----------
   updateHeroStats();

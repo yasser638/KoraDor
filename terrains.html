@@ -22,8 +22,8 @@
         <ul class="nav-links">
           <li><a href="index.html">Accueil</a></li>
           <li><a href="terrains.html" class="active">Terrains</a></li>
-          <li><a href="about.html">À propos</a></li>
-          <li><a href="contact.html">Contact</a></li>
+          <li><a href="About.html">À propos</a></li>
+          <li><a href="Contact.html">Contact</a></li>
         </ul>
         <button class="btn-login">Se connecter</button>
       </div>
@@ -43,14 +43,49 @@
         </div>
       </section>
 
-      <!-- ===== Barre de filtre ===== -->
+      <!-- ===== Barre de recherche (même style que l'accueil) ===== -->
       <section class="kd-filter-bar kd-fade">
-        <div class="kd-map-search-wrap">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          <input type="text" id="kd-map-search" class="kd-map-search-input" placeholder="Chercher un terrain (nom ou quartier)...">
-        </div>
-        <div class="kd-filter-chips" id="kd-filter-chips">
-          <button type="button" class="kd-chip active" data-quartier="">Tous les quartiers</button>
+        <div class="kd-search-bar">
+          <div class="kd-search-field kd-search-field-main kd-quartier-wrap" id="kd-t-quartier-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+            <div>
+              <div class="kd-field-label">Quartier</div>
+              <div class="kd-field-input" id="kd-t-quartier-value">Tous les quartiers</div>
+            </div>
+            <div class="kd-chips-panel" id="kd-t-chips"><!-- généré en JS --></div>
+          </div>
+
+          <div class="kd-search-field kd-date-wrap" id="kd-t-date-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <div>
+              <div class="kd-field-label">Date</div>
+              <div class="kd-field-input" id="kd-t-date-value">jj/mm/aaaa</div>
+            </div>
+            <div class="kd-date-panel" id="kd-t-cal-panel">
+              <div class="kd-cal-header">
+                <button type="button" id="kd-t-cal-prev" class="kd-cal-nav" aria-label="Mois précédent">&#8249;</button>
+                <span id="kd-t-cal-month-label" class="kd-cal-month-label"></span>
+                <button type="button" id="kd-t-cal-next" class="kd-cal-nav" aria-label="Mois suivant">&#8250;</button>
+              </div>
+              <div class="kd-cal-weekdays">
+                <span>lun</span><span>mar</span><span>mer</span><span>jeu</span><span>ven</span><span>sam</span><span>dim</span>
+              </div>
+              <div class="kd-cal-grid" id="kd-t-cal-grid"></div>
+            </div>
+          </div>
+
+          <div class="kd-search-field kd-date-wrap" id="kd-t-time-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 15"></polyline></svg>
+            <div>
+              <div class="kd-field-label">Heure</div>
+              <div class="kd-field-input" id="kd-t-time-value">19:00</div>
+            </div>
+            <div class="kd-date-panel kd-time-panel" id="kd-t-time-panel">
+              <div class="kd-time-grid" id="kd-t-time-grid"></div>
+            </div>
+          </div>
+
+          <button class="kd-search-btn" id="kd-t-search-btn">Rechercher</button>
         </div>
       </section>
 

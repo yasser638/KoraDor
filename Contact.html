@@ -29,25 +29,68 @@
     </nav>
 
     <main>
-      <div style="padding:50px 0 10px;">
-        <span class="kd-eyebrow">Contact</span>
-        <h1 class="kd-slider-title">Une question ? Écrivez-nous</h1>
-        <p style="color:var(--text-soft); max-width:520px; margin-top:8px;">
-          Réservation, partenariat, problème technique — l'équipe Korador vous répond sous 24h.
-        </p>
-      </div>
 
-      <div class="kd-contact-layout kd-fade">
+      <!-- ===== Bandeau hero sombre avec formes décoratives ===== -->
+      <section class="kd-contact-hero kd-fade">
+        <div class="kd-contact-hero-blob kd-blob-1"></div>
+        <div class="kd-contact-hero-blob kd-blob-2"></div>
 
-        <form class="kd-contact-form" id="kd-contact-form" autocomplete="on">
-          <label class="kd-form-label">Nom complet</label>
-          <input type="text" id="kd-c-name" name="name" class="kd-form-input" placeholder="Ton nom" autocomplete="name" required>
+        <span class="kd-eyebrow" style="color:var(--cream);">Contact</span>
+        <h1 class="kd-contact-hero-title">Parlons de<br>ton prochain match</h1>
+        <p class="kd-contact-hero-sub">Réservation, partenariat, question technique — l'équipe Korador répond en moins de 24h.</p>
 
-          <label class="kd-form-label">Email</label>
+        <!-- Pastilles de contact flottantes -->
+        <div class="kd-quickcontact-row">
+          <a href="tel:+212632251552" class="kd-quickcontact-card">
+            <div class="kd-quickcontact-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            </div>
+            <div>
+              <span class="kd-quickcontact-label">Téléphone</span>
+              <strong>+212 6 32 25 15 52</strong>
+            </div>
+          </a>
+          <a href="mailto:contact@korador.ma" class="kd-quickcontact-card">
+            <div class="kd-quickcontact-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z" opacity="0"></path><path d="M22 6c0-1.1-.9-2-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h16a2 2 0 0 0 2-2V6z"></path><path d="m22 6-10 7L2 6"></path></svg>
+            </div>
+            <div>
+              <span class="kd-quickcontact-label">Email</span>
+              <strong>contact@korador.ma</strong>
+            </div>
+          </a>
+          <div class="kd-quickcontact-card kd-quickcontact-static">
+            <div class="kd-quickcontact-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"></circle><path d="M12 21s7-6.5 7-11a7 7 0 1 0-14 0c0 4.5 7 11 7 11z"></path></svg>
+            </div>
+            <div>
+              <span class="kd-quickcontact-label">Zone</span>
+              <strong>Casablanca &amp; environs</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== Formulaire + colonne latérale ===== -->
+      <section class="kd-contact-layout kd-fade">
+
+        <form class="kd-contact-form kd-contact-form-pro" id="kd-contact-form" autocomplete="on">
+          <h2 class="kd-contact-form-title">Envoie-nous un message</h2>
+          <p class="kd-contact-form-hint">Tous les champs marqués * sont obligatoires.</p>
+
+          <div class="kd-form-row">
+            <div class="kd-form-group">
+              <label class="kd-form-label">Nom complet *</label>
+              <input type="text" id="kd-c-name" name="name" class="kd-form-input" placeholder="Ton nom" autocomplete="name" required>
+            </div>
+            <div class="kd-form-group">
+              <label class="kd-form-label">Téléphone</label>
+              <input type="tel" id="kd-c-phone" name="tel" class="kd-form-input" placeholder="06 XX XX XX XX" autocomplete="tel" inputmode="tel" pattern="[0-9+ ]*">
+            </div>
+          </div>
+
+          <label class="kd-form-label">Email *</label>
           <input type="email" id="kd-c-email" name="email" class="kd-form-input" placeholder="toi@exemple.com" autocomplete="email" inputmode="email" required>
-
-          <label class="kd-form-label">Téléphone</label>
-          <input type="tel" id="kd-c-phone" name="tel" class="kd-form-input" placeholder="06 XX XX XX XX" autocomplete="tel" inputmode="tel" pattern="[0-9+ ]*">
 
           <label class="kd-form-label">Sujet</label>
           <select id="kd-c-subject" class="kd-form-select">
@@ -57,32 +100,32 @@
             <option>Autre</option>
           </select>
 
-          <label class="kd-form-label">Message</label>
-          <textarea id="kd-c-message" class="kd-form-input kd-form-textarea" rows="5" placeholder="Ton message..." required></textarea>
+          <label class="kd-form-label">Message *</label>
+          <textarea id="kd-c-message" class="kd-form-input kd-form-textarea" rows="5" placeholder="Ton message..." required maxlength="500"></textarea>
+          <div class="kd-char-count"><span id="kd-char-count">0</span>/500</div>
 
-          <button type="submit" class="kd-btn-next" style="margin-top:20px; width:100%;">Envoyer le message</button>
+          <button type="submit" class="kd-btn-next kd-contact-submit" id="kd-contact-submit-btn" style="margin-top:10px; width:100%;">
+            <span class="kd-submit-label">Envoyer le message</span>
+          </button>
 
-          <p id="kd-contact-success" class="kd-modal-note" hidden style="color:var(--green-dark); font-weight:600; margin-top:14px;">
-            Message envoyé ! On te répond très vite. (démo — pas encore connecté à un vrai serveur d'envoi)
+          <p id="kd-contact-success" class="kd-contact-success-msg" hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Message envoyé ! On te répond très vite.
           </p>
         </form>
 
-        <div class="kd-contact-info">
-          <div class="kd-contact-info-item">
-            <div class="kd-form-label">Téléphone</div>
-            <p>+212 6 32 25 15 52</p>
+        <aside class="kd-contact-side">
+          <div class="kd-response-card">
+            <div class="kd-response-dot"></div>
+            <div>
+              <strong>Réponse sous 24h</strong>
+              <span>en moyenne, souvent bien plus vite</span>
+            </div>
           </div>
-          <div class="kd-contact-info-item">
-            <div class="kd-form-label">Email</div>
-            <p>contact@korador.ma</p>
-          </div>
-          <div class="kd-contact-info-item">
-            <div class="kd-form-label">Zone couverte</div>
-            <p>Casablanca et environs</p>
-          </div>
+
           <div class="kd-contact-info-item">
             <div class="kd-form-label">Réseaux sociaux</div>
-            <div class="kd-social" style="margin-top:6px;">
+            <div class="kd-social" style="margin-top:10px;">
               <a href="#" aria-label="Instagram" class="insta-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1"></circle></svg>
               </a>
@@ -94,9 +137,13 @@
               </a>
             </div>
           </div>
-        </div>
 
-      </div>
+          <div class="kd-contact-quote">
+            <p>"Fondé par des joueurs, pour des joueurs, à Casablanca."</p>
+          </div>
+        </aside>
+
+      </section>
     </main>
 
     <footer class="footer">

@@ -1,15 +1,4 @@
-/* ==========================================================
-   ÉCHELLE DE Z-INDEX — référence unique pour toute la maquette.
-   Toute nouvelle superposition doit piocher dans ces tranches
-   pour éviter les surprises de recouvrement entre pages.
-     0–9    : détails internes d'un composant (image/skeleton/
-              badge à l'intérieur d'une même carte)
-     20–39  : panneaux flottants (quartier, date, heure)
-     40–49  : conteneur de barre de recherche/filtre — établit
-              le contexte d'empilement pour les panneaux ci-dessus
-     100–149: overlays modaux (kd-modal-overlay)
-     200+   : notifications globales (toast) — toujours au sommet
-   ========================================================== */
+
 
 /* Classic Heritage Theme - Full-Bleed */
 :root{
@@ -19,6 +8,18 @@
   --green-mid:#2F5D34;
   --green-line:#d9d3b4;
   --text-soft:#4C5A3F;
+  --red-accent:#C1272D;
+  /* Motif géométrique discret façon zellige, tuilé, très basse opacité */
+  --zellige-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%232F5D34' stroke-width='1' opacity='0.12'%3E%3Cpath d='M28 0 L56 28 L28 56 L0 28 Z'/%3E%3Cpath d='M28 10 L46 28 L28 46 L10 28 Z'/%3E%3Ccircle cx='28' cy='28' r='3'/%3E%3C/g%3E%3C/svg%3E");
+  --zellige-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23FAF6E2' stroke-width='1' opacity='0.10'%3E%3Cpath d='M28 0 L56 28 L28 56 L0 28 Z'/%3E%3Cpath d='M28 10 L46 28 L28 46 L10 28 Z'/%3E%3Ccircle cx='28' cy='28' r='3'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Fine bande tricolore discrète en haut de chaque page */
+body::before{
+  content:"";
+  display:block;
+  height:4px;
+  background:linear-gradient(90deg, var(--green-mid) 0 33%, var(--red-accent) 33% 66%, var(--green-mid) 66% 100%);
 }
 
 * {
@@ -129,6 +130,8 @@ body {
   align-items: center;
   justify-content: center;
   padding: 60px 0;
+  background-image: var(--zellige-light);
+  background-repeat: repeat;
 }
 
 .hero-content {
@@ -236,6 +239,7 @@ body {
   gap: 16px;
 }
 .copyright { font-size: 0.85rem; color: var(--text-soft); font-weight: 600; }
+.kd-footer-tag{ font-size:11.5px; color:var(--text-soft); opacity:.75; margin-top:3px; }
 .kd-social{ display:flex; gap:16px; }
 .insta-icon { color: var(--green-mid); }
 .insta-icon:hover { color: var(--green-dark); }
@@ -266,7 +270,11 @@ body {
 .kd-slider-header{ margin:36px 0 32px; }
 .kd-eyebrow{
   font-size:13px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase;
-  color:var(--green-mid); margin-bottom:10px; display:block;
+  color:var(--green-mid); margin-bottom:10px; display:block; position:relative; padding-left:14px;
+}
+.kd-eyebrow::before{
+  content:""; position:absolute; left:0; top:50%; transform:translateY(-50%);
+  width:6px; height:6px; border-radius:50%; background:var(--red-accent);
 }
 .kd-slider-title{ font-size:32px; font-weight:700; color:var(--green-dark); }
 
@@ -388,7 +396,7 @@ body {
 .kd-card-img img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0; }
 .kd-img-fallback{ position:absolute; inset:0; background:linear-gradient(135deg,var(--green-mid),var(--green-dark)); z-index:0; }
 .kd-badge{ font-size:12px; font-weight:600; padding:5px 12px; border-radius:20px; background:#fff; color:var(--green-dark); position:relative; z-index:1; }
-.kd-badge.busy{ background:var(--cream-2); color:var(--text-soft); }
+.kd-badge.busy{ background:rgba(193,39,45,0.12); color:var(--red-accent); }
 .kd-card-body{ padding:20px 22px 22px; flex:1; display:flex; flex-direction:column; }
 .kd-card-body h3{ font-size:17px; font-weight:700; margin-bottom:4px; }
 .kd-quartier{ font-size:13.5px; color:var(--green-mid); font-weight:500; margin-bottom:10px; display:flex; align-items:center; gap:6px;}
@@ -558,6 +566,11 @@ select.kd-form-select{
 .kd-btn-next:hover{ background:var(--green-mid); }
 .kd-btn-next.kd-shake{ animation:kd-shake .4s; }
 .kd-input-error{ border-color:#b32e2e !important; }
+.kd-field-error{
+  display:block; min-height:15px; font-size:12px; font-weight:600; color:#b32e2e;
+  margin:4px 0 0; opacity:0; transition:opacity .15s ease;
+}
+.kd-field-error.kd-show{ opacity:1; }
 @keyframes kd-shake{
   0%,100%{ transform:translateX(0); }
   25%{ transform:translateX(-6px); }
@@ -696,8 +709,9 @@ select.kd-form-select{
 
 /* Hero sombre avec formes décoratives */
 .kd-contact-hero{
-  position:relative; overflow:hidden; background:var(--green-dark); border-radius:24px;
-  padding:56px 40px 90px; margin:36px 0 0; color:var(--cream);
+  position:relative; overflow:hidden; background-color:var(--green-dark);
+  background-image:var(--zellige-dark); background-repeat:repeat;
+  border-radius:24px; padding:56px 40px 90px; margin:36px 0 0; color:var(--cream);
 }
 .kd-contact-hero-blob{ position:absolute; border-radius:50%; filter:blur(2px); opacity:.5; }
 .kd-blob-1{ width:260px; height:260px; background:var(--green-mid); top:-100px; right:-60px; }
@@ -848,7 +862,9 @@ select.kd-form-select{
    Bande CTA (About.html)
    ========================================================= */
 .kd-cta-band{
-  position:relative; overflow:hidden; background:var(--green-dark); border-radius:24px;
+  position:relative; overflow:hidden; background-color:var(--green-dark);
+  background-image:var(--zellige-dark); background-repeat:repeat;
+  border-radius:24px;
   padding:56px 40px; margin:20px 0 60px; text-align:center; color:var(--cream);
 }
 .kd-cta-band-blob{ position:absolute; border-radius:50%; filter:blur(2px); opacity:.35; background:var(--green-mid); }
@@ -870,4 +886,11 @@ select.kd-form-select{
 @media (max-width:600px){
   .kd-cta-band{ padding:40px 24px; border-radius:18px; }
   .kd-cta-band-title{ font-size:24px; }
+}
+
+/* Bande décorative zellige, utilisable comme séparateur discret entre sections */
+.kd-zellige-divider{
+  height:36px; border-radius:8px; margin:10px 0 40px;
+  background-image:var(--zellige-light); background-repeat:repeat;
+  background-color:var(--cream-2);
 }

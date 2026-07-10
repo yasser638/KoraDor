@@ -1,3 +1,16 @@
+/* ==========================================================
+   ÉCHELLE DE Z-INDEX — référence unique pour toute la maquette.
+   Toute nouvelle superposition doit piocher dans ces tranches
+   pour éviter les surprises de recouvrement entre pages.
+     0–9    : détails internes d'un composant (image/skeleton/
+              badge à l'intérieur d'une même carte)
+     20–39  : panneaux flottants (quartier, date, heure)
+     40–49  : conteneur de barre de recherche/filtre — établit
+              le contexte d'empilement pour les panneaux ci-dessus
+     100–149: overlays modaux (kd-modal-overlay)
+     200+   : notifications globales (toast) — toujours au sommet
+   ========================================================== */
+
 /* Classic Heritage Theme - Full-Bleed */
 :root{
   --cream:#FAF6E2;
@@ -249,7 +262,7 @@ body {
 .kd-stat-label{ font-size:13px; color:var(--text-soft); font-weight:600; margin-top:2px; }
 
 /* --- Section carrousel --- */
-.kd-slider-section{ max-width:1100px; margin:0 auto; padding:40px 0 80px; }
+.kd-slider-section{ max-width:1100px; margin:0 auto; padding:40px 0 80px; position:relative; z-index:40; }
 .kd-slider-header{ margin:36px 0 32px; }
 .kd-eyebrow{
   font-size:13px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase;
@@ -669,7 +682,7 @@ select.kd-form-select{
 
 /* --- Section carte --- */
 .kd-map-header{ margin-bottom:20px; }
-#kd-map{ height:440px; border-radius:16px; border:1px solid var(--green-line); }
+#kd-map{ height:440px; border-radius:16px; border:1px solid var(--green-line); position:relative; overflow:hidden; }
 
 @media (max-width:700px){
   .kd-terrains-hero-stats{ gap:24px; }
@@ -781,4 +794,80 @@ select.kd-form-select{
   .kd-contact-hero{ padding:40px 24px 70px; border-radius:18px; }
   .kd-contact-hero-title{ font-size:28px; }
   .kd-contact-form-pro{ padding:26px; }
+}
+
+/* =========================================================
+   Skeleton loading (chargement progressif)
+   ========================================================= */
+@keyframes kd-shimmer{
+  0%{ background-position:-400px 0; }
+  100%{ background-position:400px 0; }
+}
+.kd-skel-shimmer{
+  background:linear-gradient(90deg, var(--cream-2) 25%, var(--green-line) 37%, var(--cream-2) 63%);
+  background-size:800px 100%;
+  animation:kd-shimmer 1.4s ease-in-out infinite;
+}
+
+/* --- Cartes squelettes (placeholders avant le rendu JS) --- */
+.kd-skel-card{
+  background:#fff; border:1px solid var(--green-line); border-radius:14px; overflow:hidden; height:100%;
+  display:flex; flex-direction:column;
+}
+.kd-skel-img{ height:150px; }
+.kd-skel-body{ padding:20px 22px 22px; display:flex; flex-direction:column; gap:12px; }
+.kd-skel-line{ height:12px; border-radius:6px; }
+.kd-skel-line.w-80{ width:80%; }
+.kd-skel-line.w-60{ width:60%; }
+.kd-skel-line.w-40{ width:40%; }
+.kd-skel-btn{ height:38px; border-radius:8px; margin-top:8px; }
+
+/* --- Skeleton posé sur une image de terrain le temps qu'elle charge --- */
+.kd-card-img-skeleton{
+  position:absolute; inset:0; z-index:1; transition:opacity .3s ease;
+}
+.kd-card-img-skeleton.kd-hide{ opacity:0; pointer-events:none; }
+
+/* --- Skeleton posé sur la carte Leaflet le temps que les tuiles chargent ---
+   Note z-index : Leaflet utilise en interne des z-index allant jusqu'à 700
+   pour ses propres panes (tuiles, marqueurs, popups). Ce skeleton est un cas
+   local à #kd-map (contenu par son overflow:hidden) : il doit dépasser ce
+   plafond interne de Leaflet, indépendamment de l'échelle globale du site. */
+.kd-map-skeleton{
+  position:absolute; inset:0; z-index:900;
+  display:flex; align-items:center; justify-content:center;
+  transition:opacity .35s ease;
+}
+.kd-map-skeleton.kd-hide{ opacity:0; pointer-events:none; }
+.kd-map-skeleton span{
+  font-size:13px; font-weight:600; color:var(--text-soft); background:#fff;
+  padding:8px 16px; border-radius:20px; box-shadow:0 4px 14px rgba(30,70,32,0.16);
+}
+
+/* =========================================================
+   Bande CTA (About.html)
+   ========================================================= */
+.kd-cta-band{
+  position:relative; overflow:hidden; background:var(--green-dark); border-radius:24px;
+  padding:56px 40px; margin:20px 0 60px; text-align:center; color:var(--cream);
+}
+.kd-cta-band-blob{ position:absolute; border-radius:50%; filter:blur(2px); opacity:.35; background:var(--green-mid); }
+.kd-cta-blob-1{ width:220px; height:220px; top:-90px; left:-60px; }
+.kd-cta-blob-2{ width:180px; height:180px; bottom:-80px; right:-40px; }
+.kd-cta-band-title{
+  position:relative; z-index:1; font-size:32px; font-weight:800; color:var(--cream); margin-bottom:12px;
+}
+.kd-cta-band-sub{
+  position:relative; z-index:1; color:rgba(250,246,226,0.85); max-width:520px; margin:0 auto 30px;
+  font-size:15.5px; line-height:1.6;
+}
+.kd-cta-band-actions{ position:relative; z-index:1; display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
+.kd-cta-secondary{
+  background:transparent; border:1px solid rgba(250,246,226,0.5); color:var(--cream);
+}
+.kd-cta-secondary:hover{ background:rgba(250,246,226,0.12); }
+
+@media (max-width:600px){
+  .kd-cta-band{ padding:40px 24px; border-radius:18px; }
+  .kd-cta-band-title{ font-size:24px; }
 }

@@ -1,4 +1,16 @@
-
+/* ==========================================================
+   ÉCHELLE DE Z-INDEX — référence unique pour toute la maquette.
+   Toute nouvelle superposition doit piocher dans ces tranches
+   pour éviter les surprises de recouvrement entre pages.
+     0–9    : détails internes d'un composant (image/skeleton/
+              badge à l'intérieur d'une même carte)
+     20–39  : panneaux flottants (quartier, date, heure)
+     40–49  : conteneur de barre de recherche/filtre — établit
+              le contexte d'empilement pour les panneaux ci-dessus
+     50–69  : boutons flottants utilitaires (retour en haut)
+     100–149: overlays modaux (kd-modal-overlay, kd-login-overlay)
+     200+   : notifications globales (toast) — toujours au sommet
+   ========================================================== */
 
 /* Classic Heritage Theme - Full-Bleed */
 :root{
@@ -571,6 +583,13 @@ select.kd-form-select{
   margin:4px 0 0; opacity:0; transition:opacity .15s ease;
 }
 .kd-field-error.kd-show{ opacity:1; }
+
+.kd-secure-badge{
+  display:flex; align-items:center; gap:10px; margin-top:18px; padding:12px 14px;
+  background:rgba(47,93,52,0.08); border:1px solid var(--green-line); border-radius:10px;
+  color:var(--green-mid); font-size:12.5px; line-height:1.4;
+}
+.kd-secure-badge svg{ flex-shrink:0; }
 @keyframes kd-shake{
   0%,100%{ transform:translateX(0); }
   25%{ transform:translateX(-6px); }
@@ -894,3 +913,59 @@ select.kd-form-select{
   background-image:var(--zellige-light); background-repeat:repeat;
   background-color:var(--cream-2);
 }
+
+/* =========================================================
+   Bouton retour en haut
+   ========================================================= */
+.kd-back-to-top{
+  position:fixed; right:24px; bottom:24px; z-index:60;
+  width:46px; height:46px; border-radius:50%; border:none; cursor:pointer;
+  background:var(--green-dark); color:var(--cream);
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 6px 18px rgba(30,70,32,0.28);
+  opacity:0; transform:translateY(12px); pointer-events:none;
+  transition:opacity .25s ease, transform .25s ease, background .2s ease;
+}
+.kd-back-to-top.kd-visible{ opacity:1; transform:translateY(0); pointer-events:auto; }
+.kd-back-to-top:hover{ background:var(--green-mid); }
+@media (max-width:600px){
+  .kd-back-to-top{ right:16px; bottom:16px; width:42px; height:42px; }
+}
+
+/* =========================================================
+   Modale de connexion (visuelle, sans backend)
+   ========================================================= */
+.kd-login-overlay{
+  display:none; position:fixed; inset:0; background:rgba(30,70,32,0.45);
+  z-index:100; align-items:center; justify-content:center; padding:20px;
+}
+.kd-login-overlay.kd-open{ display:flex; }
+.kd-login-modal{
+  position:relative; background:#fff; border-radius:20px; width:100%; max-width:400px;
+  padding:36px 32px 32px; box-shadow:0 20px 60px rgba(30,70,32,0.25);
+}
+.kd-login-close{
+  position:absolute; top:16px; right:16px; z-index:2; width:32px; height:32px; border-radius:50%;
+  border:none; background:var(--cream-2); color:var(--green-dark); font-size:20px; line-height:1;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
+.kd-login-tabs{ display:flex; gap:6px; background:var(--cream-2); border-radius:10px; padding:4px; margin-bottom:24px; }
+.kd-login-tab{
+  flex:1; border:none; background:transparent; padding:9px 0; border-radius:8px; cursor:pointer;
+  font-size:13.5px; font-weight:700; color:var(--text-soft); transition:background .15s ease, color .15s ease;
+}
+.kd-login-tab.active{ background:var(--green-dark); color:var(--cream); }
+.kd-login-title{ font-size:22px; font-weight:800; color:var(--green-dark); margin-bottom:6px; }
+.kd-login-sub{ font-size:13.5px; color:var(--text-soft); margin-bottom:22px; }
+.kd-login-form{ display:flex; flex-direction:column; }
+.kd-login-form .kd-form-label{ margin-top:14px; }
+.kd-login-form .kd-form-label:first-child{ margin-top:0; }
+.kd-login-submit{ margin-top:22px; width:100%; }
+.kd-login-success{ display:none; flex-direction:column; align-items:center; text-align:center; padding:16px 0 4px; }
+.kd-login-success.kd-show{ display:flex; }
+.kd-login-success-icon{
+  width:56px; height:56px; border-radius:50%; background:rgba(47,93,52,0.12); color:var(--green-mid);
+  display:flex; align-items:center; justify-content:center; margin-bottom:16px;
+}
+.kd-login-success h3{ font-size:18px; color:var(--green-dark); margin-bottom:6px; }
+.kd-login-success p{ font-size:13.5px; color:var(--text-soft); }

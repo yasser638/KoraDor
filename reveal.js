@@ -64,6 +64,35 @@ document.addEventListener('DOMContentLoaded', function () {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
+  // === Menu hamburger mobile (injecté automatiquement sur toutes les pages) ===
+  const navMenu = document.querySelector('.nav-menu');
+  const brand = document.querySelector('.brand');
+
+  if (navMenu && brand) {
+    const burger = document.createElement('button');
+    burger.type = 'button';
+    burger.className = 'kd-burger';
+    burger.setAttribute('aria-label', 'Ouvrir le menu');
+    burger.innerHTML = '<span></span><span></span><span></span>';
+    brand.after(burger);
+
+    burger.addEventListener('click', () => {
+      const isOpen = navMenu.classList.toggle('kd-menu-open');
+      burger.classList.toggle('kd-burger-open', isOpen);
+      burger.setAttribute('aria-label', isOpen ? 'Fermer le menu' : 'Ouvrir le menu');
+      document.body.classList.toggle('kd-noscroll', isOpen);
+    });
+
+    // referme le menu quand on clique sur un lien ou un bouton à l'intérieur
+    navMenu.querySelectorAll('a, button').forEach(el => {
+      el.addEventListener('click', () => {
+        navMenu.classList.remove('kd-menu-open');
+        burger.classList.remove('kd-burger-open');
+        document.body.classList.remove('kd-noscroll');
+      });
+    });
+  }
+
   // === Modale de connexion (visuelle uniquement, sans backend) ===
   const loginBtn = document.querySelector('.btn-login');
   if (loginBtn) {

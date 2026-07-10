@@ -93,7 +93,12 @@
 
       <!-- ===== Grille de tous les terrains ===== -->
       <section class="kd-terrains-grid-section kd-fade">
-        <div class="kd-terrains-grid" id="kd-terrains-grid"><!-- généré en JS --></div>
+        <div class="kd-terrains-grid" id="kd-terrains-grid">
+          <!-- squelettes affichés le temps que terrains-map.js rende les vraies cartes -->
+          <div class="kd-skel-card"><div class="kd-skel-img kd-skel-shimmer"></div><div class="kd-skel-body"><div class="kd-skel-line w-80 kd-skel-shimmer"></div><div class="kd-skel-line w-40 kd-skel-shimmer"></div><div class="kd-skel-line w-60 kd-skel-shimmer"></div><div class="kd-skel-btn kd-skel-shimmer"></div></div></div>
+          <div class="kd-skel-card"><div class="kd-skel-img kd-skel-shimmer"></div><div class="kd-skel-body"><div class="kd-skel-line w-80 kd-skel-shimmer"></div><div class="kd-skel-line w-40 kd-skel-shimmer"></div><div class="kd-skel-line w-60 kd-skel-shimmer"></div><div class="kd-skel-btn kd-skel-shimmer"></div></div></div>
+          <div class="kd-skel-card"><div class="kd-skel-img kd-skel-shimmer"></div><div class="kd-skel-body"><div class="kd-skel-line w-80 kd-skel-shimmer"></div><div class="kd-skel-line w-40 kd-skel-shimmer"></div><div class="kd-skel-line w-60 kd-skel-shimmer"></div><div class="kd-skel-btn kd-skel-shimmer"></div></div></div>
+        </div>
       </section>
 
       <!-- ===== Carte interactive ===== -->
@@ -102,7 +107,9 @@
           <span class="kd-eyebrow">Localisation</span>
           <h2 class="kd-slider-title" style="font-size:26px;">Où se trouvent-ils exactement</h2>
         </div>
-        <div id="kd-map"></div>
+        <div id="kd-map">
+          <div class="kd-map-skeleton kd-skel-shimmer" id="kd-map-skeleton"><span>Chargement de la carte…</span></div>
+        </div>
       </section>
 
     </main>

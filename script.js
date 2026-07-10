@@ -49,7 +49,10 @@ document.addEventListener('DOMContentLoaded', function () {
       <div class="kd-slide" style="flex:0 0 ${slideBasis}%;">
         <div class="kd-card">
           <div class="kd-card-img">
-            ${t.photo ? `<img src="${t.photo}" alt="${t.nom}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            ${t.photo ? `<div class="kd-card-img-skeleton kd-skel-shimmer"></div>
+            <img src="${t.photo}" alt="${t.nom}" loading="lazy"
+                 onload="this.previousElementSibling.classList.add('kd-hide')"
+                 onerror="this.previousElementSibling.classList.add('kd-hide'); this.style.display='none'; this.nextElementSibling.style.display='block';">
             <div class="kd-img-fallback" style="display:none;"></div>` : `<div class="kd-img-fallback"></div>`}
             <span class="kd-badge ${t.dispo ? '' : 'busy'}">${t.dispo ? 'Disponible' : 'Occupé'}</span>
           </div>

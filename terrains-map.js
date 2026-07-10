@@ -64,7 +64,10 @@ document.addEventListener('DOMContentLoaded', function () {
     gridEl.innerHTML = terrains.map(t => `
       <div class="kd-card">
         <div class="kd-card-img">
-          ${t.photo ? `<img src="${t.photo}" alt="${t.nom}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          ${t.photo ? `<div class="kd-card-img-skeleton kd-skel-shimmer"></div>
+          <img src="${t.photo}" alt="${t.nom}" loading="lazy"
+               onload="this.previousElementSibling.classList.add('kd-hide')"
+               onerror="this.previousElementSibling.classList.add('kd-hide'); this.style.display='none'; this.nextElementSibling.style.display='block';">
           <div class="kd-img-fallback" style="display:none;"></div>` : `<div class="kd-img-fallback"></div>`}
           <span class="kd-badge ${t.dispo ? '' : 'busy'}">${t.dispo ? 'Disponible' : 'Occupé'}</span>
         </div>
@@ -121,6 +124,14 @@ document.addEventListener('DOMContentLoaded', function () {
       `);
       markerRefs.push({ terrain: t, marker });
     });
+
+    // Masque le skeleton une fois les tuiles chargées (avec filet de sécurité)
+    const mapSkeleton = document.getElementById('kd-map-skeleton');
+    if (mapSkeleton) {
+      const hideSkeleton = () => mapSkeleton.classList.add('kd-hide');
+      map.whenReady(() => map.once('load', hideSkeleton));
+      setTimeout(hideSkeleton, 1500); // filet de sécurité si l'évènement 'load' ne se déclenche pas (tuiles déjà en cache)
+    }
   }
 
   function updateMapForFilter(){

@@ -3,8 +3,8 @@
 // ==========================================================
 // ⚠️ Remplace ces deux valeurs par celles de TON projet Supabase
 // (Dashboard Supabase > Project Settings > API)
-const SUPABASE_URL = 'https://TON-PROJET.supabase.co';
-const SUPABASE_ANON_KEY = 'TA_CLE_ANON_PUBLIQUE';
+const SUPABASE_URL = 'https://klbgyejlqxeuyrxxorhy.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable__cifG7S3Xu5VWQn7Luos6Q_uCufqc_M';
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 

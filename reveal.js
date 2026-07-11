@@ -144,6 +144,19 @@ document.addEventListener('DOMContentLoaded', function () {
           <h3>C'est bon, tu es connecté !</h3>
           <p>Retrouve tes réservations depuis ton profil.</p>
         </div>
+
+        <div class="kd-login-otp" id="kd-login-otp" hidden>
+          <h3 class="kd-login-title">Vérifie ton email</h3>
+          <p class="kd-login-sub" id="kd-otp-email-hint">Entre le code à 6 chiffres qu'on vient de t'envoyer.</p>
+          <form id="kd-otp-form">
+            <input type="text" id="kd-otp-code" class="kd-form-input kd-otp-input" placeholder="000000" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+            <p class="kd-login-error" id="kd-otp-error" hidden></p>
+            <button type="submit" class="kd-btn-next kd-login-submit" id="kd-otp-submit-btn">
+              <span>Confirmer mon compte</span>
+            </button>
+            <button type="button" class="kd-otp-resend" id="kd-otp-resend-btn">Renvoyer le code</button>
+          </form>
+        </div>
       </div>
     `;
     document.body.appendChild(overlay);
@@ -157,11 +170,19 @@ document.addEventListener('DOMContentLoaded', function () {
     const form = overlay.querySelector('#kd-login-form');
     const errorEl = overlay.querySelector('#kd-login-error');
     const successPanel = overlay.querySelector('#kd-login-success');
+    const otpPanel = overlay.querySelector('#kd-login-otp');
+    const otpForm = overlay.querySelector('#kd-otp-form');
+    const otpInput = overlay.querySelector('#kd-otp-code');
+    const otpError = overlay.querySelector('#kd-otp-error');
+    const otpEmailHint = overlay.querySelector('#kd-otp-email-hint');
+    const otpSubmitBtn = overlay.querySelector('#kd-otp-submit-btn');
+    const otpResendBtn = overlay.querySelector('#kd-otp-resend-btn');
     const submitBtn = overlay.querySelector('#kd-login-submit-btn');
     const closeBtn = overlay.querySelector('.kd-login-close');
 
     let currentMode = 'connexion';
     let selectedRole = 'client';
+    let pendingEmail = ''; // email en attente de confirmation par code
 
     roleBtns.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -195,6 +216,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function openLogin(){
       overlay.classList.add('kd-open');
       form.hidden = false;
+      otpPanel.hidden = true;
       errorEl.hidden = true;
       successPanel.classList.remove('kd-show');
       form.reset();
@@ -202,6 +224,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     function closeLogin(){
       overlay.classList.remove('kd-open');
+    }
+
+    function goToRoleBasedPage(role){
+      if (role === 'proprietaire') {
+        window.location.href = 'dashboard-proprietaire.html';
+      } else {
+        window.location.reload();
+      }
     }
 
     loginBtn.addEventListener('click', openLogin);
@@ -224,25 +254,33 @@ document.addEventListener('DOMContentLoaded', function () {
           throw new Error("auth.js n'est pas chargé sur cette page.");
         }
 
-        let userId;
-
         if (currentMode === 'inscription') {
           label.textContent = 'Création du compte...';
-          const result = await kdSignUp({ email, password, nom, role: selectedRole });
-          userId = result.user?.id;
-        } else {
-          label.textContent = 'Connexion en cours...';
-          const result = await kdSignIn({ email, password });
-          userId = result.user?.id;
+          await kdSignUp({ email, password, nom, role: selectedRole });
+
+          // Étape suivante : demander le code reçu par email, pas encore connecté
+          pendingEmail = email;
+          submitBtn.disabled = false;
+          label.textContent = original;
+          form.hidden = true;
+          otpPanel.hidden = false;
+          otpEmailHint.textContent = `Entre le code à 6 chiffres envoyé à ${email}.`;
+          otpInput.value = '';
+          otpInput.focus();
+          return;
         }
 
-        // Récupère le profil pour connaître le rôle et rediriger correctement
+        // Mode connexion classique
+        label.textContent = 'Connexion en cours...';
+        const result = await kdSignIn({ email, password });
+        const userId = result.user?.id;
+
         let role = selectedRole;
         if (userId) {
           try {
             const profile = await kdGetProfile(userId);
             role = profile.role;
-          } catch (err) { /* profil pas encore créé (trigger asynchrone) : on garde selectedRole */ }
+          } catch (err) { /* profil pas encore prêt */ }
         }
 
         submitBtn.disabled = false;
@@ -250,14 +288,7 @@ document.addEventListener('DOMContentLoaded', function () {
         form.hidden = true;
         successPanel.classList.add('kd-show');
 
-        setTimeout(() => {
-          closeLogin();
-          if (role === 'proprietaire') {
-            window.location.href = 'dashboard-proprietaire.html';
-          } else {
-            window.location.reload();
-          }
-        }, 1400);
+        setTimeout(() => { closeLogin(); goToRoleBasedPage(role); }, 1400);
 
       } catch (err) {
         submitBtn.disabled = false;
@@ -265,6 +296,65 @@ document.addEventListener('DOMContentLoaded', function () {
         errorEl.textContent = err.message || "Une erreur est survenue. Vérifie tes identifiants.";
         errorEl.hidden = false;
       }
+    });
+
+    // ---------- Vérification du code de confirmation (après inscription) ----------
+    otpForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const label = otpSubmitBtn.querySelector('span');
+      const original = label.textContent;
+      const token = otpInput.value.trim();
+
+      otpError.hidden = true;
+      otpSubmitBtn.disabled = true;
+      label.textContent = 'Vérification...';
+
+      try {
+        if (typeof kdVerifyOtp === 'undefined') {
+          throw new Error("auth.js n'est pas chargé sur cette page.");
+        }
+        const result = await kdVerifyOtp({ email: pendingEmail, token });
+        const userId = result.user?.id;
+
+        let role = selectedRole;
+        if (userId) {
+          try {
+            const profile = await kdGetProfile(userId);
+            role = profile.role;
+          } catch (err) { /* fallback sur selectedRole */ }
+        }
+
+        otpSubmitBtn.disabled = false;
+        label.textContent = original;
+        otpPanel.hidden = true;
+        successPanel.classList.add('kd-show');
+
+        setTimeout(() => { closeLogin(); goToRoleBasedPage(role); }, 1400);
+
+      } catch (err) {
+        otpSubmitBtn.disabled = false;
+        label.textContent = original;
+        otpError.textContent = err.message || "Code invalide ou expiré. Réessaie.";
+        otpError.hidden = false;
+      }
+    });
+
+    otpResendBtn.addEventListener('click', async () => {
+      otpError.hidden = true;
+      otpResendBtn.disabled = true;
+      otpResendBtn.textContent = 'Envoi...';
+      try {
+        await kdResendCode({ email: pendingEmail });
+        otpResendBtn.textContent = 'Code renvoyé !';
+      } catch (err) {
+        otpError.textContent = err.message || "Impossible de renvoyer le code.";
+        otpError.hidden = false;
+        otpResendBtn.textContent = 'Renvoyer le code';
+      }
+      setTimeout(() => {
+        otpResendBtn.disabled = false;
+        otpResendBtn.textContent = 'Renvoyer le code';
+      }, 4000);
     });
   }
 });

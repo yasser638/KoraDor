@@ -27,61 +27,80 @@
     </nav>
 
     <main class="kd-login-page-wrap">
-      <div class="kd-login-page-card">
+      <div class="kd-login-split">
 
-        <div class="kd-login-tabs">
-          <button type="button" class="kd-login-tab active" data-mode="connexion">Connexion</button>
-          <button type="button" class="kd-login-tab" data-mode="inscription">Inscription</button>
+        <div class="kd-login-visual">
+          <div class="kd-login-visual-blob kd-blob-1"></div>
+          <div class="kd-login-visual-blob kd-blob-2"></div>
+          <div class="kd-login-visual-content">
+            <span class="kd-eyebrow" style="color:var(--cream);">Bienvenue</span>
+            <h2 class="kd-login-visual-title">Ton terrain<br>t'attend.</h2>
+            <p class="kd-login-visual-sub">Réserve, gère tes matchs et retrouve tes créneaux en un seul endroit.</p>
+
+            <div class="kd-login-visual-stats">
+              <div><strong>30+</strong><span>terrains</span></div>
+              <div><strong>1 200+</strong><span>matchs joués</span></div>
+            </div>
+          </div>
         </div>
 
-        <div class="kd-login-body">
-          <h1 class="kd-login-title" id="kd-login-title">Content de te revoir</h1>
-          <p class="kd-login-sub" id="kd-login-sub">Connecte-toi pour gérer tes réservations.</p>
+        <div class="kd-login-page-card">
 
-          <form class="kd-login-form" id="kd-login-form">
-            <div id="kd-login-name-group" hidden>
-              <label class="kd-form-label">Nom complet</label>
-              <input type="text" class="kd-form-input" id="kd-login-name" placeholder="Ton nom" autocomplete="name">
-            </div>
-            <div id="kd-login-role-group" hidden>
-              <label class="kd-form-label">Je suis</label>
-              <div class="kd-role-choice">
-                <button type="button" class="kd-role-btn active" data-role="client">⚽ Joueur</button>
-                <button type="button" class="kd-role-btn" data-role="proprietaire">🏟️ Propriétaire</button>
+          <div class="kd-login-tabs">
+            <button type="button" class="kd-login-tab active" data-mode="connexion">Connexion</button>
+            <button type="button" class="kd-login-tab" data-mode="inscription">Inscription</button>
+          </div>
+
+          <div class="kd-login-body">
+            <h1 class="kd-login-title" id="kd-login-title">Content de te revoir</h1>
+            <p class="kd-login-sub" id="kd-login-sub">Connecte-toi pour gérer tes réservations.</p>
+
+            <form class="kd-login-form" id="kd-login-form">
+              <div id="kd-login-name-group" hidden>
+                <label class="kd-form-label">Nom complet</label>
+                <input type="text" class="kd-form-input" id="kd-login-name" placeholder="Ton nom" autocomplete="name">
               </div>
-            </div>
-            <label class="kd-form-label">Email</label>
-            <input type="email" class="kd-form-input" id="kd-login-identifier" placeholder="toi@gmail.com" autocomplete="username">
-            <label class="kd-form-label">Mot de passe</label>
-            <input type="password" class="kd-form-input" id="kd-login-password" placeholder="••••••••" autocomplete="current-password">
+              <div id="kd-login-role-group" hidden>
+                <label class="kd-form-label">Je suis</label>
+                <div class="kd-role-choice">
+                  <button type="button" class="kd-role-btn active" data-role="client">⚽ Joueur</button>
+                  <button type="button" class="kd-role-btn" data-role="proprietaire">🏟️ Propriétaire</button>
+                </div>
+              </div>
+              <label class="kd-form-label">Email</label>
+              <input type="email" class="kd-form-input" id="kd-login-identifier" placeholder="toi@gmail.com" autocomplete="username">
+              <label class="kd-form-label">Mot de passe</label>
+              <input type="password" class="kd-form-input" id="kd-login-password" placeholder="••••••••" autocomplete="current-password">
 
-            <p class="kd-login-error" id="kd-login-error" hidden></p>
+              <p class="kd-login-error" id="kd-login-error" hidden></p>
 
-            <button type="submit" class="kd-btn-next kd-login-submit" id="kd-login-submit-btn" style="width:100%;">
-              <span>Se connecter</span>
-            </button>
-          </form>
-
-          <div class="kd-login-success" id="kd-login-success">
-            <div class="kd-login-success-icon">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            </div>
-            <h3>C'est bon, tu es connecté !</h3>
-            <p>Redirection en cours...</p>
-          </div>
-
-          <div class="kd-login-otp" id="kd-login-otp" hidden>
-            <h2 class="kd-login-title">Vérifie ton email</h2>
-            <p class="kd-login-sub" id="kd-otp-email-hint">Entre le code à 6 chiffres qu'on vient de t'envoyer.</p>
-            <form id="kd-otp-form">
-              <input type="text" id="kd-otp-code" class="kd-form-input kd-otp-input" placeholder="000000" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
-              <p class="kd-login-error" id="kd-otp-error" hidden></p>
-              <button type="submit" class="kd-btn-next kd-login-submit" id="kd-otp-submit-btn" style="width:100%;">
-                <span>Confirmer mon compte</span>
+              <button type="submit" class="kd-btn-next kd-login-submit" id="kd-login-submit-btn" style="width:100%;">
+                <span>Se connecter</span>
               </button>
-              <button type="button" class="kd-otp-resend" id="kd-otp-resend-btn">Renvoyer le code</button>
             </form>
+
+            <div class="kd-login-success" id="kd-login-success">
+              <div class="kd-login-success-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+              <h3>C'est bon, tu es connecté !</h3>
+              <p>Redirection en cours...</p>
+            </div>
+
+            <div class="kd-login-otp" id="kd-login-otp" hidden>
+              <h2 class="kd-login-title">Vérifie ton email</h2>
+              <p class="kd-login-sub" id="kd-otp-email-hint">Entre le code à 6 chiffres qu'on vient de t'envoyer.</p>
+              <form id="kd-otp-form">
+                <input type="text" id="kd-otp-code" class="kd-form-input kd-otp-input" placeholder="000000" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+                <p class="kd-login-error" id="kd-otp-error" hidden></p>
+                <button type="submit" class="kd-btn-next kd-login-submit" id="kd-otp-submit-btn" style="width:100%;">
+                  <span>Confirmer mon compte</span>
+                </button>
+                <button type="button" class="kd-otp-resend" id="kd-otp-resend-btn">Renvoyer le code</button>
+              </form>
+            </div>
           </div>
+
         </div>
 
       </div>

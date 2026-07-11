@@ -16,3 +16,18 @@
   border-radius:8px; margin:10px 0 4px;
 }
 .kd-login-error[hidden]{ display:none; }
+
+/* Panneau de vérification du code (OTP) */
+.kd-login-otp[hidden]{ display:none; }
+.kd-login-otp .kd-login-title{ margin-bottom:6px; }
+.kd-login-otp .kd-login-sub{ margin-bottom:20px; font-size:13.5px; color:var(--text-soft); }
+.kd-otp-input{
+  text-align:center; font-size:24px; font-weight:700; letter-spacing:8px;
+  padding:14px; margin-bottom:6px;
+}
+.kd-otp-resend{
+  display:block; width:100%; text-align:center; background:none; border:none;
+  color:var(--green-mid); font-size:13px; font-weight:600; margin-top:12px; cursor:pointer;
+  font-family:inherit;
+}
+.kd-otp-resend:disabled{ opacity:.6; cursor:default; }

@@ -16,7 +16,7 @@
   border-radius:8px; margin:10px 0 4px;
 }
 .kd-login-error[hidden]{ display:none; }
-
+.kd-login-form[hidden]{ display:none !important; }
 /* Panneau de vérification du code (OTP) */
 .kd-login-otp[hidden]{ display:none; }
 .kd-login-form[hidden]{ display:none !important; }

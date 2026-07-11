@@ -117,10 +117,19 @@ document.addEventListener('DOMContentLoaded', function () {
               <label class="kd-form-label">Nom complet</label>
               <input type="text" class="kd-form-input" id="kd-login-name" placeholder="Ton nom" autocomplete="name">
             </div>
-            <label class="kd-form-label">Email ou téléphone</label>
-            <input type="text" class="kd-form-input" id="kd-login-identifier" placeholder="toi@gmail.com ou 06 XX XX XX XX" autocomplete="username">
+            <div id="kd-login-role-group" hidden>
+              <label class="kd-form-label">Je suis</label>
+              <div class="kd-role-choice">
+                <button type="button" class="kd-role-btn active" data-role="client">⚽ Joueur</button>
+                <button type="button" class="kd-role-btn" data-role="proprietaire">🏟️ Propriétaire</button>
+              </div>
+            </div>
+            <label class="kd-form-label">Email</label>
+            <input type="email" class="kd-form-input" id="kd-login-identifier" placeholder="toi@gmail.com" autocomplete="username">
             <label class="kd-form-label">Mot de passe</label>
             <input type="password" class="kd-form-input" id="kd-login-password" placeholder="••••••••" autocomplete="current-password">
+
+            <p class="kd-login-error" id="kd-login-error" hidden></p>
 
             <button type="submit" class="kd-btn-next kd-login-submit" id="kd-login-submit-btn">
               <span>Se connecter</span>
@@ -141,22 +150,40 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const modeTabs = overlay.querySelectorAll('.kd-login-tab');
     const nameGroup = overlay.querySelector('#kd-login-name-group');
+    const roleGroup = overlay.querySelector('#kd-login-role-group');
+    const roleBtns = overlay.querySelectorAll('.kd-role-btn');
     const title = overlay.querySelector('#kd-login-title');
     const sub = overlay.querySelector('#kd-login-sub');
     const form = overlay.querySelector('#kd-login-form');
+    const errorEl = overlay.querySelector('#kd-login-error');
     const successPanel = overlay.querySelector('#kd-login-success');
     const submitBtn = overlay.querySelector('#kd-login-submit-btn');
     const closeBtn = overlay.querySelector('.kd-login-close');
 
+    let currentMode = 'connexion';
+    let selectedRole = 'client';
+
+    roleBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        roleBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedRole = btn.dataset.role;
+      });
+    });
+
     function setMode(mode){
+      currentMode = mode;
+      errorEl.hidden = true;
       modeTabs.forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
       if (mode === 'inscription') {
         nameGroup.hidden = false;
+        roleGroup.hidden = false;
         title.textContent = 'Crée ton compte';
         sub.textContent = 'Rejoins Korador pour réserver plus vite.';
         submitBtn.querySelector('span').textContent = 'Créer mon compte';
       } else {
         nameGroup.hidden = true;
+        roleGroup.hidden = true;
         title.textContent = 'Content de te revoir';
         sub.textContent = 'Connecte-toi pour gérer tes réservations.';
         submitBtn.querySelector('span').textContent = 'Se connecter';
@@ -168,8 +195,10 @@ document.addEventListener('DOMContentLoaded', function () {
     function openLogin(){
       overlay.classList.add('kd-open');
       form.hidden = false;
+      errorEl.hidden = true;
       successPanel.classList.remove('kd-show');
       form.reset();
+      setMode('connexion');
     }
     function closeLogin(){
       overlay.classList.remove('kd-open');
@@ -179,22 +208,63 @@ document.addEventListener('DOMContentLoaded', function () {
     closeBtn.addEventListener('click', closeLogin);
     overlay.addEventListener('click', (e) => { if (e.target === overlay) closeLogin(); });
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const label = submitBtn.querySelector('span');
       const original = label.textContent;
-      submitBtn.disabled = true;
-      label.textContent = 'Connexion en cours...';
+      const email = document.getElementById('kd-login-identifier').value.trim();
+      const password = document.getElementById('kd-login-password').value;
+      const nom = document.getElementById('kd-login-name').value.trim();
 
-      // Pas de backend : simulation visuelle uniquement, aucune donnée n'est envoyée ni stockée.
-      setTimeout(() => {
+      errorEl.hidden = true;
+      submitBtn.disabled = true;
+
+      try {
+        if (typeof kdSignUp === 'undefined') {
+          throw new Error("auth.js n'est pas chargé sur cette page.");
+        }
+
+        let userId;
+
+        if (currentMode === 'inscription') {
+          label.textContent = 'Création du compte...';
+          const result = await kdSignUp({ email, password, nom, role: selectedRole });
+          userId = result.user?.id;
+        } else {
+          label.textContent = 'Connexion en cours...';
+          const result = await kdSignIn({ email, password });
+          userId = result.user?.id;
+        }
+
+        // Récupère le profil pour connaître le rôle et rediriger correctement
+        let role = selectedRole;
+        if (userId) {
+          try {
+            const profile = await kdGetProfile(userId);
+            role = profile.role;
+          } catch (err) { /* profil pas encore créé (trigger asynchrone) : on garde selectedRole */ }
+        }
+
         submitBtn.disabled = false;
         label.textContent = original;
         form.hidden = true;
         successPanel.classList.add('kd-show');
 
-        setTimeout(closeLogin, 1600);
-      }, 700);
+        setTimeout(() => {
+          closeLogin();
+          if (role === 'proprietaire') {
+            window.location.href = 'dashboard-proprietaire.html';
+          } else {
+            window.location.reload();
+          }
+        }, 1400);
+
+      } catch (err) {
+        submitBtn.disabled = false;
+        label.textContent = original;
+        errorEl.textContent = err.message || "Une erreur est survenue. Vérifie tes identifiants.";
+        errorEl.hidden = false;
+      }
     });
   }
 });

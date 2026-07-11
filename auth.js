@@ -3,8 +3,8 @@
 // ==========================================================
 // ⚠️ Remplace ces deux valeurs par celles de TON projet Supabase
 // (Dashboard Supabase > Project Settings > API)
-const SUPABASE_URL = 'https://klbgyejlqxeuyrxxorhy.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable__cifG7S3Xu5VWQn7Luos6Q_uCufqc_M';
+const SUPABASE_URL = 'https://TON-PROJET.supabase.co';
+const SUPABASE_ANON_KEY = 'TA_CLE_ANON_PUBLIQUE';
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -37,6 +37,23 @@ async function kdGetProfile(userId) {
     .single();
   if (error) throw error;
   return data;
+}
+
+// ---------- Vérifie le code de confirmation reçu par email (inscription) ----------
+async function kdVerifyOtp({ email, token }) {
+  const { data, error } = await supabaseClient.auth.verifyOtp({
+    email,
+    token,
+    type: 'signup'
+  });
+  if (error) throw error;
+  return data;
+}
+
+// ---------- Renvoie un nouveau code si l'utilisateur ne l'a pas reçu ----------
+async function kdResendCode({ email }) {
+  const { error } = await supabaseClient.auth.resend({ type: 'signup', email });
+  if (error) throw error;
 }
 
 // ---------- Déconnexion ----------

@@ -19,6 +19,7 @@
 
 /* Panneau de vérification du code (OTP) */
 .kd-login-otp[hidden]{ display:none; }
+.kd-login-form[hidden]{ display:none !important; }
 .kd-login-otp .kd-login-title{ margin-bottom:6px; }
 .kd-login-otp .kd-login-sub{ margin-bottom:20px; font-size:13.5px; color:var(--text-soft); }
 .kd-otp-input{

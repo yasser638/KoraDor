@@ -33,15 +33,43 @@
 }
 .kd-otp-resend:disabled{ opacity:.6; cursor:default; }
 
-/* Page de connexion dédiée */
+/* Page de connexion dédiée — mise en page 2 colonnes */
 .kd-login-page-wrap{
   display:flex; align-items:center; justify-content:center;
-  min-height:70vh; padding:60px 20px;
+  min-height:80vh; padding:50px 20px;
 }
+.kd-login-split{
+  display:grid; grid-template-columns:1fr 1.1fr; max-width:920px; width:100%;
+  border-radius:24px; overflow:hidden; box-shadow:0 30px 70px rgba(30,70,32,0.14);
+}
+
+/* Panneau visuel gauche */
+.kd-login-visual{
+  position:relative; overflow:hidden; background:var(--green-dark);
+  padding:48px 40px; display:flex; align-items:flex-end;
+}
+.kd-login-visual-blob{ position:absolute; border-radius:50%; opacity:.5; filter:blur(1px); }
+.kd-login-visual .kd-blob-1{ width:220px; height:220px; background:var(--green-mid); top:-70px; right:-50px; }
+.kd-login-visual .kd-blob-2{ width:160px; height:160px; background:var(--green-mid); bottom:-70px; left:-40px; opacity:.35; }
+.kd-login-visual-content{ position:relative; z-index:1; }
+.kd-login-visual-title{
+  font-size:36px; font-weight:800; color:var(--cream); line-height:1.15; margin:14px 0 12px;
+}
+.kd-login-visual-sub{ color:rgba(250,246,226,0.8); font-size:14.5px; line-height:1.6; max-width:280px; }
+.kd-login-visual-stats{ display:flex; gap:28px; margin-top:28px; }
+.kd-login-visual-stats strong{ display:block; font-size:22px; font-weight:800; color:var(--cream); }
+.kd-login-visual-stats span{ font-size:11.5px; color:rgba(250,246,226,0.7); font-weight:600; }
+
+/* Carte formulaire droite */
 .kd-login-page-card{
-  background:#fff; border:1px solid var(--green-line); border-radius:20px;
-  box-shadow:0 20px 50px rgba(30,70,32,0.10);
-  max-width:440px; width:100%; padding:36px;
+  background:#fff; padding:44px 40px;
 }
-.kd-login-page-card .kd-login-title{ font-size:22px; margin-bottom:6px; }
+.kd-login-page-card .kd-login-title{ font-size:23px; margin-bottom:6px; }
 .kd-login-page-card .kd-login-sub{ font-size:13.5px; color:var(--text-soft); margin-bottom:24px; }
+
+@media (max-width:800px){
+  .kd-login-split{ grid-template-columns:1fr; border-radius:20px; }
+  .kd-login-visual{ padding:36px 28px; min-height:180px; }
+  .kd-login-visual-title{ font-size:28px; }
+  .kd-login-page-card{ padding:32px 26px; }
+}

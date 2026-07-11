@@ -3,26 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KoraDor — Réservez vos terrains de foot à Casablanca</title>
+  <title>Korador — Réservez vos terrains de foot à Casablanca</title>
   <meta name="description" content="Réservez un terrain de foot à Casablanca en 3 clics : trouvez un créneau, rassemblez votre équipe ou rejoignez-en une, et jouez.">
   <meta property="og:title" content="Korador — Réservez vos terrains de foot à Casablanca">
   <meta property="og:description" content="Trouvez votre créneau, rassemblez votre équipe et jouez.">
   <meta property="og:type" content="website">
   <link rel="stylesheet" href="style.css?v=3">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <!-- Open Graph / partage réseaux sociaux -->
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="Korador — Réservation de terrains de foot à Casablanca">
-  <meta property="og:description" content="Trouve un terrain disponible, réserve en 3 clics et paie en ligne. Zéro double réservation, garanti.">
-  <meta property="og:image" content="https://korador.ma/og-image.png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:url" content="https://korador.ma/index.html">
-  <meta property="og:locale" content="fr_MA">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Korador — Réservation de terrains de foot à Casablanca">
-  <meta name="twitter:description" content="Trouve un terrain disponible, réserve en 3 clics et paie en ligne. Zéro double réservation, garanti.">
-  <meta name="twitter:image" content="https://korador.ma/og-image.png">
 </head>
 <body>
 
@@ -37,8 +24,8 @@
         <ul class="nav-links">
           <li><a href="index.html" class="active">Accueil</a></li>
           <li><a href="terrains.html">Terrains</a></li>
-          <li><a href="About.html">À propos</a></li>
-          <li><a href="Contact.html">Contact</a></li>
+          <li><a href="about.html">À propos</a></li>
+          <li><a href="contact.html">Contact</a></li>
         </ul>
         <button class="btn-login">Se connecter</button>
       </div>
@@ -46,7 +33,6 @@
 
     <main class="hero-block">
       <div class="hero-content">
-        <span class="kd-eyebrow"> 100% marocain, 100% foot amateur</span>
         <h1 class="hero-title">Kora<span class="accent">dor</span></h1>
         <p class="hero-subtitle">
           Réservez vos terrains facilement à Casablanca.<br>
@@ -141,12 +127,7 @@
         </button>
 
         <div class="kd-viewport">
-          <div class="kd-track" id="kd-track">
-            <!-- squelettes affichés le temps que script.js rende les vraies cartes -->
-            <div class="kd-slide" style="flex:0 0 33.333%;"><div class="kd-skel-card"><div class="kd-skel-img kd-skel-shimmer"></div><div class="kd-skel-body"><div class="kd-skel-line w-80 kd-skel-shimmer"></div><div class="kd-skel-line w-40 kd-skel-shimmer"></div><div class="kd-skel-line w-60 kd-skel-shimmer"></div><div class="kd-skel-btn kd-skel-shimmer"></div></div></div></div>
-            <div class="kd-slide" style="flex:0 0 33.333%;"><div class="kd-skel-card"><div class="kd-skel-img kd-skel-shimmer"></div><div class="kd-skel-body"><div class="kd-skel-line w-80 kd-skel-shimmer"></div><div class="kd-skel-line w-40 kd-skel-shimmer"></div><div class="kd-skel-line w-60 kd-skel-shimmer"></div><div class="kd-skel-btn kd-skel-shimmer"></div></div></div></div>
-            <div class="kd-slide" style="flex:0 0 33.333%;"><div class="kd-skel-card"><div class="kd-skel-img kd-skel-shimmer"></div><div class="kd-skel-body"><div class="kd-skel-line w-80 kd-skel-shimmer"></div><div class="kd-skel-line w-40 kd-skel-shimmer"></div><div class="kd-skel-line w-60 kd-skel-shimmer"></div><div class="kd-skel-btn kd-skel-shimmer"></div></div></div></div>
-          </div>
+          <div class="kd-track" id="kd-track"><!-- généré en JS --></div>
         </div>
       </div>
 
@@ -255,10 +236,7 @@
     </section>
 
     <footer class="footer">
-      <div>
-        <p class="copyright">© 2026 Korador. Tous droits réservés.</p>
-        <p class="kd-footer-tag"> Fait à Casablanca, pour les passionnés du foot amateur.</p>
-      </div>
+      <p class="copyright">© 2026 Korador. Tous droits réservés.</p>
       <div class="kd-social">
         <a href="#" aria-label="Instagram" class="insta-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1"></circle></svg>
@@ -335,24 +313,12 @@
             <h3>Vos informations</h3>
             <label class="kd-form-label">Nom complet</label>
             <input type="text" id="kd-modal-name" name="name" class="kd-form-input" placeholder="Ton nom" autocomplete="name">
-            <span class="kd-field-error" id="kd-modal-name-error"></span>
-
             <label class="kd-form-label">Téléphone</label>
             <input type="tel" id="kd-modal-phone" name="tel" class="kd-form-input" placeholder="06 XX XX XX XX" autocomplete="tel" inputmode="tel" pattern="[0-9+ ]*">
-            <span class="kd-field-error" id="kd-modal-phone-error"></span>
-
             <label class="kd-form-label">CIN</label>
             <input type="text" id="kd-modal-cin" name="cin" class="kd-form-input" placeholder="AB123456" autocomplete="off">
-            <span class="kd-field-error" id="kd-modal-cin-error"></span>
-
             <label class="kd-form-label">Email</label>
             <input type="email" id="kd-modal-email" name="email" class="kd-form-input" placeholder="toi@gmail.com" autocomplete="email" inputmode="email">
-            <span class="kd-field-error" id="kd-modal-email-error"></span>
-
-            <div class="kd-secure-badge">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-              <span>Paiement 100% sécurisé — tes informations ne sont jamais partagées.</span>
-            </div>
           </div>
 
           <div class="kd-stepper-footer">
@@ -366,6 +332,8 @@
   </div>
 
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
   <script src="reveal.js"></script>
   <script src="script.js"></script>
 

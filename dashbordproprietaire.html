@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Korador — Espace propriétaire</title>
+  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+</head>
+<body>
+
+  <div class="site-layout">
+
+    <nav class="navbar">
+      <div class="brand">
+        <span class="logo-ball"></span>
+        <h2>Kora<span class="accent">dor</span></h2>
+      </div>
+      <div class="nav-menu">
+        <ul class="nav-links">
+          <li><a href="index.html">Accueil</a></li>
+        </ul>
+        <button class="btn-login" id="kd-logout-btn">Se déconnecter</button>
+      </div>
+    </nav>
+
+    <main>
+      <div style="padding:60px 0;">
+        <span class="kd-eyebrow">Espace propriétaire</span>
+        <h1 class="kd-slider-title" style="margin-bottom:16px;">Bienvenue sur ton tableau de bord</h1>
+        <p style="color:var(--text-soft); max-width:520px;">
+          Cette page confirme que ta connexion en tant que propriétaire fonctionne.
+          Le vrai tableau de bord (planning, réservations, chiffre d'affaires) sera construit en Phase 5.
+        </p>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p class="copyright">© 2026 Korador. Tous droits réservés.</p>
+    </footer>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="auth.js" defer></script>
+  <script>
+    document.getElementById('kd-logout-btn').addEventListener('click', () => {
+      if (typeof kdSignOut === 'function') kdSignOut();
+    });
+  </script>
+
+</body>
+</html>

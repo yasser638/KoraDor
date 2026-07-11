@@ -1,0 +1,18 @@
+/* =========================================================
+   AJOUT : Choix de rôle + message d'erreur (modale connexion)
+   À COLLER À LA FIN de style.css
+   ========================================================= */
+
+.kd-role-choice{ display:flex; gap:10px; margin-bottom:14px; }
+.kd-role-btn{
+  flex:1; padding:12px; border:1.5px solid var(--green-line); border-radius:10px;
+  background:#fff; color:var(--text-soft); font-weight:600; font-size:13.5px;
+  cursor:pointer; font-family:inherit; transition:border-color .15s, background .15s, color .15s;
+}
+.kd-role-btn.active{ border-color:var(--green-dark); background:var(--green-dark); color:var(--cream); }
+
+.kd-login-error{
+  background:#fdecec; color:#b32e2e; font-size:13px; padding:10px 14px;
+  border-radius:8px; margin:10px 0 4px;
+}
+.kd-login-error[hidden]{ display:none; }

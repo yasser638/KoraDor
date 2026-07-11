@@ -16,7 +16,7 @@
   border-radius:8px; margin:10px 0 4px;
 }
 .kd-login-error[hidden]{ display:none; }
-.kd-login-form[hidden]{ display:none !important; }
+
 /* Panneau de vérification du code (OTP) */
 .kd-login-otp[hidden]{ display:none; }
 .kd-login-form[hidden]{ display:none !important; }
@@ -32,3 +32,16 @@
   font-family:inherit;
 }
 .kd-otp-resend:disabled{ opacity:.6; cursor:default; }
+
+/* Page de connexion dédiée */
+.kd-login-page-wrap{
+  display:flex; align-items:center; justify-content:center;
+  min-height:70vh; padding:60px 20px;
+}
+.kd-login-page-card{
+  background:#fff; border:1px solid var(--green-line); border-radius:20px;
+  box-shadow:0 20px 50px rgba(30,70,32,0.10);
+  max-width:440px; width:100%; padding:36px;
+}
+.kd-login-page-card .kd-login-title{ font-size:22px; margin-bottom:6px; }
+.kd-login-page-card .kd-login-sub{ font-size:13.5px; color:var(--text-soft); margin-bottom:24px; }

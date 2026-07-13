@@ -24,6 +24,15 @@ document.addEventListener('DOMContentLoaded', function () {
   let selectedRole = 'client';
   let pendingEmail = '';
 
+  // Mêmes règles que la modale de réservation (script.js), pour rester cohérent
+  function isValidMoroccanPhone(v){
+    const cleaned = v.replace(/[\s.-]/g, '');
+    return /^(?:\+212|00212|0)[5-7][0-9]{8}$/.test(cleaned);
+  }
+  function isValidCin(v){
+    return /^[a-zA-Z]{1,2}[0-9]{1,7}$/.test(v.trim());
+  }
+
   roleBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       roleBtns.forEach(b => b.classList.remove('active'));
@@ -68,6 +77,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const email = document.getElementById('kd-login-identifier').value.trim();
     const password = document.getElementById('kd-login-password').value;
     const nom = document.getElementById('kd-login-name').value.trim();
+    const telephone = document.getElementById('kd-login-phone').value.trim();
+    const cin = document.getElementById('kd-login-cin').value.trim();
 
     errorEl.hidden = true;
     submitBtn.disabled = true;
@@ -78,8 +89,15 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       if (currentMode === 'inscription') {
+        if (!isValidMoroccanPhone(telephone)) {
+          throw new Error("Numéro invalide (ex: 06 12 34 56 78).");
+        }
+        if (!isValidCin(cin)) {
+          throw new Error("CIN invalide (ex: AB123456).");
+        }
+
         label.textContent = 'Création du compte...';
-        await kdSignUp({ email, password, nom, role: selectedRole });
+        await kdSignUp({ email, password, nom, role: selectedRole, cin, telephone });
 
         pendingEmail = email;
         submitBtn.disabled = false;

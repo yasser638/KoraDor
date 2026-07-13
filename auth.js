@@ -28,6 +28,20 @@ async function kdSignIn({ email, password }) {
   return data;
 }
 
+// ---------- Vérifie le code à 6 chiffres reçu par email après l'inscription ----------
+async function kdVerifyOtp({ email, token, type = 'signup' }) {
+  const { data, error } = await supabaseClient.auth.verifyOtp({ email, token, type });
+  if (error) throw error;
+  return data;
+}
+
+// ---------- Renvoie un nouveau code de confirmation ----------
+async function kdResendCode({ email, type = 'signup' }) {
+  const { data, error } = await supabaseClient.auth.resend({ type, email });
+  if (error) throw error;
+  return data;
+}
+
 // ---------- Récupère le profil (et donc le rôle) de l'utilisateur connecté ----------
 async function kdGetProfile(userId) {
   const { data, error } = await supabaseClient

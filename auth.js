@@ -14,7 +14,8 @@ async function kdSignUp({ email, password, nom, role, cin, telephone }) {
     email,
     password,
     options: {
-      data: { nom, role, cin, telephone } // récupéré automatiquement par le trigger handle_new_user() côté SQL
+      data: { nom, role, cin, telephone }, // récupéré automatiquement par le trigger handle_new_user() côté SQL
+      emailRedirectTo: 'https://korador.vercel.app/login.html'
     }
   });
   if (error) throw error;

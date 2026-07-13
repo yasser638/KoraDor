@@ -10,11 +10,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const errorEl = document.getElementById('kd-login-error');
   const successPanel = document.getElementById('kd-login-success');
   const otpPanel = document.getElementById('kd-login-otp');
-  const otpForm = document.getElementById('kd-otp-form');
-  const otpInput = document.getElementById('kd-otp-code');
   const otpError = document.getElementById('kd-otp-error');
   const otpEmailHint = document.getElementById('kd-otp-email-hint');
-  const otpSubmitBtn = document.getElementById('kd-otp-submit-btn');
   const otpResendBtn = document.getElementById('kd-otp-resend-btn');
   const submitBtn = document.getElementById('kd-login-submit-btn');
 
@@ -104,9 +101,7 @@ document.addEventListener('DOMContentLoaded', function () {
         label.textContent = original;
         form.hidden = true;
         otpPanel.hidden = false;
-        otpEmailHint.textContent = `Entre le code à 6 chiffres envoyé à ${email}.`;
-        otpInput.value = '';
-        otpInput.focus();
+        otpEmailHint.textContent = `On vient d'envoyer un lien de confirmation à ${email}.`;
         return;
       }
 
@@ -137,45 +132,29 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  otpForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const label = otpSubmitBtn.querySelector('span');
-    const original = label.textContent;
-    const token = otpInput.value.trim();
-
-    otpError.hidden = true;
-    otpSubmitBtn.disabled = true;
-    label.textContent = 'Vérification...';
-
+  // Si l'utilisateur revient sur cette page après avoir cliqué le lien de
+  // confirmation reçu par email, Supabase a déjà créé sa session automatiquement
+  // (via l'URL). On le détecte ici et on le connecte sans rien lui demander de plus.
+  async function checkForConfirmedSession(){
+    if (typeof kdCheckSession === 'undefined') return;
     try {
-      if (typeof kdVerifyOtp === 'undefined') {
-        throw new Error("auth.js n'est pas chargé sur cette page.");
-      }
-      const result = await kdVerifyOtp({ email: pendingEmail, token });
-      const userId = result.user?.id;
+      const session = await kdCheckSession();
+      if (!session) return;
 
       let role = selectedRole;
-      if (userId) {
-        try {
-          const profile = await kdGetProfile(userId);
-          role = profile.role;
-        } catch (err) { /* fallback sur selectedRole */ }
-      }
+      try {
+        const profile = await kdGetProfile(session.user.id);
+        role = profile.role;
+      } catch (err) { /* fallback sur selectedRole */ }
 
-      otpSubmitBtn.disabled = false;
-      label.textContent = original;
+      form.hidden = true;
       otpPanel.hidden = true;
       successPanel.classList.add('kd-show');
 
       setTimeout(() => goToRoleBasedPage(role), 1200);
-
-    } catch (err) {
-      otpSubmitBtn.disabled = false;
-      label.textContent = original;
-      otpError.textContent = err.message || "Code invalide ou expiré. Réessaie.";
-      otpError.hidden = false;
-    }
-  });
+    } catch (err) { /* pas connecté, l'utilisateur continue normalement */ }
+  }
+  checkForConfirmedSession();
 
   otpResendBtn.addEventListener('click', async () => {
     otpError.hidden = true;
@@ -183,15 +162,15 @@ document.addEventListener('DOMContentLoaded', function () {
     otpResendBtn.textContent = 'Envoi...';
     try {
       await kdResendCode({ email: pendingEmail });
-      otpResendBtn.textContent = 'Code renvoyé !';
+      otpResendBtn.textContent = 'Email renvoyé !';
     } catch (err) {
-      otpError.textContent = err.message || "Impossible de renvoyer le code.";
+      otpError.textContent = err.message || "Impossible de renvoyer l'email.";
       otpError.hidden = false;
-      otpResendBtn.textContent = 'Renvoyer le code';
+      otpResendBtn.textContent = "Renvoyer l'email";
     }
     setTimeout(() => {
       otpResendBtn.disabled = false;
-      otpResendBtn.textContent = 'Renvoyer le code';
+      otpResendBtn.textContent = "Renvoyer l'email";
     }, 4000);
   });
 

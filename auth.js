@@ -9,12 +9,12 @@ const SUPABASE_ANON_KEY = 'sb_publishable__cifG7S3Xu5VWQn7Luos6Q_uCufqc_M';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ---------- Inscription ----------
-async function kdSignUp({ email, password, nom, role }) {
+async function kdSignUp({ email, password, nom, role, cin, telephone }) {
   const { data, error } = await supabaseClient.auth.signUp({
     email,
     password,
     options: {
-      data: { nom, role } // récupéré automatiquement par le trigger handle_new_user() côté SQL
+      data: { nom, role, cin, telephone } // récupéré automatiquement par le trigger handle_new_user() côté SQL
     }
   });
   if (error) throw error;
@@ -39,23 +39,6 @@ async function kdGetProfile(userId) {
   return data;
 }
 
-// ---------- Vérifie le code de confirmation reçu par email (inscription) ----------
-async function kdVerifyOtp({ email, token }) {
-  const { data, error } = await supabaseClient.auth.verifyOtp({
-    email,
-    token,
-    type: 'signup'
-  });
-  if (error) throw error;
-  return data;
-}
-
-// ---------- Renvoie un nouveau code si l'utilisateur ne l'a pas reçu ----------
-async function kdResendCode({ email }) {
-  const { error } = await supabaseClient.auth.resend({ type: 'signup', email });
-  if (error) throw error;
-}
-
 // ---------- Déconnexion ----------
 async function kdSignOut() {
   await supabaseClient.auth.signOut();
@@ -66,4 +49,18 @@ async function kdSignOut() {
 async function kdCheckSession() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   return session;
+}
+
+// ---------- Récupère en un seul appel la session + le profil (nom, cin, téléphone, rôle) ----------
+// Retourne null si personne n'est connecté ou si le profil n'est pas encore prêt.
+// Utile pour pré-remplir des formulaires (ex: la modale de réservation).
+async function kdGetCurrentProfile() {
+  const session = await kdCheckSession();
+  if (!session) return null;
+  try {
+    const profile = await kdGetProfile(session.user.id);
+    return { ...profile, email: session.user.email };
+  } catch (err) {
+    return null;
+  }
 }

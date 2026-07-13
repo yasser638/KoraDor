@@ -428,6 +428,28 @@ document.addEventListener('DOMContentLoaded', function () {
     stepNextBtn.textContent = n === totalSteps ? 'Confirmer la réservation' : 'Continuer';
   }
 
+  // Pré-remplit nom/téléphone/CIN/email à l'étape 3 si l'utilisateur est déjà connecté,
+  // pour qu'il n'ait pas à les retaper à chaque réservation.
+  async function prefillUserInfo(){
+    if (typeof kdGetCurrentProfile === 'undefined') return;
+    try {
+      const profile = await kdGetCurrentProfile();
+      if (!profile) return;
+
+      const nameInput = document.getElementById('kd-modal-name');
+      const phoneInput = document.getElementById('kd-modal-phone');
+      const cinInput = document.getElementById('kd-modal-cin');
+      const emailInput = document.getElementById('kd-modal-email');
+
+      if (nameInput && !nameInput.value && profile.nom) nameInput.value = profile.nom;
+      if (phoneInput && !phoneInput.value && profile.telephone) phoneInput.value = profile.telephone;
+      if (cinInput && !cinInput.value && profile.cin) cinInput.value = profile.cin;
+      if (emailInput && !emailInput.value && profile.email) emailInput.value = profile.email;
+    } catch (err) {
+      // Pas grave : l'utilisateur remplit simplement le formulaire manuellement.
+    }
+  }
+
   function openBookingModal(t){
     // remplit la liste déroulante avec tous les terrains, celui cliqué pré-sélectionné
     terrainSelect.innerHTML = allTerrains.map((x, i) =>
@@ -436,6 +458,7 @@ document.addEventListener('DOMContentLoaded', function () {
     fillModalDetails(t);
     goToStep(1);
     if (modalOverlay) modalOverlay.classList.add('open');
+    prefillUserInfo();
   }
 
   function closeBookingModal(){
@@ -449,7 +472,60 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // === Initialise EmailJS ===
+  // === Validation des informations (étape 3) ===
+
+  // Téléphone marocain : 06/07/05 XX XX XX XX, ou +212/00212 6/7/5 XX XX XX XX
+  function isValidMoroccanPhone(v){
+    const cleaned = v.replace(/[\s.-]/g, '');
+    return /^(?:\+212|00212|0)[5-7][0-9]{8}$/.test(cleaned);
+  }
+
+  // CIN marocaine : 1 ou 2 lettres suivies de 1 à 7 chiffres (ex: A123456, AB123456)
+  function isValidCIN(v){
+    return /^[A-Za-z]{1,2}[0-9]{1,7}$/.test(v.trim());
+  }
+
+  function isValidEmail(v){
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+  }
+
+  function setFieldState(input, errorEl, valide, message){
+    if (!input) return;
+    input.classList.toggle('kd-input-error', !valide);
+    if (errorEl) {
+      errorEl.textContent = valide ? '' : message;
+      errorEl.classList.toggle('kd-show', !valide);
+    }
+  }
+
+  function validateStep3(){
+    const nameInput = document.getElementById('kd-modal-name');
+    const phoneInput = document.getElementById('kd-modal-phone');
+    const cinInput = document.getElementById('kd-modal-cin');
+    const emailInput = document.getElementById('kd-modal-email');
+
+    const nameOk = nameInput && nameInput.value.trim().length >= 2;
+    const phoneOk = phoneInput && isValidMoroccanPhone(phoneInput.value);
+    const cinOk = cinInput && isValidCIN(cinInput.value);
+    const emailOk = emailInput && isValidEmail(emailInput.value);
+
+    setFieldState(nameInput, document.getElementById('kd-modal-name-error'), nameOk, 'Merci d\'indiquer ton nom complet.');
+    setFieldState(phoneInput, document.getElementById('kd-modal-phone-error'), phoneOk, 'Numéro invalide (ex: 06 12 34 56 78).');
+    setFieldState(cinInput, document.getElementById('kd-modal-cin-error'), cinOk, 'CIN invalide (ex: AB123456).');
+    setFieldState(emailInput, document.getElementById('kd-modal-email-error'), emailOk, 'Adresse email invalide.');
+
+    return nameOk && phoneOk && cinOk && emailOk;
+  }
+
+  // Efface l'erreur dès que l'utilisateur corrige le champ, sans attendre le prochain "Continuer"
+  ['kd-modal-name', 'kd-modal-phone', 'kd-modal-cin', 'kd-modal-email'].forEach(id => {
+    const input = document.getElementById(id);
+    if (input) input.addEventListener('input', () => {
+      if (input.classList.contains('kd-input-error')) validateStep3();
+    });
+  });
+
+
   // Remplace "TA_CLE_PUBLIQUE" par ta vraie clé publique EmailJS (Account > General)
   if (typeof emailjs !== 'undefined') {
     emailjs.init({ publicKey: 'TA_CLE_PUBLIQUE' });
@@ -464,21 +540,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       if (currentStep === 3) {
-        const nameInput = document.getElementById('kd-modal-name');
-        const phoneInput = document.getElementById('kd-modal-phone');
-        const cinInput = document.getElementById('kd-modal-cin');
-        const emailInput = document.getElementById('kd-modal-email');
-
-        const champs = [nameInput, phoneInput, cinInput, emailInput];
-        let tousValides = true;
-
-        champs.forEach(input => {
-          const valide = input && input.value.trim() !== '';
-          input.classList.toggle('kd-input-error', !valide);
-          if (!valide) tousValides = false;
-        });
-
-        if (!tousValides) {
+        if (!validateStep3()) {
           stepNextBtn.classList.add('kd-shake');
           setTimeout(() => stepNextBtn.classList.remove('kd-shake'), 400);
           return;

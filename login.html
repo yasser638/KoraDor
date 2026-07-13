@@ -5,10 +5,81 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Korador — Connexion</title>
   <link rel="stylesheet" href="style.css?v=3">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <!-- Styles propres à la page de connexion : tout est ici, rien à coller ailleurs -->
+  <style>
+    .kd-login-page-wrap{
+      max-width: 460px;
+      margin: 0 auto;
+      padding: 60px 20px 80px;
+    }
+    .kd-login-header{
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .kd-login-header .kd-eyebrow{
+      display: inline-flex;
+      justify-content: center;
+      padding-left: 16px;
+    }
+    .kd-login-header h1{
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--green-dark);
+      margin-top: 4px;
+    }
+    .kd-login-header p{
+      color: var(--text-soft);
+      font-size: 14.5px;
+      margin-top: 8px;
+    }
+
+    .kd-login-card{
+      background: #fff;
+      border: 2px solid var(--green-mid);
+      border-radius: 16px;
+      padding: 36px 32px;
+    }
+
+    .kd-login-title{ font-size: 20px; margin-bottom: 4px; }
+    .kd-login-sub{ margin-bottom: 20px; }
+
+    /* Rôle (garde exactement le même comportement, juste un habillage propre) */
+    .kd-role-choice{ display:flex; gap:10px; margin-bottom:14px; }
+    .kd-role-btn{
+      flex:1; padding:12px; border:1.5px solid var(--green-line); border-radius:10px;
+      background:#fff; color:var(--text-soft); font-weight:600; font-size:13.5px;
+      cursor:pointer; font-family:inherit; transition:border-color .15s, background .15s, color .15s;
+    }
+    .kd-role-btn.active{ border-color:var(--green-dark); background:var(--green-dark); color:var(--cream); }
+
+    .kd-login-error{
+      background:#fdecec; color:#b32e2e; font-size:13px; padding:10px 14px;
+      border-radius:8px; margin:10px 0 4px;
+    }
+    .kd-login-error[hidden]{ display:none; }
+
+    /* OTP */
+    .kd-login-otp[hidden]{ display:none; }
+    .kd-login-form[hidden]{ display:none !important; }
+    .kd-login-otp .kd-login-title{ margin-bottom:6px; }
+    .kd-otp-input{
+      text-align:center; font-size:24px; font-weight:700; letter-spacing:8px; text-indent:8px;
+      padding:14px; margin-bottom:6px;
+    }
+    .kd-otp-resend{
+      display:block; width:100%; text-align:center; background:none; border:none;
+      color:var(--green-mid); font-size:13px; font-weight:600; margin-top:12px; cursor:pointer;
+      font-family:inherit;
+    }
+    .kd-otp-resend:disabled{ opacity:.6; cursor:default; }
+
+    @media (max-width:480px){
+      .kd-login-card{ padding:28px 22px; }
+      .kd-login-header h1{ font-size:26px; }
+    }
+  </style>
 </head>
 <body>
 
@@ -30,90 +101,74 @@
     </nav>
 
     <main class="kd-login-page-wrap">
-      <div class="kd-login-split">
 
-        <div class="kd-login-visual">
-          <div class="kd-login-visual-content">
-            <span class="kd-login-visual-arabic">أهلاً بيك 👋</span>
-            <span class="kd-eyebrow" style="color:var(--cream);">Bienvenue</span>
-            <h2 class="kd-login-visual-title">Ton terrain<br>t'attend.</h2>
-            <p class="kd-login-visual-sub">Réserve, gère tes matchs et retrouve tes créneaux en un seul endroit.</p>
-          </div>
+      <div class="kd-login-header">
+        <span class="kd-eyebrow">🦁 100% marocain, 100% foot amateur</span>
+        <h1>Ton terrain t'attend</h1>
+        <p>Connecte-toi ou crée un compte pour réserver en quelques secondes.</p>
+      </div>
 
-          <div>
-            <div class="kd-login-visual-stats">
-              <div><strong>30+</strong><span>Terrains</span></div>
-              <div><strong>1 200+</strong><span>Matchs joués</span></div>
+      <div class="kd-login-card">
+
+        <div class="kd-login-tabs">
+          <button type="button" class="kd-login-tab active" data-mode="connexion">Connexion</button>
+          <button type="button" class="kd-login-tab" data-mode="inscription">Inscription</button>
+        </div>
+
+        <div class="kd-login-body">
+          <h2 class="kd-login-title" id="kd-login-title">Content de te revoir</h2>
+          <p class="kd-login-sub" id="kd-login-sub">Connecte-toi pour gérer tes réservations.</p>
+
+          <form class="kd-login-form" id="kd-login-form">
+            <div id="kd-login-name-group" hidden>
+              <label class="kd-form-label">Nom complet</label>
+              <input type="text" class="kd-form-input" id="kd-login-name" placeholder="Ton nom" autocomplete="name">
             </div>
-            <div class="kd-login-kickoff"><span class="kd-dot"></span>Casablanca &amp; environs</div>
-          </div>
-        </div>
-
-        <div class="kd-ticket-seam" aria-hidden="true">
-          <span class="kd-ticket-notch kd-notch-top"></span>
-          <span class="kd-ticket-notch kd-notch-bottom"></span>
-        </div>
-
-        <div class="kd-login-page-card">
-
-          <div class="kd-login-tabs">
-            <button type="button" class="kd-login-tab active" data-mode="connexion">Connexion</button>
-            <button type="button" class="kd-login-tab" data-mode="inscription">Inscription</button>
-          </div>
-
-          <div class="kd-login-body">
-            <h1 class="kd-login-title" id="kd-login-title">Content de te revoir</h1>
-            <p class="kd-login-sub" id="kd-login-sub">Connecte-toi pour gérer tes réservations.</p>
-
-            <form class="kd-login-form" id="kd-login-form">
-              <div id="kd-login-name-group" hidden>
-                <label class="kd-form-label">Nom complet</label>
-                <input type="text" class="kd-form-input" id="kd-login-name" placeholder="Ton nom" autocomplete="name">
+            <div id="kd-login-role-group" hidden>
+              <label class="kd-form-label">Je suis</label>
+              <div class="kd-role-choice">
+                <button type="button" class="kd-role-btn active" data-role="client">⚽ Joueur</button>
+                <button type="button" class="kd-role-btn" data-role="proprietaire">🏟️ Propriétaire</button>
               </div>
-              <div id="kd-login-role-group" hidden>
-                <label class="kd-form-label">Je suis</label>
-                <div class="kd-role-choice">
-                  <button type="button" class="kd-role-btn active" data-role="client">⚽ Joueur</button>
-                  <button type="button" class="kd-role-btn" data-role="proprietaire">🏟️ Propriétaire</button>
-                </div>
-              </div>
-              <label class="kd-form-label">Email</label>
-              <input type="email" class="kd-form-input" id="kd-login-identifier" placeholder="toi@gmail.com" autocomplete="username">
-              <label class="kd-form-label">Mot de passe</label>
-              <input type="password" class="kd-form-input" id="kd-login-password" placeholder="••••••••" autocomplete="current-password">
+            </div>
+            <label class="kd-form-label">Email</label>
+            <input type="email" class="kd-form-input" id="kd-login-identifier" placeholder="toi@gmail.com" autocomplete="username">
+            <label class="kd-form-label">Mot de passe</label>
+            <input type="password" class="kd-form-input" id="kd-login-password" placeholder="••••••••" autocomplete="current-password">
 
-              <p class="kd-login-error" id="kd-login-error" hidden></p>
+            <p class="kd-login-error" id="kd-login-error" hidden></p>
 
-              <button type="submit" class="kd-btn-next kd-login-submit" id="kd-login-submit-btn" style="width:100%;">
-                <span>Se connecter</span>
+            <button type="submit" class="kd-btn-next kd-login-submit" id="kd-login-submit-btn" style="width:100%;">
+              <span>Se connecter</span>
+            </button>
+          </form>
+
+          <div class="kd-login-success" id="kd-login-success">
+            <div class="kd-login-success-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <h3>C'est bon, tu es connecté !</h3>
+            <p>Redirection en cours...</p>
+          </div>
+
+          <div class="kd-login-otp" id="kd-login-otp" hidden>
+            <h2 class="kd-login-title">Vérifie ton email</h2>
+            <p class="kd-login-sub" id="kd-otp-email-hint">Entre le code à 6 chiffres qu'on vient de t'envoyer.</p>
+            <form id="kd-otp-form">
+              <input type="text" id="kd-otp-code" class="kd-form-input kd-otp-input" placeholder="000000" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+              <p class="kd-login-error" id="kd-otp-error" hidden></p>
+              <button type="submit" class="kd-btn-next kd-login-submit" id="kd-otp-submit-btn" style="width:100%;">
+                <span>Confirmer mon compte</span>
               </button>
+              <button type="button" class="kd-otp-resend" id="kd-otp-resend-btn">Renvoyer le code</button>
             </form>
-
-            <div class="kd-login-success" id="kd-login-success">
-              <div class="kd-login-success-icon">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              </div>
-              <h3>C'est bon, tu es connecté !</h3>
-              <p>Redirection en cours...</p>
-            </div>
-
-            <div class="kd-login-otp" id="kd-login-otp" hidden>
-              <h2 class="kd-login-title">Vérifie ton email</h2>
-              <p class="kd-login-sub" id="kd-otp-email-hint">Entre le code à 6 chiffres qu'on vient de t'envoyer.</p>
-              <form id="kd-otp-form">
-                <input type="text" id="kd-otp-code" class="kd-form-input kd-otp-input" placeholder="000000" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
-                <p class="kd-login-error" id="kd-otp-error" hidden></p>
-                <button type="submit" class="kd-btn-next kd-login-submit" id="kd-otp-submit-btn" style="width:100%;">
-                  <span>Confirmer mon compte</span>
-                </button>
-                <button type="button" class="kd-otp-resend" id="kd-otp-resend-btn">Renvoyer le code</button>
-              </form>
-            </div>
           </div>
-
         </div>
 
       </div>
+
+      <div class="kd-zellige-divider" style="margin-top:40px;"></div>
+
     </main>
 
     <footer class="footer">

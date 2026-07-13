@@ -162,15 +162,12 @@
 
           <div class="kd-login-otp" id="kd-login-otp" hidden>
             <h2 class="kd-login-title">Vérifie ton email</h2>
-            <p class="kd-login-sub" id="kd-otp-email-hint">Entre le code à 6 chiffres qu'on vient de t'envoyer.</p>
-            <form id="kd-otp-form">
-              <input type="text" id="kd-otp-code" class="kd-form-input kd-otp-input" placeholder="000000" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
-              <p class="kd-login-error" id="kd-otp-error" hidden></p>
-              <button type="submit" class="kd-btn-next kd-login-submit" id="kd-otp-submit-btn" style="width:100%;">
-                <span>Confirmer mon compte</span>
-              </button>
-              <button type="button" class="kd-otp-resend" id="kd-otp-resend-btn">Renvoyer le code</button>
-            </form>
+            <p class="kd-login-sub" id="kd-otp-email-hint">On vient de t'envoyer un lien de confirmation.</p>
+            <p style="color:var(--text-soft); font-size:13.5px; margin-bottom:20px; line-height:1.6;">
+              Clique sur le lien reçu par email, puis reviens sur cette page — tu seras connecté automatiquement.
+            </p>
+            <p class="kd-login-error" id="kd-otp-error" hidden></p>
+            <button type="button" class="kd-otp-resend" id="kd-otp-resend-btn">Renvoyer l'email</button>
           </div>
         </div>
 

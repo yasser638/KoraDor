@@ -18,9 +18,13 @@
   --cream-2:#F3EED4;
   --green-dark:#1E4620;
   --green-mid:#2F5D34;
+  --green-vivid:#2E9E4A;
   --green-line:#d9d3b4;
   --text-soft:#4C5A3F;
   --red-accent:#C1272D;
+  --amber-flood:#F2B705;
+  --font-display:'Bricolage Grotesque', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body:'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   /* Motif géométrique discret façon zellige, tuilé, très basse opacité */
   --zellige-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%232F5D34' stroke-width='1' opacity='0.12'%3E%3Cpath d='M28 0 L56 28 L28 56 L0 28 Z'/%3E%3Cpath d='M28 10 L46 28 L28 46 L10 28 Z'/%3E%3Ccircle cx='28' cy='28' r='3'/%3E%3C/g%3E%3C/svg%3E");
   --zellige-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23FAF6E2' stroke-width='1' opacity='0.10'%3E%3Cpath d='M28 0 L56 28 L28 56 L0 28 Z'/%3E%3Cpath d='M28 10 L46 28 L28 46 L10 28 Z'/%3E%3Ccircle cx='28' cy='28' r='3'/%3E%3C/g%3E%3C/svg%3E");
@@ -38,7 +42,7 @@ body::before{
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-body);
   scroll-behavior: smooth;
 }
 
@@ -88,6 +92,7 @@ body {
 }
 
 .brand h2 {
+  font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--green-dark);
@@ -115,7 +120,17 @@ body {
   text-decoration: none;
   font-size: 0.95rem;
   font-weight: 600;
+  position: relative;
+  transition: color .18s ease;
 }
+
+.nav-links a::after{
+  content:"";
+  position:absolute; left:0; right:100%; bottom:-4px; height:2px;
+  background:var(--amber-flood);
+  transition:right .22s ease;
+}
+.nav-links a:hover::after, .nav-links a.active::after{ right:0; }
 
 .nav-links a:hover, .nav-links a.active { color: var(--green-dark); }
 
@@ -149,9 +164,20 @@ body {
 .hero-content {
   text-align: center;
   width: 100%;
+  position: relative;
+}
+
+.hero-content::before{
+  content:"";
+  position:absolute;
+  top:-60px; left:50%; transform:translateX(-50%);
+  width:520px; height:320px;
+  background:radial-gradient(ellipse at center, rgba(242,183,5,0.16), transparent 70%);
+  pointer-events:none; z-index:-1;
 }
 
 .hero-title {
+  font-family: var(--font-display);
   font-size: 5.5rem;
   font-weight: 800;
   color: var(--green-dark);
@@ -181,11 +207,17 @@ body {
   gap: 12px;
   border: none;
   cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
 }
 
-.btn-explore:hover { background: var(--green-mid); }
+.btn-explore:hover {
+  background: var(--green-vivid);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 26px rgba(242,183,5,0.3), 0 6px 14px rgba(30,70,32,0.28);
+}
 
 .section-title {
+  font-family: var(--font-display);
   font-size: 2rem;
   font-weight: 800;
   margin-bottom: 40px;
@@ -274,7 +306,7 @@ body {
 .kd-stats{
   display:flex; justify-content:center; gap:60px; padding:20px 0 50px; flex-wrap:wrap; text-align:center;
 }
-.kd-stat-num{ font-size:32px; font-weight:800; color:var(--green-dark); }
+.kd-stat-num{ font-family:var(--font-display); font-size:32px; font-weight:800; color:var(--green-dark); }
 .kd-stat-label{ font-size:13px; color:var(--text-soft); font-weight:600; margin-top:2px; }
 
 /* --- Section carrousel --- */
@@ -288,7 +320,7 @@ body {
   content:""; position:absolute; left:0; top:50%; transform:translateY(-50%);
   width:6px; height:6px; border-radius:50%; background:var(--red-accent);
 }
-.kd-slider-title{ font-size:32px; font-weight:700; color:var(--green-dark); }
+.kd-slider-title{ font-family:var(--font-display); font-size:32px; font-weight:700; color:var(--green-dark); }
 
 /* --- Barre de recherche --- */
 .kd-search-bar{
@@ -370,9 +402,9 @@ body {
 .kd-search-btn{
   background:var(--green-dark); color:var(--cream); font-weight:700; font-size:14.5px;
   border:none; padding:0 30px; cursor:pointer; white-space:nowrap; font-family:inherit;
-  transition:background .2s; border-radius:0 9px 9px 0;
+  transition:background .2s, box-shadow .2s; border-radius:0 9px 9px 0;
 }
-.kd-search-btn:hover{ background:var(--green-mid); }
+.kd-search-btn:hover{ background:var(--green-vivid); box-shadow:inset 0 0 0 999px rgba(242,183,5,0.06); }
 
 /* --- Carrousel --- */
 .kd-carousel{ position:relative; max-width:100%; }
@@ -395,11 +427,12 @@ body {
 .kd-card{ max-width:100%;
   background:#fff; border:1px solid var(--green-line); border-radius:14px; overflow:hidden; height:100%;
   display:flex; flex-direction:column;
-  transition:transform .25s ease, box-shadow .25s ease;
+  transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
 }
 .kd-card:hover{
-  transform:translateY(-6px);
-  box-shadow:0 12px 28px rgba(30,70,32,0.14);
+  transform:translateY(-8px);
+  box-shadow:0 16px 32px rgba(30,70,32,0.16), 0 4px 10px rgba(242,183,5,0.18);
+  border-color:var(--green-vivid);
 }
 .kd-card-img{
   height:150px; position:relative; overflow:hidden;
@@ -410,7 +443,7 @@ body {
 .kd-badge{ font-size:12px; font-weight:600; padding:5px 12px; border-radius:20px; background:#fff; color:var(--green-dark); position:relative; z-index:1; }
 .kd-badge.busy{ background:rgba(193,39,45,0.12); color:var(--red-accent); }
 .kd-card-body{ padding:20px 22px 22px; flex:1; display:flex; flex-direction:column; }
-.kd-card-body h3{ font-size:17px; font-weight:700; margin-bottom:4px; }
+.kd-card-body h3{ font-family:var(--font-display); font-size:17px; font-weight:700; margin-bottom:4px; }
 .kd-quartier{ font-size:13.5px; color:var(--green-mid); font-weight:500; margin-bottom:10px; display:flex; align-items:center; gap:6px;}
 
 .kd-rating{ display:flex; align-items:center; gap:6px; margin-bottom:14px; }
@@ -439,12 +472,20 @@ body {
 /* --- Comment ça marche --- */
 .kd-howitworks{ max-width:1100px; margin:0 auto; padding:20px 0 80px; }
 .kd-steps{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
-.kd-step{ background:#fff; border:1px solid var(--green-line); border-radius:14px; padding:28px 26px; }
+.kd-step{
+  background:#fff; border:1px solid var(--green-line); border-radius:14px; padding:28px 26px;
+  transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.kd-step:hover{
+  transform:translateY(-5px);
+  box-shadow:0 14px 26px rgba(30,70,32,0.12), 0 3px 8px rgba(242,183,5,0.16);
+  border-color:var(--green-vivid);
+}
 .kd-step-num{
   width:36px; height:36px; border-radius:50%; background:var(--green-dark); color:var(--cream);
   display:flex; align-items:center; justify-content:center; font-weight:700; margin-bottom:16px;
 }
-.kd-step h3{ font-size:17px; font-weight:700; color:var(--green-dark); margin-bottom:8px; }
+.kd-step h3{ font-family:var(--font-display); font-size:17px; font-weight:700; color:var(--green-dark); margin-bottom:8px; }
 .kd-step p{ font-size:14px; color:var(--text-soft); line-height:1.55; }
 
 /* --- Témoignages --- */
@@ -573,9 +614,10 @@ select.kd-form-select{
 .kd-stepper-footer{ display:flex; justify-content:space-between; gap:10px; margin-top:24px; }
 .kd-btn-next, .kd-btn-back{
   border:none; padding:12px 26px; border-radius:8px; font-weight:700; font-size:14px; cursor:pointer; font-family:inherit;
+  transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
 }
 .kd-btn-next{ background:var(--green-dark); color:var(--cream); margin-left:auto; }
-.kd-btn-next:hover{ background:var(--green-mid); }
+.kd-btn-next:hover{ background:var(--green-vivid); transform:translateY(-2px); box-shadow:0 8px 18px rgba(242,183,5,0.28); }
 .kd-btn-next.kd-shake{ animation:kd-shake .4s; }
 .kd-input-error{ border-color:#b32e2e !important; }
 .kd-field-error{
@@ -605,6 +647,22 @@ select.kd-form-select{
 }
 .kd-fade.kd-visible{
   opacity:1; transform:translateY(0);
+}
+
+/* Cascade : les cartes "comment ça marche" apparaissent en léger décalage,
+   comme des joueurs qui entrent sur le terrain l'un après l'autre. */
+.kd-fade .kd-step{
+  opacity:0; transform:translateY(16px);
+  transition:opacity .5s ease, transform .5s ease;
+}
+.kd-fade.kd-visible .kd-step{ opacity:1; transform:translateY(0); }
+.kd-fade.kd-visible .kd-step:nth-child(1){ transition-delay:.05s; }
+.kd-fade.kd-visible .kd-step:nth-child(2){ transition-delay:.15s; }
+.kd-fade.kd-visible .kd-step:nth-child(3){ transition-delay:.25s; }
+.kd-fade.kd-visible .kd-step:nth-child(4){ transition-delay:.35s; }
+
+@media (prefers-reduced-motion:reduce){
+  .kd-fade, .kd-fade .kd-step{ transition:none; }
 }
 
 @media (max-width:600px){

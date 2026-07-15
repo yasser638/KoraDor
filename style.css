@@ -465,8 +465,9 @@ body {
   transition:background .18s ease, transform .18s ease, box-shadow .18s ease;
 }
 .kd-book-btn:hover{ background:var(--green-vivid); transform:translateY(-2px); box-shadow:0 8px 16px rgba(242,183,5,0.25); }
-.kd-card-actions{ display:flex; gap:8px; margin-top:14px; }
-.kd-card-actions .kd-book-btn, .kd-card-actions .kd-details-btn{ margin-top:0; flex:1; }
+.kd-card-actions{ display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+.kd-card-actions .kd-book-btn, .kd-card-actions .kd-details-btn{ margin-top:0; flex:1 1 100px; min-width:0; }
+.kd-card-actions .kd-share-btn{ flex-shrink:0; }
 .kd-details-btn{
   background:#fff; color:var(--green-dark); border:1.5px solid var(--green-line);
   font-weight:600; font-size:14px; padding:10px; border-radius:8px; cursor:pointer; font-family:inherit;
@@ -1122,3 +1123,81 @@ select.kd-form-select{
 
   body.kd-noscroll{ overflow:hidden; }
 }
+/* =========================================================
+   Écran de succès de réservation + invitation WhatsApp
+   ========================================================= */
+.kd-booking-success{
+  display:flex; flex-direction:column; align-items:center; text-align:center; padding:20px 6px 4px;
+}
+.kd-booking-success-icon{
+  width:60px; height:60px; border-radius:50%; background:rgba(47,93,52,0.12); color:var(--green-mid);
+  display:flex; align-items:center; justify-content:center; margin-bottom:18px;
+}
+.kd-booking-success h3{ font-size:20px; color:var(--green-dark); margin-bottom:8px; }
+.kd-booking-success-details{ font-size:13.5px; color:var(--text-soft); line-height:1.6; margin-bottom:24px; }
+
+.kd-whatsapp-invite{
+  display:flex; align-items:center; justify-content:center; gap:9px; width:100%;
+  background:#25D366; text-decoration:none;
+}
+.kd-whatsapp-invite:hover{ background:#20bd5a; }
+
+/* =========================================================
+   Dashboard propriétaire
+   ========================================================= */
+.kd-dash-stats{
+  display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:40px;
+}
+.kd-dash-stat-card{
+  background:#fff; border:1px solid var(--green-line); border-radius:14px; padding:20px 22px;
+  display:flex; flex-direction:column; gap:8px;
+}
+.kd-dash-stat-highlight{ border-color:var(--green-mid); background:rgba(47,93,52,0.05); }
+.kd-dash-stat-label{ font-size:12px; font-weight:700; color:var(--text-soft); text-transform:uppercase; letter-spacing:.4px; }
+.kd-dash-stat-value{ font-size:26px; font-weight:800; color:var(--green-dark); }
+
+.kd-dash-empty{
+  background:var(--cream-2); border:1px dashed var(--green-line); border-radius:14px;
+  padding:30px; text-align:center; margin-bottom:40px;
+}
+
+.kd-dash-section{ margin-bottom:60px; }
+.kd-dash-day-group{ margin-bottom:22px; }
+.kd-dash-day-title{
+  font-size:14px; font-weight:700; color:var(--green-dark); text-transform:capitalize;
+  margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--green-line);
+}
+.kd-dash-res-row{
+  display:grid; grid-template-columns:64px 1fr 1fr auto; align-items:center; gap:14px;
+  padding:12px 14px; border-radius:10px; background:#fff; border:1px solid var(--green-line);
+  margin-bottom:8px; font-size:13.5px;
+}
+.kd-dash-res-time{ font-weight:700; color:var(--green-dark); }
+.kd-dash-res-client{ color:var(--text-soft); }
+
+@media (max-width:900px){
+  .kd-dash-stats{ grid-template-columns:repeat(2, 1fr); }
+}
+@media (max-width:600px){
+  .kd-dash-stats{ grid-template-columns:1fr; }
+  .kd-dash-res-row{ grid-template-columns:1fr 1fr; row-gap:6px; }
+}
+
+/* =========================================================
+   Bouton de partage (WhatsApp / Instagram via le partage natif)
+   ========================================================= */
+.kd-share-btn{
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  width:42px; height:42px; border-radius:10px; border:1px solid var(--green-line);
+  background:#fff; color:var(--green-dark); cursor:pointer; transition:background .15s ease, border-color .15s ease;
+}
+.kd-share-btn:hover{ background:var(--cream-2); border-color:var(--green-mid); }
+
+/* Toast de confirmation "Lien copié !" */
+.kd-share-toast{
+  position:fixed; left:50%; bottom:32px; transform:translateX(-50%) translateY(20px);
+  background:var(--green-dark); color:var(--cream); font-size:13.5px; font-weight:600;
+  padding:12px 20px; border-radius:30px; box-shadow:0 10px 30px rgba(30,70,32,0.3);
+  z-index:200; opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;
+}
+.kd-share-toast.kd-show{ opacity:1; transform:translateX(-50%) translateY(0); }

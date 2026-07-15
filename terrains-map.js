@@ -79,6 +79,47 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // ---------- Grille de cartes ----------
   const gridEl = document.getElementById('kd-terrains-grid');
+  // ---------- Petit toast de confirmation (réutilisé pour "lien copié") ----------
+  function showShareToast(message){
+    let toast = document.getElementById('kd-share-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'kd-share-toast';
+      toast.className = 'kd-share-toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.classList.add('kd-show');
+    clearTimeout(toast._hideTimer);
+    toast._hideTimer = setTimeout(() => toast.classList.remove('kd-show'), 2200);
+  }
+
+  // ---------- Partage d'un terrain (WhatsApp / Instagram / etc.) ----------
+  function shareTerrain(t){
+    const shareUrl = `${window.location.origin}${window.location.pathname}#terrain=${encodeURIComponent(t.nom)}`;
+    const shareText = `⚽ Regarde ce terrain sur Korador : ${t.nom} (${t.quartier}) — ${t.prix} DH/heure, noté ${t.note.toFixed(1)}★`;
+
+    // Sur mobile : ouvre le sélecteur natif du téléphone (WhatsApp, Instagram, Messages...)
+    if (navigator.share) {
+      navigator.share({ title: 'Korador', text: shareText, url: shareUrl }).catch(() => {
+        // l'utilisateur a annulé le partage — rien à faire
+      });
+      return;
+    }
+
+    // Sur desktop (pas de Web Share API) : on copie le lien dans le presse-papier
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(shareUrl)
+        .then(() => showShareToast('Lien copié !'))
+        .catch(() => {
+          // dernier recours si le presse-papier est bloqué (permissions, contexte non sécurisé...)
+          window.open(`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`, '_blank', 'noopener');
+        });
+    } else {
+      window.open(`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`, '_blank', 'noopener');
+    }
+  }
+
   function renderGrid(){
     if (!gridEl) return;
 
@@ -111,6 +152,9 @@ document.addEventListener('DOMContentLoaded', function () {
           <div style="display:flex; gap:8px;" class="kd-card-actions">
             <button type="button" class="kd-details-btn" data-nom="${t.nom}" style="flex:1;">Voir plus</button>
             <a href="index.html#reserve=${encodeURIComponent(t.nom)}" class="kd-book-btn" style="flex:1; text-align:center; text-decoration:none;">Réserver</a>
+            <button type="button" class="kd-share-btn" data-nom="${t.nom}" aria-label="Partager ce terrain">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"></line><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"></line></svg>
+            </button>
           </div>
         </div>
       </div>
@@ -120,6 +164,13 @@ document.addEventListener('DOMContentLoaded', function () {
       btn.addEventListener('click', () => {
         const t = allTerrains.find(x => x.nom === btn.dataset.nom);
         if (t) openDetailModal(t);
+      });
+    });
+
+    gridEl.querySelectorAll('.kd-share-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const t = allTerrains.find(x => x.nom === btn.dataset.nom);
+        if (t) shareTerrain(t);
       });
     });
   }
@@ -328,6 +379,9 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('kd-detail-badge').classList.toggle('busy', !t.dispo);
     document.getElementById('kd-detail-reserve').href = `index.html#reserve=${encodeURIComponent(t.nom)}`;
 
+    const shareBtn = document.getElementById('kd-detail-share');
+    if (shareBtn) shareBtn.onclick = () => shareTerrain(t);
+
     renderDetailPhoto();
     detailOverlay.classList.add('open');
   }
@@ -358,5 +412,13 @@ document.addEventListener('DOMContentLoaded', function () {
   renderChips();
   renderGrid();
   initMap();
+
+  // === Ouvre automatiquement la fiche détaillée si on arrive depuis un lien partagé ===
+  const hash = window.location.hash; // ex: "#terrain=Stade%20Hay%20Hassani"
+  if (hash.startsWith('#terrain=')) {
+    const terrainName = decodeURIComponent(hash.replace('#terrain=', ''));
+    const match = allTerrains.find(t => t.nom === terrainName);
+    if (match) openDetailModal(match);
+  }
 
 });

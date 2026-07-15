@@ -439,7 +439,21 @@ body {
   display:flex; align-items:flex-start; justify-content:flex-end; padding:14px;
 }
 .kd-card-img img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0; }
-.kd-img-fallback{ position:absolute; inset:0; background:linear-gradient(135deg,var(--green-mid),var(--green-dark)); z-index:0; }
+.kd-img-fallback{
+  position:absolute; inset:0; z-index:0;
+  background-color:var(--green-dark);
+  background-image:
+    radial-gradient(circle at 50% 50%, rgba(250,246,226,0.14) 0%, transparent 55%),
+    var(--zellige-dark);
+  background-repeat:no-repeat, repeat;
+  display:flex; align-items:center; justify-content:center;
+}
+.kd-img-fallback::after{
+  content:"⚽";
+  font-size:34px;
+  opacity:.55;
+  filter:grayscale(1) brightness(1.6);
+}
 .kd-badge{ font-size:12px; font-weight:600; padding:5px 12px; border-radius:20px; background:#fff; color:var(--green-dark); position:relative; z-index:1; }
 .kd-badge.busy{ background:rgba(193,39,45,0.12); color:var(--red-accent); }
 .kd-card-body{ padding:20px 22px 22px; flex:1; display:flex; flex-direction:column; }
@@ -492,9 +506,19 @@ body {
   background:rgba(0,0,0,0.35); color:#fff; border:none; font-size:20px; cursor:pointer; line-height:1;
 }
 .kd-detail-gallery{
-  position:relative; height:240px; background:var(--green-dark); border-radius:18px 18px 0 0; overflow:hidden;
+  position:relative; height:240px; border-radius:18px 18px 0 0; overflow:hidden;
+  background-color:var(--green-dark);
+  background-image:
+    radial-gradient(circle at 50% 50%, rgba(250,246,226,0.14) 0%, transparent 55%),
+    var(--zellige-dark);
+  background-repeat:no-repeat, repeat;
+  display:flex; align-items:center; justify-content:center;
 }
-.kd-detail-gallery img{ width:100%; height:100%; object-fit:cover; display:block; }
+.kd-detail-gallery::after{
+  content:"⚽"; font-size:44px; opacity:.55; filter:grayscale(1) brightness(1.6);
+  position:absolute; z-index:0;
+}
+.kd-detail-gallery img{ width:100%; height:100%; object-fit:cover; display:block; position:relative; z-index:1; }
 .kd-detail-nav{
   position:absolute; top:50%; transform:translateY(-50%); width:34px; height:34px; border-radius:50%;
   background:rgba(255,255,255,0.85); border:none; font-size:20px; cursor:pointer; color:var(--green-dark);
@@ -1202,3 +1226,64 @@ select.kd-form-select{
   z-index:200; opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;
 }
 .kd-share-toast.kd-show{ opacity:1; transform:translateX(-50%) translateY(0); }
+/* =========================================================
+   MICRO-INTERACTIONS — petits détails tactiles et ludiques
+   ========================================================= */
+
+/* Feedback de pression : tout élément cliquable se tasse légèrement au clic */
+.btn-explore:active, .kd-btn-next:active, .kd-btn-back:active,
+.kd-book-btn:active, .kd-details-btn:active, .kd-search-btn:active,
+.kd-role-btn:active, .kd-chip:active, .kd-otp-resend:active,
+.kd-login-tab:active, .btn-login:active{
+  transform: scale(0.96);
+}
+
+/* Le ballon du logo s'anime légèrement au survol de la marque */
+.brand{ transition: transform .2s ease; }
+.logo-ball{ transition: transform .35s cubic-bezier(.34,1.56,.64,1); }
+.brand:hover .logo-ball{ transform: rotate(160deg) scale(1.15); }
+
+/* Icônes réseaux sociaux : petit cercle qui apparaît au survol */
+.insta-icon{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:34px; height:34px; border-radius:50%;
+  transition: color .18s ease, background .18s ease, transform .18s ease;
+}
+.insta-icon:hover{ background:var(--cream-2); transform:translateY(-2px); }
+
+/* Puces de filtre (quartier, etc.) : petit soulèvement au survol */
+.kd-chip{ transition: background .18s ease, transform .18s ease; }
+.kd-chip:hover{ transform: translateY(-1px); }
+
+/* Bouton retour en haut : cohérent avec la lueur ambrée du reste du site */
+.kd-back-to-top{ transition: background .2s ease, transform .2s ease, box-shadow .2s ease; }
+.kd-back-to-top:hover{ transform: translateY(-3px); box-shadow: 0 10px 22px rgba(242,183,5,0.3); }
+
+/* Étapes de la modale de réservation : réagissent même avant d'être actives */
+.kd-step-item{ transition: background .18s ease, opacity .18s ease; cursor:default; }
+.kd-step-item.done{ cursor:pointer; }
+.kd-step-item.done:hover{ background:rgba(255,255,255,0.08); }
+
+/* Étoiles de notation : léger effet d'apparition quand on survole une carte */
+.kd-card .kd-stars, .kd-step .kd-stars{ transition: transform .25s ease; }
+.kd-card:hover .kd-stars{ transform: scale(1.05); }
+
+/* Flèches de navigation de la galerie photo (fiche détaillée) */
+.kd-detail-nav{ transition: transform .18s ease, background .18s ease; }
+.kd-detail-nav:hover{ transform: translateY(-50%) scale(1.1); background:#fff; }
+
+/* Question FAQ : léger fond au survol pour signaler l'interactivité */
+.kd-faq-question{ transition: background .18s ease; }
+.kd-faq-question:hover{ background: var(--cream-2); }
+
+/* Anneau de focus cohérent avec la marque, pour la navigation au clavier */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{
+  outline: 2px solid var(--amber-flood);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .brand:hover .logo-ball{ transform:none; }
+  .kd-card:hover .kd-stars{ transform:none; }
+}

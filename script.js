@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
     { nom:"Green Arena",          quartier:"Bourgogne",    prix:220, dispo:false, note:4.1, avis:19, nbTerrains:3, photo:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTBNI-zlqi0Zoe7VFz1mUnzssjXQmFcqAlViDB4larZV6jHGrG9R6mYN5E&s=10" },
     { nom:"Stade Hay Hassani",    quartier:"Hay Hassani",  prix:180, dispo:true,  note:3.9, avis:34, nbTerrains:1, photo:"https://www.hatkosport.com/wp-content/uploads/2020/03/outdoor-field.jpg" },
     { nom:"City Foot Maarif",     quartier:"Maarif",       prix:280, dispo:true,  note:4.6, avis:41, nbTerrains:5, photo:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoI5T_63KeH8gmjYqne64wWZTEgvG6yz_kNyEAEwTC9kDv3B7TlofT8w-f&s=10" },
-    { nom:"Terrain Oasis Club",   quartier:"Oasis",        prix:240, dispo:false, note:4.3, avis:23, nbTerrains:2, photo:"https://quintessia.ma/wp-content/uploads/2024/11/WhatsApp-Image-2024-10-15-a-11.05.40_5ce343f8.jpg" }
+    { nom:"Terrain Oasis Club",   quartier:"Oasis",        prix:240, dispo:false, note:4.3, avis:23, nbTerrains:2, photo:null }
   ];
 
   function renderStars(note){
@@ -450,6 +450,39 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  function showBookingSuccess(t, subtxt, dateTxt, timeTxt, note){
+    const stepperLayout = document.querySelector('.kd-stepper-layout');
+    const successPanel = document.getElementById('kd-modal-success');
+    const summaryEl = document.getElementById('kd-modal-success-summary');
+    const whatsappLink = document.getElementById('kd-whatsapp-invite');
+
+    if (stepperLayout) stepperLayout.hidden = true;
+    if (summaryEl) summaryEl.textContent = `${t.nom}${subtxt} — ${dateTxt} à ${timeTxt}. ${note}`;
+
+    if (whatsappLink) {
+      const message =
+        `⚽ Match programmé sur Korador !\n` +
+        `📍 ${t.nom}${subtxt} — ${t.quartier}\n` +
+        `📅 ${dateTxt} à ${timeTxt}\n` +
+        `💰 ${t.prix} DH / heure\n\n` +
+        `On complète l'équipe, vous êtes chauds ?`;
+      whatsappLink.href = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    }
+
+    if (successPanel) successPanel.hidden = false;
+  }
+
+  const modalSuccessCloseBtn = document.getElementById('kd-modal-success-close');
+  if (modalSuccessCloseBtn) {
+    modalSuccessCloseBtn.addEventListener('click', () => {
+      const stepperLayout = document.querySelector('.kd-stepper-layout');
+      const successPanel = document.getElementById('kd-modal-success');
+      if (stepperLayout) stepperLayout.hidden = false;
+      if (successPanel) successPanel.hidden = true;
+      closeBookingModal();
+    });
+  }
+
   function openBookingModal(t){
     // remplit la liste déroulante avec tous les terrains, celui cliqué pré-sélectionné
     terrainSelect.innerHTML = allTerrains.map((x, i) =>
@@ -576,17 +609,14 @@ document.addEventListener('DOMContentLoaded', function () {
           // Remplace "SERVICE_ID" et "TEMPLATE_ID" par les tiens (EmailJS > Email Services / Email Templates)
           emailjs.send('SERVICE_ID', 'TEMPLATE_ID', detailsReservation)
             .then(() => {
-              alert(`Réservation confirmée pour ${t.nom}${subtxt} le ${dateTxt} à ${timeTxt} ! Un email de confirmation a été envoyé à ${email}.`);
-              closeBookingModal();
+              showBookingSuccess(t, subtxt, dateTxt, timeTxt, `Un email de confirmation a été envoyé à ${email}.`);
             })
             .catch((err) => {
               console.error('Erreur envoi email :', err);
-              alert(`Réservation confirmée pour ${t.nom}${subtxt} le ${dateTxt} à ${timeTxt} ! (l'email n'a pas pu être envoyé, vérifie la config EmailJS)`);
-              closeBookingModal();
+              showBookingSuccess(t, subtxt, dateTxt, timeTxt, "(l'email n'a pas pu être envoyé, vérifie la config EmailJS)");
             });
         } else {
-          alert(`Réservation confirmée pour ${t.nom}${subtxt} le ${dateTxt} à ${timeTxt} ! (démo — EmailJS non chargé)`);
-          closeBookingModal();
+          showBookingSuccess(t, subtxt, dateTxt, timeTxt, '(démo — EmailJS non chargé)');
         }
       }
     });

@@ -462,6 +462,7 @@ body {
 .kd-book-btn{
   margin-top:14px; width:100%; text-align:center; background:var(--green-dark); color:var(--cream);
   font-weight:600; font-size:14px; padding:10px; border-radius:8px; border:none; cursor:pointer;
+  font-family:inherit; text-decoration:none; display:inline-block;
   transition:background .18s ease, transform .18s ease, box-shadow .18s ease;
 }
 .kd-book-btn:hover{ background:var(--green-vivid); transform:translateY(-2px); box-shadow:0 8px 16px rgba(242,183,5,0.25); }

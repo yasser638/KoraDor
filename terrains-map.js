@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', function () {
           </div>
           <div style="display:flex; gap:8px;" class="kd-card-actions">
             <button type="button" class="kd-details-btn" data-nom="${t.nom}" style="flex:1;">Voir plus</button>
-            <a href="index.html#reserve=${encodeURIComponent(t.nom)}" class="kd-book-btn" style="flex:1; text-align:center; text-decoration:none;">Réserver</a>
+            <button type="button" class="kd-book-btn kd-reserve-btn" data-nom="${t.nom}" style="flex:1; text-align:center;">Réserver</button>
             <button type="button" class="kd-share-btn" data-nom="${t.nom}" aria-label="Partager ce terrain">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"></line><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"></line></svg>
             </button>
@@ -164,6 +164,13 @@ document.addEventListener('DOMContentLoaded', function () {
       btn.addEventListener('click', () => {
         const t = allTerrains.find(x => x.nom === btn.dataset.nom);
         if (t) openDetailModal(t);
+      });
+    });
+
+    gridEl.querySelectorAll('.kd-reserve-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const t = allTerrains.find(x => x.nom === btn.dataset.nom);
+        if (t) openBookingModal(t);
       });
     });
 
@@ -206,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function () {
           <strong>${t.nom}</strong><br>
           <span>${t.quartier}</span><br>
           <span>${t.prix} DH / heure — ★ ${t.note.toFixed(1)} (${t.avis} avis)</span><br>
-          <a href="index.html#reserve=${encodeURIComponent(t.nom)}">Réserver ce terrain</a>
+          <a href="#" onclick="event.preventDefault(); window.kdOpenBookingByName('${t.nom.replace(/'/g, "\\'")}')">Réserver ce terrain</a>
         </div>
       `);
       markerRefs.push({ terrain: t, marker });
@@ -377,7 +384,14 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('kd-detail-horaires').textContent = t.horaires || '';
     document.getElementById('kd-detail-badge').textContent = t.dispo ? 'Disponible' : 'Occupé';
     document.getElementById('kd-detail-badge').classList.toggle('busy', !t.dispo);
-    document.getElementById('kd-detail-reserve').href = `index.html#reserve=${encodeURIComponent(t.nom)}`;
+
+    const reserveBtn = document.getElementById('kd-detail-reserve');
+    reserveBtn.href = '#';
+    reserveBtn.onclick = (e) => {
+      e.preventDefault();
+      closeDetailModal();
+      openBookingModal(t);
+    };
 
     const shareBtn = document.getElementById('kd-detail-share');
     if (shareBtn) shareBtn.onclick = () => shareTerrain(t);
@@ -406,6 +420,321 @@ document.addEventListener('DOMContentLoaded', function () {
   if (detailOverlay) detailOverlay.addEventListener('click', (e) => {
     if (e.target === detailOverlay) closeDetailModal();
   });
+
+  // =========================================================
+  // Modale de réservation multi-étapes (portée depuis script.js
+  // pour pouvoir réserver directement depuis cette page)
+  // =========================================================
+  const modalCalGrid = document.getElementById('kd-cal-grid');
+  const modalCalMonthLabel = document.getElementById('kd-cal-month-label');
+  const modalCalPrev = document.getElementById('kd-cal-prev');
+  const modalCalNext = document.getElementById('kd-cal-next');
+  const modalTimeGrid = document.getElementById('kd-time-grid');
+
+  let modalViewYear = today.getFullYear();
+  let modalViewMonth = today.getMonth();
+  let modalSelectedDate = null;
+  let modalSelectedTime = null;
+
+  function renderModalCalendar(){
+    modalCalMonthLabel.textContent = `${moisNoms[modalViewMonth]} ${modalViewYear}`;
+    modalCalGrid.innerHTML = '';
+
+    const firstDay = new Date(modalViewYear, modalViewMonth, 1);
+    const startOffset = (firstDay.getDay() + 6) % 7;
+    const daysInMonth = new Date(modalViewYear, modalViewMonth + 1, 0).getDate();
+
+    for (let i = 0; i < startOffset; i++) {
+      const filler = document.createElement('button');
+      filler.className = 'kd-cal-day other-month';
+      filler.disabled = true;
+      modalCalGrid.appendChild(filler);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cellDate = new Date(modalViewYear, modalViewMonth, d);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'kd-cal-day';
+      btn.textContent = d;
+
+      if (cellDate < today) {
+        btn.classList.add('disabled');
+        btn.disabled = true;
+      } else {
+        if (modalSelectedDate && cellDate.getTime() === modalSelectedDate.getTime()) {
+          btn.classList.add('selected');
+        }
+        btn.addEventListener('click', () => {
+          modalSelectedDate = cellDate;
+          renderModalCalendar();
+        });
+      }
+      modalCalGrid.appendChild(btn);
+    }
+  }
+
+  function renderModalTimeSlots(){
+    modalTimeGrid.innerHTML = heures.map(h =>
+      `<button type="button" class="kd-time-slot${h === modalSelectedTime ? ' selected' : ''}" data-time="${h}">${h}</button>`
+    ).join('');
+    modalTimeGrid.querySelectorAll('.kd-time-slot').forEach(btn => {
+      btn.addEventListener('click', () => {
+        modalSelectedTime = btn.dataset.time;
+        renderModalTimeSlots();
+      });
+    });
+  }
+
+  if (modalCalPrev) modalCalPrev.addEventListener('click', () => {
+    modalViewMonth--; if (modalViewMonth < 0) { modalViewMonth = 11; modalViewYear--; }
+    renderModalCalendar();
+  });
+  if (modalCalNext) modalCalNext.addEventListener('click', () => {
+    modalViewMonth++; if (modalViewMonth > 11) { modalViewMonth = 0; modalViewYear++; }
+    renderModalCalendar();
+  });
+
+  if (modalCalGrid) renderModalCalendar();
+  if (modalTimeGrid) renderModalTimeSlots();
+
+  const modalOverlay = document.getElementById('kd-modal-overlay');
+  const modalClose = document.getElementById('kd-modal-close');
+  const terrainSelect = document.getElementById('kd-modal-terrain-select');
+  const subterrainLabel = document.getElementById('kd-modal-subterrain-label');
+  const subterrainSelect = document.getElementById('kd-modal-subterrain-select');
+  const stepItems = document.querySelectorAll('.kd-step-item');
+  const stepPanels = document.querySelectorAll('.kd-step-panel');
+  const stepBackBtn = document.getElementById('kd-step-back');
+  const stepNextBtn = document.getElementById('kd-step-next');
+  let currentStep = 1;
+  const totalSteps = stepItems.length;
+
+  function fillModalDetails(t){
+    document.getElementById('kd-modal-quartier').textContent = t.quartier;
+    document.getElementById('kd-modal-prix').textContent = t.prix + ' DH / heure';
+    document.getElementById('kd-modal-note').textContent = t.note.toFixed(1) + ' ★ (' + t.avis + ' avis)';
+
+    if (t.nbTerrains > 1) {
+      subterrainSelect.innerHTML = Array.from({ length: t.nbTerrains }, (_, i) =>
+        `<option value="${i + 1}">Terrain ${i + 1}</option>`
+      ).join('');
+      subterrainLabel.hidden = false;
+      subterrainSelect.hidden = false;
+    } else {
+      subterrainLabel.hidden = true;
+      subterrainSelect.hidden = true;
+    }
+  }
+
+  function goToModalStep(n){
+    currentStep = n;
+    stepItems.forEach(item => {
+      const s = parseInt(item.dataset.step, 10);
+      item.classList.toggle('active', s === n);
+      item.classList.toggle('done', s < n);
+    });
+    stepPanels.forEach(panel => {
+      panel.hidden = parseInt(panel.dataset.panel, 10) !== n;
+    });
+    stepBackBtn.hidden = n === 1;
+    stepNextBtn.textContent = n === totalSteps ? 'Confirmer la réservation' : 'Continuer';
+  }
+
+  // Affiche l'écran de succès (avec le lien d'invitation WhatsApp) à la place du formulaire
+  function showBookingSuccess(detailsText, whatsappUrl){
+    stepPanels.forEach(panel => { panel.hidden = true; });
+    const successPanel = document.querySelector('.kd-step-panel[data-panel="success"]');
+    if (successPanel) successPanel.hidden = false;
+
+    const detailsEl = document.getElementById('kd-booking-success-details');
+    if (detailsEl) detailsEl.textContent = detailsText;
+
+    const waBtn = document.getElementById('kd-whatsapp-invite-btn');
+    if (waBtn) waBtn.href = whatsappUrl;
+
+    const footer = document.getElementById('kd-stepper-footer');
+    if (footer) footer.hidden = true;
+
+    stepItems.forEach(item => item.classList.add('done'));
+  }
+
+  // Pré-remplit nom/téléphone/CIN/email si l'utilisateur est déjà connecté
+  async function prefillUserInfo(){
+    if (typeof kdGetCurrentProfile === 'undefined') return;
+    try {
+      const profile = await kdGetCurrentProfile();
+      if (!profile) return;
+
+      const nameInput = document.getElementById('kd-modal-name');
+      const phoneInput = document.getElementById('kd-modal-phone');
+      const cinInput = document.getElementById('kd-modal-cin');
+      const emailInput = document.getElementById('kd-modal-email');
+
+      if (nameInput && !nameInput.value && profile.nom) nameInput.value = profile.nom;
+      if (phoneInput && !phoneInput.value && profile.telephone) phoneInput.value = profile.telephone;
+      if (cinInput && !cinInput.value && profile.cin) cinInput.value = profile.cin;
+      if (emailInput && !emailInput.value && profile.email) emailInput.value = profile.email;
+    } catch (err) {
+      // Pas grave : l'utilisateur remplit simplement le formulaire manuellement.
+    }
+  }
+
+  function openBookingModal(t){
+    terrainSelect.innerHTML = allTerrains.map((x, i) =>
+      `<option value="${i}" ${x.nom === t.nom ? 'selected' : ''}>${x.nom} — ${x.quartier}</option>`
+    ).join('');
+    fillModalDetails(t);
+    const footer = document.getElementById('kd-stepper-footer');
+    if (footer) footer.hidden = false;
+    goToModalStep(1);
+    if (modalOverlay) modalOverlay.classList.add('open');
+    prefillUserInfo();
+  }
+
+  function closeBookingModal(){
+    if (modalOverlay) modalOverlay.classList.remove('open');
+  }
+
+  // Pont global : nécessaire car le popup Leaflet est injecté comme HTML brut
+  // (pas de closure JS directe possible depuis son contenu)
+  window.kdOpenBookingByName = function(nom){
+    const t = allTerrains.find(x => x.nom === nom);
+    if (t) openBookingModal(t);
+  };
+
+  if (terrainSelect) {
+    terrainSelect.addEventListener('change', (e) => {
+      const t = allTerrains[parseInt(e.target.value, 10)];
+      if (t) fillModalDetails(t);
+    });
+  }
+
+  // === Validation des informations (étape 3) ===
+  function isValidMoroccanPhone(v){
+    const cleaned = v.replace(/[\s.-]/g, '');
+    return /^(?:\+212|00212|0)[5-7][0-9]{8}$/.test(cleaned);
+  }
+  function isValidCIN(v){
+    return /^[A-Za-z]{1,2}[0-9]{1,7}$/.test(v.trim());
+  }
+  function isValidEmail(v){
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+  }
+  function setFieldState(input, errorEl, valide, message){
+    if (!input) return;
+    input.classList.toggle('kd-input-error', !valide);
+    if (errorEl) {
+      errorEl.textContent = valide ? '' : message;
+      errorEl.classList.toggle('kd-show', !valide);
+    }
+  }
+  function validateStep3(){
+    const nameInput = document.getElementById('kd-modal-name');
+    const phoneInput = document.getElementById('kd-modal-phone');
+    const cinInput = document.getElementById('kd-modal-cin');
+    const emailInput = document.getElementById('kd-modal-email');
+
+    const nameOk = nameInput && nameInput.value.trim().length >= 2;
+    const phoneOk = phoneInput && isValidMoroccanPhone(phoneInput.value);
+    const cinOk = cinInput && isValidCIN(cinInput.value);
+    const emailOk = emailInput && isValidEmail(emailInput.value);
+
+    setFieldState(nameInput, document.getElementById('kd-modal-name-error'), nameOk, 'Merci d\'indiquer ton nom complet.');
+    setFieldState(phoneInput, document.getElementById('kd-modal-phone-error'), phoneOk, 'Numéro invalide (ex: 06 12 34 56 78).');
+    setFieldState(cinInput, document.getElementById('kd-modal-cin-error'), cinOk, 'CIN invalide (ex: AB123456).');
+    setFieldState(emailInput, document.getElementById('kd-modal-email-error'), emailOk, 'Adresse email invalide.');
+
+    return nameOk && phoneOk && cinOk && emailOk;
+  }
+
+  ['kd-modal-name', 'kd-modal-phone', 'kd-modal-cin', 'kd-modal-email'].forEach(id => {
+    const input = document.getElementById(id);
+    if (input) input.addEventListener('input', () => {
+      if (input.classList.contains('kd-input-error')) validateStep3();
+    });
+  });
+
+  // Remplace "TA_CLE_PUBLIQUE" par ta vraie clé publique EmailJS (Account > General)
+  if (typeof emailjs !== 'undefined') {
+    emailjs.init({ publicKey: 'TA_CLE_PUBLIQUE' });
+  }
+
+  if (stepNextBtn) {
+    stepNextBtn.addEventListener('click', () => {
+      if (currentStep === 2 && (!modalSelectedDate || !modalSelectedTime)) {
+        stepNextBtn.classList.add('kd-shake');
+        setTimeout(() => stepNextBtn.classList.remove('kd-shake'), 400);
+        return;
+      }
+
+      if (currentStep === 3) {
+        if (!validateStep3()) {
+          stepNextBtn.classList.add('kd-shake');
+          setTimeout(() => stepNextBtn.classList.remove('kd-shake'), 400);
+          return;
+        }
+      }
+
+      if (currentStep < totalSteps) {
+        goToModalStep(currentStep + 1);
+      } else {
+        const t = allTerrains[parseInt(terrainSelect.value, 10)];
+        const subtxt = t.nbTerrains > 1 ? ` (Terrain ${subterrainSelect.value})` : '';
+        const dateTxt = modalSelectedDate ? modalSelectedDate.toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '—';
+        const timeTxt = modalSelectedTime || '—';
+
+        const nom = document.getElementById('kd-modal-name').value.trim();
+        const telephone = document.getElementById('kd-modal-phone').value.trim();
+        const cin = document.getElementById('kd-modal-cin').value.trim();
+        const email = document.getElementById('kd-modal-email').value.trim();
+
+        const detailsReservation = {
+          to_email: email,
+          client_nom: nom,
+          client_telephone: telephone,
+          client_cin: cin,
+          terrain_nom: t.nom + subtxt,
+          terrain_quartier: t.quartier,
+          terrain_prix: t.prix + ' DH / heure',
+          date_reservation: dateTxt,
+          heure_reservation: timeTxt
+        };
+
+        const successDetails = `${t.nom}${subtxt} — ${t.quartier}, le ${dateTxt} à ${timeTxt}.`;
+        const waMessage = `⚽ On joue à ${t.nom}${subtxt} (${t.quartier}) le ${dateTxt} à ${timeTxt} ! Rejoins-nous 👇\nhttps://korador.vercel.app/terrains.html`;
+        const waUrl = `https://wa.me/?text=${encodeURIComponent(waMessage)}`;
+
+        if (typeof emailjs !== 'undefined') {
+          // Remplace "SERVICE_ID" et "TEMPLATE_ID" par les tiens (EmailJS > Email Services / Email Templates)
+          emailjs.send('SERVICE_ID', 'TEMPLATE_ID', detailsReservation)
+            .then(() => {
+              showBookingSuccess(`${successDetails} Un email de confirmation a été envoyé à ${email}.`, waUrl);
+            })
+            .catch((err) => {
+              console.error('Erreur envoi email :', err);
+              showBookingSuccess(`${successDetails} (l'email n'a pas pu être envoyé, vérifie la config EmailJS)`, waUrl);
+            });
+        } else {
+          showBookingSuccess(`${successDetails} (démo — EmailJS non chargé)`, waUrl);
+        }
+      }
+    });
+  }
+
+  const bookingSuccessCloseBtn = document.getElementById('kd-booking-success-close');
+  if (bookingSuccessCloseBtn) {
+    bookingSuccessCloseBtn.addEventListener('click', closeBookingModal);
+  }
+
+  if (stepBackBtn) {
+    stepBackBtn.addEventListener('click', () => goToModalStep(Math.max(1, currentStep - 1)));
+  }
+
+  if (modalClose) modalClose.addEventListener('click', closeBookingModal);
+  if (modalOverlay) {
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeBookingModal(); });
+  }
 
   // ---------- Initialisation ----------
   updateHeroStats();

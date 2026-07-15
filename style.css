@@ -462,8 +462,62 @@ body {
 .kd-book-btn{
   margin-top:14px; width:100%; text-align:center; background:var(--green-dark); color:var(--cream);
   font-weight:600; font-size:14px; padding:10px; border-radius:8px; border:none; cursor:pointer;
+  transition:background .18s ease, transform .18s ease, box-shadow .18s ease;
 }
+.kd-book-btn:hover{ background:var(--green-vivid); transform:translateY(-2px); box-shadow:0 8px 16px rgba(242,183,5,0.25); }
+.kd-card-actions{ display:flex; gap:8px; margin-top:14px; }
+.kd-card-actions .kd-book-btn, .kd-card-actions .kd-details-btn{ margin-top:0; flex:1; }
+.kd-details-btn{
+  background:#fff; color:var(--green-dark); border:1.5px solid var(--green-line);
+  font-weight:600; font-size:14px; padding:10px; border-radius:8px; cursor:pointer; font-family:inherit;
+  transition:border-color .18s ease, background .18s ease;
+}
+.kd-details-btn:hover{ border-color:var(--green-vivid); background:var(--cream-2); }
 .kd-no-results{ text-align:center; padding:48px 20px; color:var(--text-soft); font-size:14.5px; }
+
+/* ===== Fiche détaillée d'un terrain ===== */
+.kd-detail-overlay{
+  display:none; position:fixed; inset:0; background:rgba(15,30,16,0.55);
+  align-items:center; justify-content:center; z-index:130; padding:20px;
+}
+.kd-detail-overlay.open{ display:flex; }
+.kd-detail-modal{
+  background:#fff; border-radius:18px; max-width:560px; width:100%; max-height:90vh;
+  overflow-y:auto; position:relative; box-shadow:0 30px 70px rgba(0,0,0,0.3);
+}
+.kd-detail-close{
+  position:absolute; top:14px; right:14px; z-index:2; width:32px; height:32px; border-radius:50%;
+  background:rgba(0,0,0,0.35); color:#fff; border:none; font-size:20px; cursor:pointer; line-height:1;
+}
+.kd-detail-gallery{
+  position:relative; height:240px; background:var(--green-dark); border-radius:18px 18px 0 0; overflow:hidden;
+}
+.kd-detail-gallery img{ width:100%; height:100%; object-fit:cover; display:block; }
+.kd-detail-nav{
+  position:absolute; top:50%; transform:translateY(-50%); width:34px; height:34px; border-radius:50%;
+  background:rgba(255,255,255,0.85); border:none; font-size:20px; cursor:pointer; color:var(--green-dark);
+}
+.kd-detail-prev{ left:12px; }
+.kd-detail-next{ right:12px; }
+.kd-detail-counter{
+  position:absolute; bottom:12px; right:14px; background:rgba(0,0,0,0.5); color:#fff;
+  font-size:11.5px; font-weight:600; padding:3px 10px; border-radius:20px;
+}
+.kd-detail-gallery-badge{ position:absolute; top:14px; left:14px; }
+.kd-detail-body{ padding:24px 26px 28px; }
+.kd-detail-body h2{ font-family:var(--font-display); font-size:22px; color:var(--green-dark); margin-bottom:6px; }
+.kd-detail-description{ color:var(--text-soft); font-size:14px; line-height:1.6; margin:14px 0; }
+.kd-detail-info-row{
+  display:flex; align-items:center; gap:8px; color:var(--text-soft); font-size:13.5px;
+  padding:10px 0; border-top:1px solid var(--green-line); border-bottom:1px solid var(--green-line);
+}
+.kd-detail-footer{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:18px; }
+.kd-detail-footer .kd-book-btn{ width:auto; padding:12px 28px; text-decoration:none; display:inline-block; }
+
+@media (max-width:600px){
+  .kd-detail-modal{ max-height:94vh; }
+  .kd-detail-gallery{ height:190px; }
+}
 
 .kd-dots{ display:flex; justify-content:center; gap:8px; margin-top:26px; }
 .kd-dot{ width:7px; height:7px; border-radius:50%; background:var(--green-line); cursor:pointer; transition:background .2s,width .2s; }

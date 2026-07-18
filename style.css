@@ -697,6 +697,11 @@ select.kd-form-select{
 }
 .kd-time-slot:hover{ background:var(--cream-2); }
 .kd-time-slot.selected{ background:var(--green-dark); color:var(--cream); border-color:var(--green-dark); }
+.kd-time-slot.kd-time-slot-taken{
+  background:var(--cream-2); color:var(--text-soft); text-decoration:line-through;
+  opacity:.55; cursor:not-allowed;
+}
+.kd-time-slot.kd-time-slot-taken:hover{ background:var(--cream-2); }
 
 .kd-modal-row{ display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--green-line); font-size:13.5px; color:var(--text-soft); margin-top:6px; }
 .kd-modal-row strong{ color:var(--green-dark); }

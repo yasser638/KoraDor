@@ -409,6 +409,50 @@ document.addEventListener('DOMContentLoaded', async function () {
   let modalViewMonth = today.getMonth();
   let modalSelectedDate = null;
   let modalSelectedTime = null;
+  let reservedSlots = [];
+
+  function formatDateISO(d){
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function getCurrentModalTerrain(){
+    if (!terrainSelect || terrainSelect.value === '') return null;
+    return allTerrains[parseInt(terrainSelect.value, 10)] || null;
+  }
+
+  function getCurrentModalNumeroTerrain(){
+    if (subterrainSelect && !subterrainSelect.hidden && subterrainSelect.value) {
+      return parseInt(subterrainSelect.value, 10);
+    }
+    return 1;
+  }
+
+  // Interroge Supabase pour savoir quels créneaux sont déjà pris sur ce terrain/date,
+  // et met à jour l'affichage des créneaux en conséquence.
+  async function refreshReservedSlots(){
+    reservedSlots = [];
+    const t = getCurrentModalTerrain();
+    if (!t || !t.id || !modalSelectedDate || typeof kdGetReservedSlots === 'undefined') {
+      renderModalTimeSlots();
+      return;
+    }
+    try {
+      reservedSlots = await kdGetReservedSlots({
+        terrain_id: t.id,
+        numero_terrain: getCurrentModalNumeroTerrain(),
+        date_reservation: formatDateISO(modalSelectedDate)
+      });
+    } catch (err) {
+      console.error('Korador: impossible de vérifier les créneaux réservés —', err);
+    }
+    if (modalSelectedTime && reservedSlots.includes(modalSelectedTime)) {
+      modalSelectedTime = null; // le créneau qu'on avait choisi vient d'être pris
+    }
+    renderModalTimeSlots();
+  }
 
   function renderModalCalendar(){
     modalCalMonthLabel.textContent = `${moisNoms[modalViewMonth]} ${modalViewYear}`;
@@ -442,6 +486,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         btn.addEventListener('click', () => {
           modalSelectedDate = cellDate;
           renderModalCalendar();
+          refreshReservedSlots();
         });
       }
       modalCalGrid.appendChild(btn);
@@ -449,10 +494,14 @@ document.addEventListener('DOMContentLoaded', async function () {
   }
 
   function renderModalTimeSlots(){
-    modalTimeGrid.innerHTML = heures.map(h =>
-      `<button type="button" class="kd-time-slot${h === modalSelectedTime ? ' selected' : ''}" data-time="${h}">${h}</button>`
-    ).join('');
-    modalTimeGrid.querySelectorAll('.kd-time-slot').forEach(btn => {
+    modalTimeGrid.innerHTML = heures.map(h => {
+      const taken = reservedSlots.includes(h);
+      const classes = ['kd-time-slot'];
+      if (h === modalSelectedTime) classes.push('selected');
+      if (taken) classes.push('kd-time-slot-taken');
+      return `<button type="button" class="${classes.join(' ')}" data-time="${h}" ${taken ? 'disabled title="Déjà réservé"' : ''}>${h}</button>`;
+    }).join('');
+    modalTimeGrid.querySelectorAll('.kd-time-slot:not(.kd-time-slot-taken)').forEach(btn => {
       btn.addEventListener('click', () => {
         modalSelectedTime = btn.dataset.time;
         renderModalTimeSlots();
@@ -559,6 +608,10 @@ document.addEventListener('DOMContentLoaded', async function () {
       `<option value="${i}" ${x.nom === t.nom ? 'selected' : ''}>${x.nom} — ${x.quartier}</option>`
     ).join('');
     fillModalDetails(t);
+    modalSelectedDate = null;
+    modalSelectedTime = null;
+    renderModalCalendar();
+    refreshReservedSlots();
     const footer = document.getElementById('kd-stepper-footer');
     if (footer) footer.hidden = false;
     goToModalStep(1);
@@ -581,7 +634,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     terrainSelect.addEventListener('change', (e) => {
       const t = allTerrains[parseInt(e.target.value, 10)];
       if (t) fillModalDetails(t);
+      refreshReservedSlots();
     });
+  }
+  if (subterrainSelect) {
+    subterrainSelect.addEventListener('change', refreshReservedSlots);
   }
 
   // === Validation des informations (étape 3) ===
@@ -634,6 +691,22 @@ document.addEventListener('DOMContentLoaded', async function () {
     emailjs.init({ publicKey: 'TA_CLE_PUBLIQUE' });
   }
 
+  function showModalError(html){
+    let el = document.getElementById('kd-modal-generic-error');
+    if (!el) {
+      el = document.createElement('p');
+      el.id = 'kd-modal-generic-error';
+      el.style.cssText = 'color:#b32e2e; background:#fdecec; border-radius:8px; padding:10px 14px; font-size:13px; margin:10px 24px 0; text-align:center;';
+      const footer = document.getElementById('kd-stepper-footer');
+      if (footer && footer.parentNode) footer.parentNode.insertBefore(el, footer);
+    }
+    el.innerHTML = html;
+  }
+  function clearModalError(){
+    const el = document.getElementById('kd-modal-generic-error');
+    if (el) el.remove();
+  }
+
   if (stepNextBtn) {
     stepNextBtn.addEventListener('click', () => {
       if (currentStep === 2 && (!modalSelectedDate || !modalSelectedTime)) {
@@ -663,36 +736,77 @@ document.addEventListener('DOMContentLoaded', async function () {
         const cin = document.getElementById('kd-modal-cin').value.trim();
         const email = document.getElementById('kd-modal-email').value.trim();
 
-        const detailsReservation = {
-          to_email: email,
-          client_nom: nom,
-          client_telephone: telephone,
-          client_cin: cin,
-          terrain_nom: t.nom + subtxt,
-          terrain_quartier: t.quartier,
-          terrain_prix: t.prix + ' DH / heure',
-          date_reservation: dateTxt,
-          heure_reservation: timeTxt
-        };
+        clearModalError();
+        stepNextBtn.disabled = true;
+        const originalLabel = stepNextBtn.textContent;
+        stepNextBtn.textContent = 'Réservation en cours...';
 
-        const successDetails = `${t.nom}${subtxt} — ${t.quartier}, le ${dateTxt} à ${timeTxt}.`;
-        const waMessage = `⚽ On joue à ${t.nom}${subtxt} (${t.quartier}) le ${dateTxt} à ${timeTxt} ! Rejoins-nous 👇\nhttps://korador.vercel.app/terrains.html`;
-        const waUrl = `https://wa.me/?text=${encodeURIComponent(waMessage)}`;
+        (async () => {
+          try {
+            if (typeof kdCreateReservation === 'undefined') {
+              throw new Error("auth.js n'est pas chargé sur cette page.");
+            }
 
-        if (typeof emailjs !== 'undefined') {
-          // Remplace "SERVICE_ID" et "TEMPLATE_ID" par les tiens (EmailJS > Email Services / Email Templates)
-          emailjs.send('SERVICE_ID', 'TEMPLATE_ID', detailsReservation)
-            .then(() => {
-              showBookingSuccess(`${successDetails} Un email de confirmation a été envoyé à ${email}.`, waUrl);
-            })
-            .catch((err) => {
-              console.error('Erreur envoi email :', err);
-              showBookingSuccess(`${successDetails} (l'email n'a pas pu être envoyé, vérifie la config EmailJS)`, waUrl);
+            // 1) On enregistre VRAIMENT la réservation dans Supabase (bloque les doubles-réservations)
+            await kdCreateReservation({
+              terrain_id: t.id,
+              numero_terrain: getCurrentModalNumeroTerrain(),
+              date_reservation: formatDateISO(modalSelectedDate),
+              heure_reservation: timeTxt,
+              nom_client: nom,
+              telephone_client: telephone,
+              cin_client: cin,
+              email_client: email
             });
-        } else {
-          showBookingSuccess(`${successDetails} (démo — EmailJS non chargé)`, waUrl);
-        }
+
+            const detailsReservation = {
+              to_email: email,
+              client_nom: nom,
+              client_telephone: telephone,
+              client_cin: cin,
+              terrain_nom: t.nom + subtxt,
+              terrain_quartier: t.quartier,
+              terrain_prix: t.prix + ' DH / heure',
+              date_reservation: dateTxt,
+              heure_reservation: timeTxt
+            };
+
+            const successDetails = `${t.nom}${subtxt} — ${t.quartier}, le ${dateTxt} à ${timeTxt}.`;
+            const waMessage = `⚽ On joue à ${t.nom}${subtxt} (${t.quartier}) le ${dateTxt} à ${timeTxt} ! Rejoins-nous 👇\nhttps://korador.vercel.app/terrains.html`;
+            const waUrl = `https://wa.me/?text=${encodeURIComponent(waMessage)}`;
+
+            if (typeof emailjs !== 'undefined') {
+              // Remplace "SERVICE_ID" et "TEMPLATE_ID" par les tiens (EmailJS > Email Services / Email Templates)
+              emailjs.send('SERVICE_ID', 'TEMPLATE_ID', detailsReservation)
+                .then(() => {
+                  showBookingSuccess(`${successDetails} Un email de confirmation a été envoyé à ${email}.`, waUrl);
+                })
+                .catch((err) => {
+                  console.error('Erreur envoi email :', err);
+                  showBookingSuccess(`${successDetails} (l'email n'a pas pu être envoyé, vérifie la config EmailJS)`, waUrl);
+                });
+            } else {
+              showBookingSuccess(`${successDetails} (démo — EmailJS non chargé)`, waUrl);
+            }
+
+          } catch (err) {
+            stepNextBtn.disabled = false;
+            stepNextBtn.textContent = originalLabel;
+
+            if (err.code === 'NOT_LOGGED_IN') {
+              showModalError('Connecte-toi pour confirmer ta réservation. <a href="login.html" style="color:var(--green-dark); font-weight:700;">Se connecter</a>');
+            } else if (err.code === 'SLOT_TAKEN') {
+              showModalError(err.message);
+              await refreshReservedSlots();
+              goToModalStep(2);
+            } else {
+              console.error('Korador: erreur création réservation —', err);
+              showModalError("Une erreur est survenue, réessaie dans un instant.");
+            }
+          }
+        })();
       }
+
     });
   }
 

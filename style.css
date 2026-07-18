@@ -27,7 +27,7 @@
   --font-body:'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   /* Motif géométrique discret façon zellige, tuilé, très basse opacité */
   --zellige-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%232F5D34' stroke-width='1' opacity='0.12'%3E%3Cpath d='M28 0 L56 28 L28 56 L0 28 Z'/%3E%3Cpath d='M28 10 L46 28 L28 46 L10 28 Z'/%3E%3Ccircle cx='28' cy='28' r='3'/%3E%3C/g%3E%3C/svg%3E");
-  --zellige-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23FAF6E2' stroke-width='1' opacity='0.10'%3E%3Cpath d='M28 0 L56 28 L28 56 L0 28 Z'/%3E%3Cpath d='M28 10 L46 28 L28 46 L10 28 Z'/%3E%3Ccircle cx='28' cy='28' r='3'/%3E%3C/g%3E%3C/svg%3E");
+  --zellige-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23FAFAF7' stroke-width='1' opacity='0.10'%3E%3Cpath d='M28 0 L56 28 L28 56 L0 28 Z'/%3E%3Cpath d='M28 10 L46 28 L28 46 L10 28 Z'/%3E%3Ccircle cx='28' cy='28' r='3'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 /* Fine bande tricolore discrète en haut de chaque page */
@@ -577,6 +577,16 @@ body {
   width:36px; height:36px; border-radius:50%; background:var(--green-dark); color:var(--cream);
   display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0;
 }
+.kd-team-avatar{
+  width:48px; height:48px; border-radius:50%; color:var(--cream);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-weight:800; font-size:19px;
+  margin-bottom:14px;
+}
+.kd-about-deco{
+  position:absolute; top:0; left:50%; transform:translateX(-50%); opacity:0.5; z-index:0;
+}
+@media (max-width:600px){ .kd-about-deco{ display:none; } }
 .kd-testimonial-author strong{ display:block; font-size:13.5px; color:var(--green-dark); }
 .kd-testimonial-author span{ font-size:12px; color:var(--text-soft); }
 
@@ -887,15 +897,19 @@ select.kd-form-select{
 .kd-quickcontact-card{
   background:#fff; border-radius:14px; padding:18px 20px; display:flex; align-items:center; gap:14px;
   text-decoration:none; color:var(--green-dark); box-shadow:0 14px 30px rgba(0,0,0,0.18);
-  transition:transform .2s ease;
+  transition:transform .2s ease, box-shadow .2s ease;
 }
-.kd-quickcontact-card:hover{ transform:translateY(-4px); }
+.kd-quickcontact-card:hover{ transform:translateY(-4px); box-shadow:0 18px 36px rgba(0,0,0,0.22), 0 4px 14px rgba(242,183,5,0.2); }
 .kd-quickcontact-static{ cursor:default; }
-.kd-quickcontact-static:hover{ transform:none; }
+.kd-quickcontact-static:hover{ transform:none; box-shadow:0 14px 30px rgba(0,0,0,0.18); }
 .kd-quickcontact-icon{
   width:40px; height:40px; border-radius:10px; background:var(--cream-2); color:var(--green-mid);
   display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  transition:transform .2s ease;
 }
+.kd-quickcontact-card:hover .kd-quickcontact-icon{ transform:rotate(-6deg) scale(1.08); }
+.kd-quickcontact-card:nth-child(2) .kd-quickcontact-icon{ background:rgba(242,183,5,0.15); color:#8a6600; }
+.kd-quickcontact-card:nth-child(3) .kd-quickcontact-icon{ background:rgba(193,39,45,0.1); color:var(--red-accent); }
 .kd-quickcontact-label{ display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--text-soft); }
 .kd-quickcontact-card strong{ font-size:14px; font-weight:700; }
 

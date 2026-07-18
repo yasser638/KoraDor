@@ -47,13 +47,26 @@
     <main>
 
       <!-- ===== Intro ===== -->
-      <div style="padding:50px 0 10px; text-align:center;">
+      <div style="padding:50px 0 10px; text-align:center; position:relative;">
+        <svg class="kd-about-deco" width="180" height="90" viewBox="0 0 180 90" fill="none" aria-hidden="true">
+          <rect x="4" y="4" width="172" height="82" rx="6" stroke="var(--green-line)" stroke-width="2"/>
+          <line x1="90" y1="4" x2="90" y2="86" stroke="var(--green-line)" stroke-width="2"/>
+          <circle cx="90" cy="45" r="16" stroke="var(--green-line)" stroke-width="2"/>
+          <circle cx="90" cy="45" r="2.5" fill="var(--green-line)"/>
+        </svg>
         <span class="kd-eyebrow" style="display:block;">Notre mission</span>
         <h1 class="kd-slider-title" style="font-size:40px;">On digitalise le foot amateur à Casablanca</h1>
         <p style="color:var(--text-soft); max-width:620px; margin:16px auto 0; line-height:1.6;">
           Korador résout les problèmes de gestion de planning, de désistements et de recherche de joueurs — pour que réserver un terrain soit aussi simple que réserver un Uber. Parce que la passion du foot marocain mérite mieux qu'un carnet et un stylo.
         </p>
       </div>
+
+      <!-- ===== Chiffres clés (animés) ===== -->
+      <section class="kd-stats kd-fade" style="margin:36px auto 10px;">
+        <div class="kd-stat"><div class="kd-stat-num"><span class="kd-count" data-target="4">0</span></div><div class="kd-stat-label">co-fondateurs</div></div>
+        <div class="kd-stat"><div class="kd-stat-num"><span class="kd-count" data-target="2026">0</span></div><div class="kd-stat-label">année de lancement</div></div>
+        <div class="kd-stat"><div class="kd-stat-num">100%</div><div class="kd-stat-label">casablancais</div></div>
+      </section>
 
       <!-- ===== Fonctionnalités clés ===== -->
       <section class="kd-howitworks kd-fade">
@@ -108,20 +121,24 @@
         <h2 class="kd-slider-title" style="margin-bottom:36px;">Quatre associés, un seul objectif</h2>
         <div class="kd-steps">
           <div class="kd-step">
+            <div class="kd-team-avatar" style="background:var(--green-dark);">T</div>
             <h3>Tech &amp; Product</h3>
             <p>Développement de l'application, maintenance et intégration du paiement.</p>
           </div>
           <div class="kd-step">
+            <div class="kd-team-avatar" style="background:var(--green-mid);">C</div>
             <h3>Commercial</h3>
             <p>Prospection terrain, signature des complexes et relation avec les propriétaires.</p>
           </div>
           <div class="kd-step">
+            <div class="kd-team-avatar" style="background:var(--red-accent);">M</div>
             <h3>Marketing &amp; Content</h3>
             <p>Création vidéo, community management et publicité sur les réseaux sociaux.</p>
           </div>
         </div>
         <div class="kd-steps" style="margin-top:24px; grid-template-columns:1fr;">
           <div class="kd-step">
+            <div class="kd-team-avatar" style="background:var(--green-dark);">G</div>
             <h3>Gestion &amp; Finance</h3>
             <p>Facturation, comptabilité et support client / gardien au quotidien.</p>
           </div>

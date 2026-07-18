@@ -1,42 +1,9 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
 
-  // === Remplace ce tableau par tes vrais terrains ===
-  // "photos" : mets ici toutes les photos du terrain (la 1ère sert de couverture sur la carte).
-  // "description" et "horaires" s'affichent dans la fiche détaillée (bouton "Voir plus").
-  const allTerrains = [
-    { nom:"Terrain Al Amal",      quartier:"Sidi Maarouf", prix:250, dispo:true,  note:4.5, avis:28, nbTerrains:2, lat:33.5340, lng:-7.6398,
-      photo:"https://fr.reformsports.com/oachoata/2020/09/mini-futbol-sahasi-ozellikleri-ve-olculeri.jpg",
-      photos:["https://fr.reformsports.com/oachoata/2020/09/mini-futbol-sahasi-ozellikleri-ve-olculeri.jpg"],
-      description:"Terrain en gazon synthétique dernière génération, éclairage LED pour les matchs en soirée. Ambiance conviviale, idéal pour les matchs entre potes.",
-      horaires:"Tous les jours : 08h00 – 23h00" },
-    { nom:"Complexe Anfa Foot",   quartier:"Anfa",         prix:300, dispo:true,  note:4.8, avis:52, nbTerrains:4, lat:33.5931, lng:-7.6478,
-      photo:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT80W-XTaACYEw02TDddAE3yQ5p4IKdnMui9M5_e-5KhGbMrRYErTatqw&s=10",
-      photos:["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT80W-XTaACYEw02TDddAE3yQ5p4IKdnMui9M5_e-5KhGbMrRYErTatqw&s=10"],
-      description:"4 terrains disponibles, vestiaires avec douches chaudes et parking gratuit surveillé. Le complexe le plus complet du quartier Anfa.",
-      horaires:"Lun–Sam : 07h00 – 00h00 · Dim : 09h00 – 22h00" },
-    { nom:"Green Arena",          quartier:"Bourgogne",    prix:220, dispo:false, note:4.1, avis:19, nbTerrains:3, lat:33.5950, lng:-7.6180,
-      photo:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTBNI-zlqi0Zoe7VFz1mUnzssjXQmFcqAlViDB4larZV6jHGrG9R6mYN5E&s=10",
-      photos:["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTBNI-zlqi0Zoe7VFz1mUnzssjXQmFcqAlViDB4larZV6jHGrG9R6mYN5E&s=10"],
-      description:"Ambiance arena couverte, protégée du vent et de la pluie. Parfait pour jouer toute l'année sans interruption.",
-      horaires:"Tous les jours : 09h00 – 23h30" },
-    { nom:"Stade Hay Hassani",    quartier:"Hay Hassani",  prix:180, dispo:true,  note:3.9, avis:34, nbTerrains:1, lat:33.5588, lng:-7.6647,
-      photo:"https://www.hatkosport.com/wp-content/uploads/2020/03/outdoor-field.jpg",
-      photos:["https://www.hatkosport.com/wp-content/uploads/2020/03/outdoor-field.jpg"],
-      description:"Le terrain le plus abordable du quartier, ambiance populaire et chaleureuse. Bon rapport qualité-prix pour les matchs réguliers.",
-      horaires:"Tous les jours : 08h00 – 22h00" },
-    { nom:"City Foot Maarif",     quartier:"Maarif",       prix:280, dispo:true,  note:4.6, avis:41, nbTerrains:5, lat:33.5731, lng:-7.6299,
-      photo:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoI5T_63KeH8gmjYqne64wWZTEgvG6yz_kNyEAEwTC9kDv3B7TlofT8w-f&s=10",
-      photos:["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoI5T_63KeH8gmjYqne64wWZTEgvG6yz_kNyEAEwTC9kDv3B7TlofT8w-f&s=10"],
-      description:"5 terrains sur un même site, tribune pour les spectateurs et buvette sur place. Idéal pour les tournois entre équipes.",
-      horaires:"Tous les jours : 07h30 – 00h00" },
-    { nom:"Terrain Oasis Club",   quartier:"Oasis",        prix:240, dispo:false, note:4.3, avis:23, nbTerrains:2, lat:33.5462, lng:-7.6297,
-      photo:"https://quintessia.ma/wp-content/uploads/2024/11/WhatsApp-Image-2024-10-15-a-11.05.40_5ce343f8.jpg",
-      photos:["https://quintessia.ma/wp-content/uploads/2024/11/WhatsApp-Image-2024-10-15-a-11.05.40_5ce343f8.jpg"],
-      description:"Cadre calme et résidentiel, gazon bien entretenu. Accès facile et places de parking à proximité immédiate.",
-      horaires:"Tous les jours : 08h00 – 22h30" }
-  ];
-
-  let terrains = allTerrains;
+  // Les terrains sont chargés depuis Supabase (table `terrains`) plus bas,
+  // juste avant l'initialisation de l'affichage.
+  let allTerrains = [];
+  let terrains = [];
   let selectedQuartier = '';
 
   // ---------- Étoiles ----------
@@ -359,7 +326,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const imgEl = document.getElementById('kd-detail-img');
     const counterEl = document.getElementById('kd-detail-counter');
     if (!imgEl) return;
-    imgEl.src = detailPhotos[detailIndex] || '';
+    const src = detailPhotos[detailIndex];
+    if (src) {
+      imgEl.style.display = '';
+      imgEl.src = src;
+      imgEl.onerror = () => { imgEl.style.display = 'none'; };
+    } else {
+      imgEl.style.display = 'none';
+    }
     if (counterEl) counterEl.textContent = `${detailIndex + 1} / ${detailPhotos.length}`;
     const prevBtn = document.getElementById('kd-detail-prev');
     const nextBtn = document.getElementById('kd-detail-next');
@@ -735,6 +709,44 @@ document.addEventListener('DOMContentLoaded', function () {
   if (modalOverlay) {
     modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeBookingModal(); });
   }
+
+  // ---------- Chargement des terrains depuis Supabase (table `terrains`) ----------
+  async function loadTerrainsFromSupabase(){
+    if (typeof supabaseClient === 'undefined') {
+      console.error('Korador: Supabase (auth.js) non chargé — impossible de récupérer les terrains.');
+      return [];
+    }
+
+    const { data, error } = await supabaseClient
+      .from('terrains')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Korador: erreur lors du chargement des terrains —', error);
+      return [];
+    }
+
+    // Convertit les colonnes Supabase (snake_case) vers le format utilisé par le reste du fichier
+    return (data || []).map(t => ({
+      nom: t.nom,
+      quartier: t.quartier,
+      prix: t.prix,
+      dispo: t.dispo !== false,
+      note: Number(t.note) || 0,
+      avis: t.avis || 0,
+      nbTerrains: t.nb_terrains || 1,
+      lat: t.lat !== null ? Number(t.lat) : null,
+      lng: t.lng !== null ? Number(t.lng) : null,
+      photo: t.photo || null,
+      photos: (t.photos && t.photos.length) ? t.photos : (t.photo ? [t.photo] : []),
+      description: t.description || '',
+      horaires: t.horaires || ''
+    }));
+  }
+
+  allTerrains = await loadTerrainsFromSupabase();
+  terrains = allTerrains;
 
   // ---------- Initialisation ----------
   updateHeroStats();

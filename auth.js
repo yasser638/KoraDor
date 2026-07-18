@@ -66,6 +66,59 @@ async function kdCheckSession() {
   return session;
 }
 
+// ---------- Récupère les créneaux déjà réservés pour un terrain (et sous-terrain) à une date donnée ----------
+async function kdGetReservedSlots({ terrain_id, numero_terrain, date_reservation }) {
+  const { data, error } = await supabaseClient
+    .from('reservations')
+    .select('heure_reservation')
+    .eq('terrain_id', terrain_id)
+    .eq('numero_terrain', numero_terrain)
+    .eq('date_reservation', date_reservation)
+    .neq('statut', 'annulee');
+  if (error) throw error;
+  return (data || []).map(r => r.heure_reservation);
+}
+
+// ---------- Crée une réservation ----------
+// Nécessite d'être connecté (RLS : user_id doit être auth.uid()).
+async function kdCreateReservation({ terrain_id, numero_terrain, date_reservation, heure_reservation, nom_client, telephone_client, cin_client, email_client }) {
+  const session = await kdCheckSession();
+  if (!session) {
+    const err = new Error("Connecte-toi pour finaliser ta réservation.");
+    err.code = 'NOT_LOGGED_IN';
+    throw err;
+  }
+
+  const { data, error } = await supabaseClient
+    .from('reservations')
+    .insert({
+      terrain_id,
+      numero_terrain,
+      date_reservation,
+      heure_reservation,
+      user_id: session.user.id,
+      nom_client,
+      telephone_client,
+      cin_client,
+      email_client,
+      statut: 'en_attente'
+    })
+    .select()
+    .single();
+
+  if (error) {
+    // Code 23505 = violation de contrainte unique -> quelqu'un d'autre vient de prendre ce créneau
+    if (error.code === '23505') {
+      const conflictErr = new Error("Ce créneau vient d'être réservé par quelqu'un d'autre. Choisis-en un autre.");
+      conflictErr.code = 'SLOT_TAKEN';
+      throw conflictErr;
+    }
+    throw error;
+  }
+
+  return data;
+}
+
 // ---------- Récupère en un seul appel la session + le profil (nom, cin, téléphone, rôle) ----------
 // Retourne null si personne n'est connecté ou si le profil n'est pas encore prêt.
 // Utile pour pré-remplir des formulaires (ex: la modale de réservation).

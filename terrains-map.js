@@ -727,7 +727,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         goToModalStep(currentStep + 1);
       } else {
         const t = allTerrains[parseInt(terrainSelect.value, 10)];
-        console.log('Korador DEBUG — terrain sélectionné:', t, '| terrainSelect.value:', terrainSelect.value);
         const subtxt = t.nbTerrains > 1 ? ` (Terrain ${subterrainSelect.value})` : '';
         const dateTxt = modalSelectedDate ? modalSelectedDate.toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '—';
         const timeTxt = modalSelectedTime || '—';
@@ -842,6 +841,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // Convertit les colonnes Supabase (snake_case) vers le format utilisé par le reste du fichier
     return (data || []).map(t => ({
+      id: t.id,
       nom: t.nom,
       quartier: t.quartier,
       prix: t.prix,

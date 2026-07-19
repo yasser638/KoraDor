@@ -1,14 +1,8 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
 
-  // === Remplace ce tableau par tes vrais terrains ===
-  const allTerrains = [
-    { nom:"Terrain Al Amal",      quartier:"Sidi Maarouf", prix:250, dispo:true,  note:4.5, avis:28, nbTerrains:2, photo:"https://fr.reformsports.com/oachoata/2020/09/mini-futbol-sahasi-ozellikleri-ve-olculeri.jpg" },
-    { nom:"Complexe Anfa Foot",   quartier:"Anfa",         prix:300, dispo:true,  note:4.8, avis:52, nbTerrains:4, photo:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT80W-XTaACYEw02TDddAE3yQ5p4IKdnMui9M5_e-5KhGbMrRYErTatqw&s=10" },
-    { nom:"Green Arena",          quartier:"Bourgogne",    prix:220, dispo:false, note:4.1, avis:19, nbTerrains:3, photo:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTBNI-zlqi0Zoe7VFz1mUnzssjXQmFcqAlViDB4larZV6jHGrG9R6mYN5E&s=10" },
-    { nom:"Stade Hay Hassani",    quartier:"Hay Hassani",  prix:180, dispo:true,  note:3.9, avis:34, nbTerrains:1, photo:"https://www.hatkosport.com/wp-content/uploads/2020/03/outdoor-field.jpg" },
-    { nom:"City Foot Maarif",     quartier:"Maarif",       prix:280, dispo:true,  note:4.6, avis:41, nbTerrains:5, photo:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoI5T_63KeH8gmjYqne64wWZTEgvG6yz_kNyEAEwTC9kDv3B7TlofT8w-f&s=10" },
-    { nom:"Terrain Oasis Club",   quartier:"Oasis",        prix:240, dispo:false, note:4.3, avis:23, nbTerrains:2, photo:null }
-  ];
+  // Les terrains sont chargés depuis Supabase (table `terrains`) juste avant
+  // l'initialisation du carrousel, plus bas dans ce fichier.
+  let allTerrains = [];
 
   function renderStars(note){
     const pct = Math.max(0, Math.min(5, note)) / 5 * 100;
@@ -26,6 +20,40 @@ document.addEventListener('DOMContentLoaded', function () {
     console.error('Korador carousel: éléments #kd-track ou #kd-dots introuvables dans la page.');
     return;
   }
+
+  // ---------- Chargement des terrains depuis Supabase (table `terrains`) ----------
+  async function loadTerrainsFromSupabase(){
+    if (typeof supabaseClient === 'undefined') {
+      console.error('Korador: Supabase (auth.js) non chargé — impossible de récupérer les terrains.');
+      return [];
+    }
+
+    const { data, error } = await supabaseClient
+      .from('terrains')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Korador: erreur lors du chargement des terrains —', error);
+      return [];
+    }
+
+    return (data || []).map(t => ({
+      id: t.id,
+      nom: t.nom,
+      quartier: t.quartier,
+      prix: t.prix,
+      dispo: t.dispo !== false,
+      note: Number(t.note) || 0,
+      avis: t.avis || 0,
+      nbTerrains: t.nb_terrains || 1,
+      photo: t.photo || null,
+      description: t.description || '',
+      horaires: t.horaires || ''
+    }));
+  }
+
+  allTerrains = await loadTerrainsFromSupabase();
 
   let terrains = allTerrains;
   let index = 0;
@@ -75,10 +103,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // brancher les boutons Réserver sur la modale
     track.querySelectorAll('.kd-book-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const t = terrains[parseInt(btn.dataset.index, 10)];
-        if (t) window.location.href = `terrains.html#reserve=${encodeURIComponent(t.nom)}`;
-      });
+      btn.addEventListener('click', () => openBookingModal(terrains[parseInt(btn.dataset.index, 10)]));
     });
 
     renderDots();
@@ -211,6 +236,48 @@ document.addEventListener('DOMContentLoaded', function () {
   let viewMonth = today.getMonth();
   let selectedDate = null;
   let selectedTime = null;
+  let reservedSlots = [];
+
+  function formatDateISO(d){
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function getCurrentModalNumeroTerrain(){
+    const subterrainSelectEl = document.getElementById('kd-modal-subterrain-select');
+    if (subterrainSelectEl && !subterrainSelectEl.hidden && subterrainSelectEl.value) {
+      return parseInt(subterrainSelectEl.value, 10);
+    }
+    return 1;
+  }
+
+  // Interroge Supabase pour savoir quels créneaux sont déjà pris sur ce terrain/date,
+  // et met à jour l'affichage des créneaux en conséquence.
+  async function refreshReservedSlots(){
+    reservedSlots = [];
+    const terrainSelectEl = document.getElementById('kd-modal-terrain-select');
+    const t = terrainSelectEl && terrainSelectEl.value !== '' ? allTerrains[parseInt(terrainSelectEl.value, 10)] : null;
+
+    if (!t || !t.id || !selectedDate || typeof kdGetReservedSlots === 'undefined') {
+      renderTimeSlots();
+      return;
+    }
+    try {
+      reservedSlots = await kdGetReservedSlots({
+        terrain_id: t.id,
+        numero_terrain: getCurrentModalNumeroTerrain(),
+        date_reservation: formatDateISO(selectedDate)
+      });
+    } catch (err) {
+      console.error('Korador: impossible de vérifier les créneaux réservés —', err);
+    }
+    if (selectedTime && reservedSlots.includes(selectedTime)) {
+      selectedTime = null; // le créneau qu'on avait choisi vient d'être pris
+    }
+    renderTimeSlots();
+  }
 
   const moisNoms = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
   const heures = ['08:00','09:00','10:00','11:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00'];
@@ -248,6 +315,7 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.addEventListener('click', () => {
           selectedDate = cellDate;
           renderCalendar();
+          refreshReservedSlots();
         });
       }
       calGrid.appendChild(btn);
@@ -255,10 +323,14 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function renderTimeSlots(){
-    timeGrid.innerHTML = heures.map(h =>
-      `<button type="button" class="kd-time-slot${h === selectedTime ? ' selected' : ''}" data-time="${h}">${h}</button>`
-    ).join('');
-    timeGrid.querySelectorAll('.kd-time-slot').forEach(btn => {
+    timeGrid.innerHTML = heures.map(h => {
+      const taken = reservedSlots.includes(h);
+      const classes = ['kd-time-slot'];
+      if (h === selectedTime) classes.push('selected');
+      if (taken) classes.push('kd-time-slot-taken');
+      return `<button type="button" class="${classes.join(' ')}" data-time="${h}" ${taken ? 'disabled title="Déjà réservé"' : ''}>${h}</button>`;
+    }).join('');
+    timeGrid.querySelectorAll('.kd-time-slot:not(.kd-time-slot-taken)').forEach(btn => {
       btn.addEventListener('click', () => {
         selectedTime = btn.dataset.time;
         renderTimeSlots();
@@ -455,11 +527,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function showBookingSuccess(t, subtxt, dateTxt, timeTxt, note){
     const stepperLayout = document.querySelector('.kd-stepper-layout');
+    const footer = document.getElementById('kd-stepper-footer');
     const successPanel = document.getElementById('kd-modal-success');
     const summaryEl = document.getElementById('kd-modal-success-summary');
     const whatsappLink = document.getElementById('kd-whatsapp-invite');
 
     if (stepperLayout) stepperLayout.hidden = true;
+    if (footer) footer.hidden = true;
     if (summaryEl) summaryEl.textContent = `${t.nom}${subtxt} — ${dateTxt} à ${timeTxt}. ${note}`;
 
     if (whatsappLink) {
@@ -479,8 +553,10 @@ document.addEventListener('DOMContentLoaded', function () {
   if (modalSuccessCloseBtn) {
     modalSuccessCloseBtn.addEventListener('click', () => {
       const stepperLayout = document.querySelector('.kd-stepper-layout');
+      const footer = document.getElementById('kd-stepper-footer');
       const successPanel = document.getElementById('kd-modal-success');
       if (stepperLayout) stepperLayout.hidden = false;
+      if (footer) footer.hidden = false;
       if (successPanel) successPanel.hidden = true;
       closeBookingModal();
     });
@@ -492,6 +568,10 @@ document.addEventListener('DOMContentLoaded', function () {
       `<option value="${i}" ${x.nom === t.nom ? 'selected' : ''}>${x.nom} — ${x.quartier}</option>`
     ).join('');
     fillModalDetails(t);
+    selectedDate = null;
+    selectedTime = null;
+    renderCalendar();
+    refreshReservedSlots();
     goToStep(1);
     if (modalOverlay) modalOverlay.classList.add('open');
     prefillUserInfo();
@@ -505,7 +585,11 @@ document.addEventListener('DOMContentLoaded', function () {
     terrainSelect.addEventListener('change', (e) => {
       const t = allTerrains[parseInt(e.target.value, 10)];
       if (t) fillModalDetails(t);
+      refreshReservedSlots();
     });
+  }
+  if (subterrainSelect) {
+    subterrainSelect.addEventListener('change', refreshReservedSlots);
   }
 
   // === Validation des informations (étape 3) ===
@@ -567,6 +651,22 @@ document.addEventListener('DOMContentLoaded', function () {
     emailjs.init({ publicKey: 'TA_CLE_PUBLIQUE' });
   }
 
+  function showModalError(html){
+    let el = document.getElementById('kd-modal-generic-error');
+    if (!el) {
+      el = document.createElement('p');
+      el.id = 'kd-modal-generic-error';
+      el.style.cssText = 'color:#b32e2e; background:#fdecec; border-radius:8px; padding:10px 14px; font-size:13px; margin:10px 24px 0; text-align:center;';
+      const footer = document.getElementById('kd-stepper-footer');
+      if (footer && footer.parentNode) footer.parentNode.insertBefore(el, footer);
+    }
+    el.innerHTML = html;
+  }
+  function clearModalError(){
+    const el = document.getElementById('kd-modal-generic-error');
+    if (el) el.remove();
+  }
+
   if (stepNextBtn) {
     stepNextBtn.addEventListener('click', () => {
       if (currentStep === 2 && (!selectedDate || !selectedTime)) {
@@ -596,31 +696,69 @@ document.addEventListener('DOMContentLoaded', function () {
         const cin = document.getElementById('kd-modal-cin').value.trim();
         const email = document.getElementById('kd-modal-email').value.trim();
 
-        const detailsReservation = {
-          to_email: email,
-          client_nom: nom,
-          client_telephone: telephone,
-          client_cin: cin,
-          terrain_nom: t.nom + subtxt,
-          terrain_quartier: t.quartier,
-          terrain_prix: t.prix + ' DH / heure',
-          date_reservation: dateTxt,
-          heure_reservation: timeTxt
-        };
+        clearModalError();
+        stepNextBtn.disabled = true;
+        const originalLabel = stepNextBtn.textContent;
+        stepNextBtn.textContent = 'Réservation en cours...';
 
-        if (typeof emailjs !== 'undefined') {
-          // Remplace "SERVICE_ID" et "TEMPLATE_ID" par les tiens (EmailJS > Email Services / Email Templates)
-          emailjs.send('SERVICE_ID', 'TEMPLATE_ID', detailsReservation)
-            .then(() => {
-              showBookingSuccess(t, subtxt, dateTxt, timeTxt, `Un email de confirmation a été envoyé à ${email}.`);
-            })
-            .catch((err) => {
-              console.error('Erreur envoi email :', err);
-              showBookingSuccess(t, subtxt, dateTxt, timeTxt, "(l'email n'a pas pu être envoyé, vérifie la config EmailJS)");
+        (async () => {
+          try {
+            if (typeof kdCreateReservation === 'undefined') {
+              throw new Error("auth.js n'est pas chargé sur cette page.");
+            }
+
+            // On enregistre VRAIMENT la réservation dans Supabase (bloque les doubles-réservations)
+            await kdCreateReservation({
+              terrain_id: t.id,
+              numero_terrain: getCurrentModalNumeroTerrain(),
+              date_reservation: formatDateISO(selectedDate),
+              heure_reservation: timeTxt,
+              nom_client: nom,
+              telephone_client: telephone,
+              cin_client: cin,
+              email_client: email
             });
-        } else {
-          showBookingSuccess(t, subtxt, dateTxt, timeTxt, '(démo — EmailJS non chargé)');
-        }
+
+            const detailsReservation = {
+              to_email: email,
+              client_nom: nom,
+              client_telephone: telephone,
+              client_cin: cin,
+              terrain_nom: t.nom + subtxt,
+              terrain_quartier: t.quartier,
+              terrain_prix: t.prix + ' DH / heure',
+              date_reservation: dateTxt,
+              heure_reservation: timeTxt
+            };
+
+            if (typeof emailjs !== 'undefined') {
+              // Remplace "SERVICE_ID" et "TEMPLATE_ID" par les tiens (EmailJS > Email Services / Email Templates)
+              emailjs.send('SERVICE_ID', 'TEMPLATE_ID', detailsReservation)
+                .then(() => {
+                  showBookingSuccess(t, subtxt, dateTxt, timeTxt, `Un email de confirmation a été envoyé à ${email}.`);
+                })
+                .catch((err) => {
+                  console.error('Erreur envoi email :', err);
+                  showBookingSuccess(t, subtxt, dateTxt, timeTxt, "(l'email n'a pas pu être envoyé, vérifie la config EmailJS)");
+                });
+            } else {
+              showBookingSuccess(t, subtxt, dateTxt, timeTxt, '(démo — EmailJS non chargé)');
+            }
+
+          } catch (err) {
+            stepNextBtn.disabled = false;
+            stepNextBtn.textContent = originalLabel;
+
+            if (err.code === 'SLOT_TAKEN') {
+              showModalError(err.message);
+              await refreshReservedSlots();
+              goToStep(2);
+            } else {
+              console.error('Korador: erreur création réservation —', err);
+              showModalError("Une erreur est survenue, réessaie dans un instant.");
+            }
+          }
+        })();
       }
     });
   }

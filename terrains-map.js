@@ -875,4 +875,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (match) openDetailModal(match);
   }
 
+  // === Ouvre automatiquement la modale de réservation si on arrive depuis l'accueil (index.html) ===
+  if (hash.startsWith('#reserve=')) {
+    const terrainName = decodeURIComponent(hash.replace('#reserve=', ''));
+    const match = allTerrains.find(t => t.nom === terrainName);
+    if (match) openBookingModal(match);
+  }
+
 });

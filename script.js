@@ -75,7 +75,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // brancher les boutons Réserver sur la modale
     track.querySelectorAll('.kd-book-btn').forEach(btn => {
-      btn.addEventListener('click', () => openBookingModal(terrains[parseInt(btn.dataset.index, 10)]));
+      btn.addEventListener('click', () => {
+        const t = terrains[parseInt(btn.dataset.index, 10)];
+        if (t) window.location.href = `terrains.html#reserve=${encodeURIComponent(t.nom)}`;
+      });
     });
 
     renderDots();

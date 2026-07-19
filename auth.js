@@ -84,7 +84,7 @@ async function kdGetReservedSlots({ terrain_id, numero_terrain, date_reservation
 async function kdCreateReservation({ terrain_id, numero_terrain, date_reservation, heure_reservation, nom_client, telephone_client, cin_client, email_client }) {
   const session = await kdCheckSession();
 
-  const { data, error } = await supabaseClient
+  const { error } = await supabaseClient
     .from('reservations')
     .insert({
       terrain_id,
@@ -97,9 +97,7 @@ async function kdCreateReservation({ terrain_id, numero_terrain, date_reservatio
       cin_client,
       email_client,
       statut: 'en_attente'
-    })
-    .select()
-    .single();
+    });
 
   if (error) {
     // Code 23505 = violation de contrainte unique -> quelqu'un d'autre vient de prendre ce créneau
@@ -111,7 +109,7 @@ async function kdCreateReservation({ terrain_id, numero_terrain, date_reservatio
     throw error;
   }
 
-  return data;
+  return true;
 }
 
 // ---------- Récupère en un seul appel la session + le profil (nom, cin, téléphone, rôle) ----------

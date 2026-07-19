@@ -67,14 +67,15 @@ async function kdCheckSession() {
 }
 
 // ---------- Récupère les créneaux déjà réservés pour un terrain (et sous-terrain) à une date donnée ----------
+// Passe par une fonction SQL dédiée (get_reserved_slots) plutôt que par une lecture directe
+// de la table `reservations`, pour que n'importe quel visiteur puisse voir les horaires pris
+// SANS avoir accès aux infos privées des autres clients (nom, téléphone, CIN, email).
 async function kdGetReservedSlots({ terrain_id, numero_terrain, date_reservation }) {
-  const { data, error } = await supabaseClient
-    .from('reservations')
-    .select('heure_reservation')
-    .eq('terrain_id', terrain_id)
-    .eq('numero_terrain', numero_terrain)
-    .eq('date_reservation', date_reservation)
-    .neq('statut', 'annulee');
+  const { data, error } = await supabaseClient.rpc('get_reserved_slots', {
+    p_terrain_id: terrain_id,
+    p_numero_terrain: numero_terrain,
+    p_date: date_reservation
+  });
   if (error) throw error;
   return (data || []).map(r => r.heure_reservation);
 }

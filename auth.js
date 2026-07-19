@@ -80,14 +80,9 @@ async function kdGetReservedSlots({ terrain_id, numero_terrain, date_reservation
 }
 
 // ---------- Crée une réservation ----------
-// Nécessite d'être connecté (RLS : user_id doit être auth.uid()).
+// Fonctionne aussi pour un visiteur non connecté (user_id sera alors null).
 async function kdCreateReservation({ terrain_id, numero_terrain, date_reservation, heure_reservation, nom_client, telephone_client, cin_client, email_client }) {
   const session = await kdCheckSession();
-  if (!session) {
-    const err = new Error("Connecte-toi pour finaliser ta réservation.");
-    err.code = 'NOT_LOGGED_IN';
-    throw err;
-  }
 
   const { data, error } = await supabaseClient
     .from('reservations')
@@ -96,7 +91,7 @@ async function kdCreateReservation({ terrain_id, numero_terrain, date_reservatio
       numero_terrain,
       date_reservation,
       heure_reservation,
-      user_id: session.user.id,
+      user_id: session ? session.user.id : null,
       nom_client,
       telephone_client,
       cin_client,

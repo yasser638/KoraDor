@@ -707,6 +707,7 @@ select.kd-form-select{
 .kd-modal-row strong{ color:var(--green-dark); }
 
 .kd-stepper-footer{ display:flex; justify-content:space-between; gap:10px; margin-top:24px; }
+.kd-stepper-footer[hidden]{ display:none; }
 .kd-btn-next, .kd-btn-back{
   border:none; padding:12px 26px; border-radius:8px; font-weight:700; font-size:14px; cursor:pointer; font-family:inherit;
   transition:transform .18s ease, box-shadow .18s ease, background .18s ease;

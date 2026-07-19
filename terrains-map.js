@@ -793,9 +793,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             stepNextBtn.disabled = false;
             stepNextBtn.textContent = originalLabel;
 
-            if (err.code === 'NOT_LOGGED_IN') {
-              showModalError('Connecte-toi pour confirmer ta réservation. <a href="login.html" style="color:var(--green-dark); font-weight:700;">Se connecter</a>');
-            } else if (err.code === 'SLOT_TAKEN') {
+            if (err.code === 'SLOT_TAKEN') {
               showModalError(err.message);
               await refreshReservedSlots();
               goToModalStep(2);

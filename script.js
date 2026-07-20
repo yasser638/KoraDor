@@ -469,7 +469,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   const stepBackBtn = document.getElementById('kd-step-back');
   const stepNextBtn = document.getElementById('kd-step-next');
   let currentStep = 1;
-  const totalSteps = stepPanels.length;
+  const totalSteps = stepItems.length;
 
   function fillModalDetails(t){
     document.getElementById('kd-modal-quartier').textContent = t.quartier;

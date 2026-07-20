@@ -525,41 +525,26 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
   }
 
-  function showBookingSuccess(t, subtxt, dateTxt, timeTxt, note){
-    const stepperLayout = document.querySelector('.kd-stepper-layout');
-    const footer = document.getElementById('kd-stepper-footer');
-    const successPanel = document.getElementById('kd-modal-success');
-    const summaryEl = document.getElementById('kd-modal-success-summary');
-    const whatsappLink = document.getElementById('kd-whatsapp-invite');
-
-    if (stepperLayout) stepperLayout.hidden = true;
-    if (footer) footer.hidden = true;
-    if (summaryEl) summaryEl.textContent = `${t.nom}${subtxt} — ${dateTxt} à ${timeTxt}. ${note}`;
-
-    if (whatsappLink) {
-      const message =
-        `⚽ Match programmé sur Korador !\n` +
-        `📍 ${t.nom}${subtxt} — ${t.quartier}\n` +
-        `📅 ${dateTxt} à ${timeTxt}\n` +
-        `💰 ${t.prix} DH / heure\n\n` +
-        `On complète l'équipe, vous êtes chauds ?`;
-      whatsappLink.href = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    }
-
+  function showBookingSuccess(detailsText, whatsappUrl){
+    stepPanels.forEach(panel => { panel.hidden = true; });
+    const successPanel = document.querySelector('.kd-step-panel[data-panel="success"]');
     if (successPanel) successPanel.hidden = false;
+
+    const detailsEl = document.getElementById('kd-booking-success-details');
+    if (detailsEl) detailsEl.textContent = detailsText;
+
+    const waBtn = document.getElementById('kd-whatsapp-invite-btn');
+    if (waBtn) waBtn.href = whatsappUrl;
+
+    const footer = document.getElementById('kd-stepper-footer');
+    if (footer) footer.hidden = true;
+
+    stepItems.forEach(item => item.classList.add('done'));
   }
 
-  const modalSuccessCloseBtn = document.getElementById('kd-modal-success-close');
-  if (modalSuccessCloseBtn) {
-    modalSuccessCloseBtn.addEventListener('click', () => {
-      const stepperLayout = document.querySelector('.kd-stepper-layout');
-      const footer = document.getElementById('kd-stepper-footer');
-      const successPanel = document.getElementById('kd-modal-success');
-      if (stepperLayout) stepperLayout.hidden = false;
-      if (footer) footer.hidden = false;
-      if (successPanel) successPanel.hidden = true;
-      closeBookingModal();
-    });
+  const bookingSuccessCloseBtn = document.getElementById('kd-booking-success-close');
+  if (bookingSuccessCloseBtn) {
+    bookingSuccessCloseBtn.addEventListener('click', closeBookingModal);
   }
 
   function openBookingModal(t){
@@ -731,18 +716,22 @@ document.addEventListener('DOMContentLoaded', async function () {
               heure_reservation: timeTxt
             };
 
+            const successDetails = `${t.nom}${subtxt} — ${t.quartier}, le ${dateTxt} à ${timeTxt}.`;
+            const waMessage = `⚽ On joue à ${t.nom}${subtxt} (${t.quartier}) le ${dateTxt} à ${timeTxt} ! Rejoins-nous 👇\nhttps://korador.vercel.app/index.html`;
+            const waUrl = `https://wa.me/?text=${encodeURIComponent(waMessage)}`;
+
             if (typeof emailjs !== 'undefined') {
               // Remplace "SERVICE_ID" et "TEMPLATE_ID" par les tiens (EmailJS > Email Services / Email Templates)
               emailjs.send('SERVICE_ID', 'TEMPLATE_ID', detailsReservation)
                 .then(() => {
-                  showBookingSuccess(t, subtxt, dateTxt, timeTxt, `Un email de confirmation a été envoyé à ${email}.`);
+                  showBookingSuccess(`${successDetails} Un email de confirmation a été envoyé à ${email}.`, waUrl);
                 })
                 .catch((err) => {
                   console.error('Erreur envoi email :', err);
-                  showBookingSuccess(t, subtxt, dateTxt, timeTxt, "(l'email n'a pas pu être envoyé, vérifie la config EmailJS)");
+                  showBookingSuccess(`${successDetails} (l'email n'a pas pu être envoyé, vérifie la config EmailJS)`, waUrl);
                 });
             } else {
-              showBookingSuccess(t, subtxt, dateTxt, timeTxt, '(démo — EmailJS non chargé)');
+              showBookingSuccess(`${successDetails} (démo — EmailJS non chargé)`, waUrl);
             }
 
           } catch (err) {

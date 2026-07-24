@@ -572,6 +572,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     const successPanel = document.querySelector('.kd-step-panel[data-panel="success"]');
     if (successPanel) successPanel.hidden = false;
 
+    stepNextBtn.disabled = false;
+    stepNextBtn.textContent = 'Continuer';
+
     const detailsEl = document.getElementById('kd-booking-success-details');
     if (detailsEl) detailsEl.textContent = detailsText;
 

@@ -77,10 +77,26 @@
     .kd-login-otp[hidden]{ display:none; }
     .kd-login-form[hidden]{ display:none !important; }
     .kd-login-otp .kd-login-title{ margin-bottom:6px; }
-    .kd-otp-input{
-      text-align:center; font-size:24px; font-weight:700; letter-spacing:8px; text-indent:8px;
-      padding:14px; margin-bottom:6px;
+    .kd-otp-boxes{ display:flex; gap:8px; justify-content:center; margin-bottom:16px; }
+    .kd-otp-box{
+      width:15%; max-width:48px; aspect-ratio:1/1.2; text-align:center;
+      font-size:22px; font-weight:700; color:var(--green-dark);
+      border:1.5px solid var(--green-line); border-radius:10px;
+      transition:border-color .15s ease, background .15s ease, box-shadow .15s ease;
     }
+    .kd-otp-box:focus{
+      outline:none; border-color:var(--green-mid);
+      box-shadow:0 0 0 3px rgba(47,93,52,0.14);
+    }
+    .kd-otp-box.kd-otp-error{ border-color:#b32e2e; background:#fdecec; color:#b32e2e; }
+    @keyframes kd-otp-shake{
+      0%, 100%{ transform:translateX(0); }
+      20%{ transform:translateX(-6px); }
+      40%{ transform:translateX(6px); }
+      60%{ transform:translateX(-4px); }
+      80%{ transform:translateX(4px); }
+    }
+    .kd-otp-boxes.kd-shake .kd-otp-box{ animation:kd-otp-shake .4s ease; }
     .kd-otp-resend{
       display:block; width:100%; text-align:center; background:none; border:none;
       color:var(--green-mid); font-size:13px; font-weight:600; margin-top:12px; cursor:pointer;
@@ -171,12 +187,22 @@
 
           <div class="kd-login-otp" id="kd-login-otp" hidden>
             <h2 class="kd-login-title">Vérifie ton email</h2>
-            <p class="kd-login-sub" id="kd-otp-email-hint">On vient de t'envoyer un lien de confirmation.</p>
-            <p style="color:var(--text-soft); font-size:13.5px; margin-bottom:20px; line-height:1.6;">
-              Clique sur le lien reçu par email, puis reviens sur cette page — tu seras connecté automatiquement.
-            </p>
-            <p class="kd-login-error" id="kd-otp-error" hidden></p>
-            <button type="button" class="kd-otp-resend" id="kd-otp-resend-btn">Renvoyer l'email</button>
+            <p class="kd-login-sub" id="kd-otp-email-hint">Entre le code à 6 chiffres qu'on vient de t'envoyer.</p>
+            <form id="kd-otp-form">
+              <div class="kd-otp-boxes" id="kd-otp-boxes">
+                <input type="text" inputmode="numeric" maxlength="1" class="kd-otp-box" autocomplete="one-time-code">
+                <input type="text" inputmode="numeric" maxlength="1" class="kd-otp-box">
+                <input type="text" inputmode="numeric" maxlength="1" class="kd-otp-box">
+                <input type="text" inputmode="numeric" maxlength="1" class="kd-otp-box">
+                <input type="text" inputmode="numeric" maxlength="1" class="kd-otp-box">
+                <input type="text" inputmode="numeric" maxlength="1" class="kd-otp-box">
+              </div>
+              <p class="kd-login-error" id="kd-otp-error" hidden></p>
+              <button type="submit" class="kd-btn-next kd-login-submit" id="kd-otp-submit-btn" style="width:100%;">
+                <span>Confirmer mon compte</span>
+              </button>
+              <button type="button" class="kd-otp-resend" id="kd-otp-resend-btn">Renvoyer le code</button>
+            </form>
           </div>
         </div>
 

@@ -530,6 +530,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   const stepPanels = document.querySelectorAll('.kd-step-panel');
   const stepBackBtn = document.getElementById('kd-step-back');
   const stepNextBtn = document.getElementById('kd-step-next');
+  const footer = document.getElementById('kd-stepper-footer');
   let currentStep = 1;
   const totalSteps = stepItems.length;
 
@@ -562,6 +563,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
     stepBackBtn.hidden = n === 1;
     stepNextBtn.textContent = n === totalSteps ? 'Confirmer la réservation' : 'Continuer';
+    footer.hidden = false;
   }
 
   // Affiche l'écran de succès (avec le lien d'invitation WhatsApp) à la place du formulaire

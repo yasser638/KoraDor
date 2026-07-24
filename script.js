@@ -655,6 +655,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   if (stepNextBtn) {
     stepNextBtn.addEventListener('click', () => {
+      console.log('Korador DEBUG — currentStep:', currentStep, '| totalSteps:', totalSteps, '| selectedDate:', selectedDate, '| selectedTime:', selectedTime);
       if (currentStep === 2 && (!selectedDate || !selectedTime)) {
         stepNextBtn.classList.add('kd-shake');
         setTimeout(() => stepNextBtn.classList.remove('kd-shake'), 400);

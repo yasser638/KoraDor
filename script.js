@@ -55,6 +55,33 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   allTerrains = await loadTerrainsFromSupabase();
 
+  // ---------- Message de bienvenue après connexion/inscription ----------
+  (async function showWelcomeToastIfNeeded(){
+    if (!sessionStorage.getItem('kd-just-logged-in')) return;
+    sessionStorage.removeItem('kd-just-logged-in');
+
+    const toast = document.getElementById('kd-welcome-toast');
+    if (!toast) return;
+
+    let firstName = '';
+    if (typeof kdGetCurrentProfile !== 'undefined') {
+      try {
+        const profile = await kdGetCurrentProfile();
+        if (profile && profile.nom) firstName = profile.nom.trim().split(' ')[0];
+      } catch (err) { /* tant pis, message générique */ }
+    }
+
+    const titleEl = document.getElementById('kd-welcome-toast-title');
+    if (titleEl) titleEl.textContent = firstName ? `Bienvenue ${firstName} ! 👋` : 'Bienvenue ! 👋';
+
+    toast.hidden = false;
+    requestAnimationFrame(() => toast.classList.add('kd-show'));
+    setTimeout(() => {
+      toast.classList.remove('kd-show');
+      setTimeout(() => { toast.hidden = true; }, 350);
+    }, 4500);
+  })();
+
   let terrains = allTerrains;
   let index = 0;
   let timer;

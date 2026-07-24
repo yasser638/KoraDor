@@ -468,6 +468,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   const stepPanels = document.querySelectorAll('.kd-step-panel');
   const stepBackBtn = document.getElementById('kd-step-back');
   const stepNextBtn = document.getElementById('kd-step-next');
+  const footer = document.getElementById('kd-stepper-footer');
   let currentStep = 1;
   const totalSteps = stepItems.length;
 
@@ -501,6 +502,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
     stepBackBtn.hidden = n === 1;
     stepNextBtn.textContent = n === totalSteps ? 'Confirmer la réservation' : 'Continuer';
+    footer.hidden = false;
   }
 
   // Pré-remplit nom/téléphone/CIN/email à l'étape 3 si l'utilisateur est déjà connecté,
@@ -536,8 +538,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     const waBtn = document.getElementById('kd-whatsapp-invite-btn');
     if (waBtn) waBtn.href = whatsappUrl;
 
-    const footer = document.getElementById('kd-stepper-footer');
-    if (footer) footer.hidden = true;
+    footer.hidden = true;
 
     stepItems.forEach(item => item.classList.add('done'));
   }

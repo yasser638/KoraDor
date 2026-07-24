@@ -532,6 +532,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     const successPanel = document.querySelector('.kd-step-panel[data-panel="success"]');
     if (successPanel) successPanel.hidden = false;
 
+    stepNextBtn.disabled = false;
+    stepNextBtn.textContent = 'Continuer';
+
     const detailsEl = document.getElementById('kd-booking-success-details');
     if (detailsEl) detailsEl.textContent = detailsText;
 
@@ -655,7 +658,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   if (stepNextBtn) {
     stepNextBtn.addEventListener('click', () => {
-      console.log('Korador DEBUG — currentStep:', currentStep, '| totalSteps:', totalSteps, '| selectedDate:', selectedDate, '| selectedTime:', selectedTime);
       if (currentStep === 2 && (!selectedDate || !selectedTime)) {
         stepNextBtn.classList.add('kd-shake');
         setTimeout(() => stepNextBtn.classList.remove('kd-shake'), 400);

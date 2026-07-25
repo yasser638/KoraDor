@@ -108,6 +108,68 @@
       .kd-login-card{ padding:28px 22px; }
       .kd-login-header h1{ font-size:26px; }
     }
+
+    /* ============ Animations OTP "full animated" ============ */
+
+    /* Pop de chaque chiffre saisi */
+    @keyframes kd-otp-pop{
+      0%{ transform:scale(1); }
+      45%{ transform:scale(1.22); border-color:var(--green-vivid, var(--green-mid)); }
+      100%{ transform:scale(1); }
+    }
+    .kd-otp-box.kd-otp-pop{ animation:kd-otp-pop .28s ease; }
+
+    /* Pulse discret sur la case active */
+    @keyframes kd-otp-focus-pulse{
+      0%, 100%{ box-shadow:0 0 0 3px rgba(47,93,52,0.14); }
+      50%{ box-shadow:0 0 0 6px rgba(47,93,52,0.22); }
+    }
+    .kd-otp-box:focus{ animation:kd-otp-focus-pulse 1.6s ease-in-out infinite; }
+
+    /* Checkmark de succès, dessiné au trait */
+    .kd-login-success-icon{ animation:kd-success-pop .45s cubic-bezier(.2,.8,.2,1); }
+    @keyframes kd-success-pop{
+      0%{ transform:scale(.4); opacity:0; }
+      65%{ transform:scale(1.12); opacity:1; }
+      100%{ transform:scale(1); }
+    }
+    .kd-login-success-icon svg polyline{
+      stroke-dasharray:24; stroke-dashoffset:24;
+      animation:kd-check-draw .5s ease forwards .18s;
+    }
+    @keyframes kd-check-draw{ to{ stroke-dashoffset:0; } }
+
+    /* Confetti (pièces générées en JS) */
+    .kd-confetti-piece{
+      position:fixed; top:0; left:0; width:8px; height:8px; border-radius:2px;
+      pointer-events:none; z-index:300;
+      animation:kd-confetti-fly .9s cubic-bezier(.15,.7,.3,1) forwards;
+    }
+    @keyframes kd-confetti-fly{
+      0%{ transform:translate(0,0) rotate(0); opacity:1; }
+      100%{ transform:translate(var(--dx), var(--dy)) rotate(var(--rot)); opacity:0; }
+    }
+
+    /* Anneau de progression + spinner de chargement */
+    .kd-otp-resend{ display:flex; align-items:center; justify-content:center; gap:8px; }
+    .kd-otp-resend-ring{
+      width:14px; height:14px; border-radius:50%; flex-shrink:0;
+      background:conic-gradient(var(--green-mid) calc(var(--pct, 0) * 1%), var(--green-line) 0);
+      transition:background .3s linear;
+    }
+    @keyframes kd-spin{ to{ transform:rotate(360deg); } }
+    .kd-btn-spinner{
+      display:inline-block; width:14px; height:14px; border-radius:50%;
+      border:2px solid rgba(255,255,255,0.4); border-top-color:#fff;
+      animation:kd-spin .6s linear infinite; margin-right:8px; vertical-align:-2px;
+    }
+
+    @media (prefers-reduced-motion:reduce){
+      .kd-otp-box.kd-otp-pop, .kd-otp-box:focus, .kd-login-success-icon,
+      .kd-login-success-icon svg polyline, .kd-confetti-piece, .kd-btn-spinner{
+        animation:none !important;
+      }
+    }
   </style>
 </head>
 <body>

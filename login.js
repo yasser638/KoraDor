@@ -10,8 +10,12 @@ document.addEventListener('DOMContentLoaded', function () {
   const errorEl = document.getElementById('kd-login-error');
   const successPanel = document.getElementById('kd-login-success');
   const otpPanel = document.getElementById('kd-login-otp');
+  const otpForm = document.getElementById('kd-otp-form');
+  const otpBoxes = document.querySelectorAll('.kd-otp-box');
+  const otpBoxesWrap = document.getElementById('kd-otp-boxes');
   const otpError = document.getElementById('kd-otp-error');
   const otpEmailHint = document.getElementById('kd-otp-email-hint');
+  const otpSubmitBtn = document.getElementById('kd-otp-submit-btn');
   const otpResendBtn = document.getElementById('kd-otp-resend-btn');
   const submitBtn = document.getElementById('kd-login-submit-btn');
 
@@ -20,6 +24,42 @@ document.addEventListener('DOMContentLoaded', function () {
   let currentMode = 'connexion';
   let selectedRole = 'client';
   let pendingEmail = '';
+
+  // ---------- Saisie du code à 6 chiffres (une case par chiffre) ----------
+  function getOtpValue(){
+    return Array.from(otpBoxes).map(b => b.value).join('');
+  }
+  function clearOtpBoxes(){
+    otpBoxes.forEach(b => { b.value = ''; b.classList.remove('kd-otp-error'); });
+    if (otpBoxes[0]) otpBoxes[0].focus();
+  }
+  function setOtpError(hasError){
+    otpBoxes.forEach(b => b.classList.toggle('kd-otp-error', hasError));
+    if (hasError && otpBoxesWrap) {
+      otpBoxesWrap.classList.add('kd-shake');
+      setTimeout(() => otpBoxesWrap.classList.remove('kd-shake'), 400);
+    }
+  }
+  otpBoxes.forEach((box, i) => {
+    box.addEventListener('input', () => {
+      box.value = box.value.replace(/[^0-9]/g, '').slice(0, 1);
+      setOtpError(false);
+      otpError.hidden = true;
+      if (box.value && i < otpBoxes.length - 1) otpBoxes[i + 1].focus();
+    });
+    box.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !box.value && i > 0) {
+        otpBoxes[i - 1].focus();
+      }
+    });
+    box.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const pasted = (e.clipboardData.getData('text') || '').replace(/[^0-9]/g, '').slice(0, otpBoxes.length);
+      pasted.split('').forEach((digit, idx) => { if (otpBoxes[idx]) otpBoxes[idx].value = digit; });
+      const nextIdx = Math.min(pasted.length, otpBoxes.length - 1);
+      otpBoxes[nextIdx].focus();
+    });
+  });
 
   // Mêmes règles que la modale de réservation (script.js), pour rester cohérent
   function isValidMoroccanPhone(v){
@@ -101,8 +141,8 @@ document.addEventListener('DOMContentLoaded', function () {
         label.textContent = original;
         form.hidden = true;
         otpPanel.hidden = false;
-        otpEmailHint.textContent = `On vient d'envoyer un code à ${email}.`;
-        document.getElementById('kd-otp-code').focus();
+        otpEmailHint.textContent = `Entre le code à 6 chiffres envoyé à ${email}.`;
+        clearOtpBoxes();
         return;
       }
 
@@ -133,43 +173,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // Si l'utilisateur revient sur login.html alors qu'il est déjà connecté
-  // (session existante), on le redirige direct au lieu de lui remontrer le formulaire.
-  async function redirectIfAlreadyConnected(){
-    if (typeof kdCheckSession === 'undefined') return;
-    try {
-      const session = await kdCheckSession();
-      if (!session) return;
-      let role = selectedRole;
-      try {
-        const profile = await kdGetProfile(session.user.id);
-        role = profile.role;
-      } catch (err) { /* fallback sur selectedRole */ }
-      goToRoleBasedPage(role);
-    } catch (err) { /* pas connecté, l'utilisateur continue normalement */ }
-  }
-  redirectIfAlreadyConnected();
-
-  // ---------- Vérification du code à 6 chiffres ----------
-  const otpForm = document.getElementById('kd-otp-form');
-  const otpCodeInput = document.getElementById('kd-otp-code');
-  const otpSubmitBtn = document.getElementById('kd-otp-submit-btn');
-
-  // n'accepte que des chiffres, 6 max
-  otpCodeInput.addEventListener('input', () => {
-    otpCodeInput.value = otpCodeInput.value.replace(/\D/g, '').slice(0, 6);
-  });
-
   otpForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const label = otpSubmitBtn.querySelector('span');
     const original = label.textContent;
-    const code = otpCodeInput.value.trim();
+    const token = getOtpValue();
 
     otpError.hidden = true;
 
-    if (code.length !== 6) {
-      otpError.textContent = 'Le code doit contenir 6 chiffres.';
+    if (token.length < 6) {
+      setOtpError(true);
+      otpError.textContent = 'Entre les 6 chiffres du code.';
       otpError.hidden = false;
       return;
     }
@@ -181,8 +195,7 @@ document.addEventListener('DOMContentLoaded', function () {
       if (typeof kdVerifyOtp === 'undefined') {
         throw new Error("auth.js n'est pas chargé sur cette page.");
       }
-
-      const result = await kdVerifyOtp({ email: pendingEmail, token: code, type: 'signup' });
+      const result = await kdVerifyOtp({ email: pendingEmail, token });
       const userId = result.user?.id;
 
       let role = selectedRole;
@@ -190,17 +203,21 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
           const profile = await kdGetProfile(userId);
           role = profile.role;
-        } catch (err) { /* profil pas encore prêt */ }
+        } catch (err) { /* fallback sur selectedRole */ }
       }
 
+      otpSubmitBtn.disabled = false;
+      label.textContent = original;
       otpPanel.hidden = true;
       successPanel.classList.add('kd-show');
+
       setTimeout(() => goToRoleBasedPage(role), 1200);
 
     } catch (err) {
       otpSubmitBtn.disabled = false;
       label.textContent = original;
-      otpError.textContent = err.message || "Code invalide ou expiré. Vérifie ou renvoie un nouveau code.";
+      setOtpError(true);
+      otpError.textContent = err.message || 'Code invalide ou expiré. Réessaie.';
       otpError.hidden = false;
     }
   });
@@ -212,14 +229,15 @@ document.addEventListener('DOMContentLoaded', function () {
     try {
       await kdResendCode({ email: pendingEmail });
       otpResendBtn.textContent = 'Code renvoyé !';
+      clearOtpBoxes();
     } catch (err) {
       otpError.textContent = err.message || "Impossible de renvoyer le code.";
       otpError.hidden = false;
-      otpResendBtn.textContent = "Renvoyer le code";
+      otpResendBtn.textContent = 'Renvoyer le code';
     }
     setTimeout(() => {
       otpResendBtn.disabled = false;
-      otpResendBtn.textContent = "Renvoyer le code";
+      otpResendBtn.textContent = 'Renvoyer le code';
     }, 4000);
   });
 

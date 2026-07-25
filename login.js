@@ -45,7 +45,13 @@ document.addEventListener('DOMContentLoaded', function () {
       box.value = box.value.replace(/[^0-9]/g, '').slice(0, 1);
       setOtpError(false);
       otpError.hidden = true;
-      if (box.value && i < otpBoxes.length - 1) otpBoxes[i + 1].focus();
+      if (box.value) {
+        box.classList.remove('kd-otp-pop');
+        void box.offsetWidth; // force le redémarrage de l'animation même si on retape le même chiffre
+        box.classList.add('kd-otp-pop');
+        if (i < otpBoxes.length - 1) otpBoxes[i + 1].focus();
+        else box.blur(); // dernier chiffre : referme le clavier virtuel sur mobile
+      }
     });
     box.addEventListener('keydown', (e) => {
       if (e.key === 'Backspace' && !box.value && i > 0) {
@@ -60,6 +66,55 @@ document.addEventListener('DOMContentLoaded', function () {
       otpBoxes[nextIdx].focus();
     });
   });
+
+  // ---------- Petit confetti aux couleurs Korador, déclenché à la connexion réussie ----------
+  function fireConfetti(){
+    const colors = ['#2F5D34', '#7ac882', '#C1272D', '#FAF6E2'];
+    const originX = window.innerWidth / 2;
+    const originY = window.innerHeight / 2.5;
+
+    for (let i = 0; i < 28; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'kd-confetti-piece';
+      piece.style.background = colors[i % colors.length];
+      piece.style.left = originX + 'px';
+      piece.style.top = originY + 'px';
+
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 80 + Math.random() * 140;
+      const dx = Math.cos(angle) * distance;
+      const dy = Math.sin(angle) * distance - 40; // légère poussée vers le haut
+      const rotation = Math.random() * 720 - 360;
+
+      piece.style.setProperty('--dx', dx + 'px');
+      piece.style.setProperty('--dy', dy + 'px');
+      piece.style.setProperty('--rot', rotation + 'deg');
+
+      document.body.appendChild(piece);
+      piece.addEventListener('animationend', () => piece.remove());
+    }
+  }
+
+  // ---------- Countdown animé sur "Renvoyer le code" (30s, avec anneau de progression) ----------
+  let resendInterval = null;
+  function startResendCountdown(seconds = 30){
+    let remaining = seconds;
+    otpResendBtn.disabled = true;
+    otpResendBtn.innerHTML = `<span class="kd-otp-resend-ring" style="--pct:100"></span><span>Renvoyer (${remaining}s)</span>`;
+
+    clearInterval(resendInterval);
+    resendInterval = setInterval(() => {
+      remaining--;
+      if (remaining <= 0) {
+        clearInterval(resendInterval);
+        otpResendBtn.disabled = false;
+        otpResendBtn.textContent = 'Renvoyer le code';
+        return;
+      }
+      const pct = Math.round((remaining / seconds) * 100);
+      otpResendBtn.innerHTML = `<span class="kd-otp-resend-ring" style="--pct:${pct}"></span><span>Renvoyer (${remaining}s)</span>`;
+    }, 1000);
+  }
 
   // Mêmes règles que la modale de réservation (script.js), pour rester cohérent
   function isValidMoroccanPhone(v){
@@ -133,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function () {
           throw new Error("CIN invalide (ex: AB123456).");
         }
 
-        label.textContent = 'Création du compte...';
+        label.innerHTML = '<span class="kd-btn-spinner"></span>Création du compte...';
         await kdSignUp({ email, password, nom, role: selectedRole, cin, telephone });
 
         pendingEmail = email;
@@ -146,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
 
-      label.textContent = 'Connexion en cours...';
+      label.innerHTML = '<span class="kd-btn-spinner"></span>Connexion en cours...';
       const result = await kdSignIn({ email, password });
       const userId = result.user?.id;
 
@@ -162,6 +217,7 @@ document.addEventListener('DOMContentLoaded', function () {
       label.textContent = original;
       form.hidden = true;
       successPanel.classList.add('kd-show');
+      fireConfetti();
 
       setTimeout(() => goToRoleBasedPage(role), 1200);
 
@@ -189,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     otpSubmitBtn.disabled = true;
-    label.textContent = 'Vérification...';
+    label.innerHTML = '<span class="kd-btn-spinner"></span>Vérification...';
 
     try {
       if (typeof kdVerifyOtp === 'undefined') {
@@ -210,6 +266,7 @@ document.addEventListener('DOMContentLoaded', function () {
       label.textContent = original;
       otpPanel.hidden = true;
       successPanel.classList.add('kd-show');
+      fireConfetti();
 
       setTimeout(() => goToRoleBasedPage(role), 1200);
 
@@ -228,17 +285,14 @@ document.addEventListener('DOMContentLoaded', function () {
     otpResendBtn.textContent = 'Envoi...';
     try {
       await kdResendCode({ email: pendingEmail });
-      otpResendBtn.textContent = 'Code renvoyé !';
       clearOtpBoxes();
+      startResendCountdown(30);
     } catch (err) {
       otpError.textContent = err.message || "Impossible de renvoyer le code.";
       otpError.hidden = false;
-      otpResendBtn.textContent = 'Renvoyer le code';
-    }
-    setTimeout(() => {
       otpResendBtn.disabled = false;
       otpResendBtn.textContent = 'Renvoyer le code';
-    }, 4000);
+    }
   });
 
 });

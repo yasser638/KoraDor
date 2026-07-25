@@ -113,6 +113,39 @@ async function kdCreateReservation({ terrain_id, numero_terrain, date_reservatio
   return true;
 }
 
+// ---------- Récupère toutes les réservations de l'utilisateur connecté ----------
+async function kdGetMyReservations() {
+  const session = await kdCheckSession();
+  if (!session) return [];
+  const { data, error } = await supabaseClient
+    .from('reservations')
+    .select('*, terrains(nom, quartier, prix), avis(id)')
+    .eq('user_id', session.user.id)
+    .order('date_reservation', { ascending: false })
+    .order('heure_reservation', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+// ---------- Annule une réservation (la sienne uniquement, via RLS) ----------
+async function kdCancelReservation(reservationId) {
+  const { error } = await supabaseClient
+    .from('reservations')
+    .update({ statut: 'annulee' })
+    .eq('id', reservationId);
+  if (error) throw error;
+}
+
+// ---------- Laisse un avis sur un terrain après une réservation jouée ----------
+async function kdSubmitAvis({ reservation_id, terrain_id, note, commentaire }) {
+  const session = await kdCheckSession();
+  if (!session) throw new Error('Connecte-toi pour laisser un avis.');
+  const { error } = await supabaseClient
+    .from('avis')
+    .insert({ reservation_id, terrain_id, user_id: session.user.id, note, commentaire: commentaire || null });
+  if (error) throw error;
+}
+
 // ---------- Récupère en un seul appel la session + le profil (nom, cin, téléphone, rôle) ----------
 // Retourne null si personne n'est connecté ou si le profil n'est pas encore prêt.
 // Utile pour pré-remplir des formulaires (ex: la modale de réservation).

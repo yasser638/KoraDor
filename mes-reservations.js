@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   try {
     reservations = await kdGetMyReservations();
   } catch (err) {
-    loadingEl.textContent = "Erreur lors du chargement de tes réservations.";
+    loadingEl.innerHTML = `<div class="kd-mr-empty">Erreur lors du chargement de tes réservations.</div>`;
     console.error('Korador:', err);
     return;
   }
@@ -50,17 +50,27 @@ document.addEventListener('DOMContentLoaded', async function () {
     const t = r.terrains || {};
     const hasAvis = Array.isArray(r.avis) && r.avis.length > 0;
 
+    const photoHtml = t.photo
+      ? `<img src="${t.photo}" alt="${t.nom || ''}" class="kd-mr-card-photo" loading="lazy" onerror="this.outerHTML='<div class=&quot;kd-mr-card-photo-fallback&quot;>⚽</div>';">`
+      : `<div class="kd-mr-card-photo-fallback">⚽</div>`;
+
     const div = document.createElement('div');
     div.className = 'kd-mr-card';
     div.innerHTML = `
-      <div class="kd-mr-card-main">
-        <strong>${t.nom || 'Terrain'}${r.numero_terrain > 1 ? ' (Terrain ' + r.numero_terrain + ')' : ''}</strong>
-        <span>${t.quartier || ''}</span>
-        <span class="kd-mr-badge ${r.statut}">${statutLabel(r.statut)}</span>
+      <div class="kd-mr-card-left">
+        ${photoHtml}
+        <div class="kd-mr-card-main">
+          <strong>${t.nom || 'Terrain'}${r.numero_terrain > 1 ? ' (Terrain ' + r.numero_terrain + ')' : ''}</strong>
+          <span class="kd-mr-quartier">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+            ${t.quartier || ''}
+          </span>
+          <span class="kd-mr-badge ${r.statut}">${statutLabel(r.statut)}</span>
+        </div>
       </div>
       <div class="kd-mr-card-when">
-        ${formatDate(r.date_reservation)}
-        <span>${r.heure_reservation}</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        <span class="kd-mr-when-text">${formatDate(r.date_reservation)}<span>${r.heure_reservation}</span></span>
       </div>
       <div class="kd-mr-actions"></div>
     `;
@@ -108,13 +118,13 @@ document.addEventListener('DOMContentLoaded', async function () {
   }
 
   if (!upcoming.length) {
-    upcomingWrap.innerHTML = `<div class="kd-mr-empty">Aucune réservation à venir. <a href="terrains.html">Trouve un terrain →</a></div>`;
+    upcomingWrap.innerHTML = `<div class="kd-mr-empty"><div class="kd-mr-empty-icon">📅</div>Aucune réservation à venir. <a href="terrains.html">Trouve un terrain →</a></div>`;
   } else {
     upcoming.forEach(r => upcomingWrap.appendChild(renderCard(r, { showCancel: true, showReview: false })));
   }
 
   if (!past.length) {
-    pastWrap.innerHTML = `<div class="kd-mr-empty">Pas encore de match joué avec Korador.</div>`;
+    pastWrap.innerHTML = `<div class="kd-mr-empty"><div class="kd-mr-empty-icon">⚽</div>Pas encore de match joué avec Korador.</div>`;
   } else {
     past.forEach(r => pastWrap.appendChild(renderCard(r, { showCancel: false, showReview: true })));
   }

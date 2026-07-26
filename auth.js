@@ -119,7 +119,7 @@ async function kdGetMyReservations() {
   if (!session) return [];
   const { data, error } = await supabaseClient
     .from('reservations')
-    .select('*, terrains(nom, quartier, prix), avis(id)')
+    .select('*, terrains(nom, quartier, prix, photo), avis(id)')
     .eq('user_id', session.user.id)
     .order('date_reservation', { ascending: false })
     .order('heure_reservation', { ascending: false });

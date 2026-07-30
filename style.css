@@ -653,7 +653,7 @@ body {
 }
 .kd-step-item.active .kd-step-dot{ background:var(--cream); color:var(--green-dark); }
 
-.kd-stepper-content{ flex:1; padding:32px; display:flex; flex-direction:column; overflow-y:auto; }
+.kd-stepper-content{ flex:1; padding:32px; display:flex; flex-direction:column; overflow-y:auto; position:relative; }
 .kd-stepper-content h3{ font-size:18px; color:var(--green-dark); margin-bottom:20px; }
 .kd-step-panel{ flex:1; }
 

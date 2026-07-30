@@ -529,6 +529,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   const stepItems = document.querySelectorAll('.kd-step-item');
   const stepPanels = document.querySelectorAll('.kd-step-panel');
   const stepBackBtn = document.getElementById('kd-step-back');
+  const modalBackTop = document.getElementById('kd-modal-back-top');
   const stepNextBtn = document.getElementById('kd-step-next');
   const footer = document.getElementById('kd-stepper-footer');
   let currentStep = 1;
@@ -562,6 +563,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       panel.hidden = parseInt(panel.dataset.panel, 10) !== n;
     });
     stepBackBtn.hidden = n === 1;
+    if (modalBackTop) modalBackTop.hidden = n === 1;
     stepNextBtn.textContent = n === totalSteps ? 'Confirmer la réservation' : 'Continuer';
     footer.hidden = false;
   }
@@ -772,6 +774,8 @@ document.addEventListener('DOMContentLoaded', async function () {
               terrain_nom: t.nom + subtxt,
               terrain_quartier: t.quartier,
               terrain_prix: t.prix + ' DH / heure',
+              terrain_horaires: t.horaires || 'Non précisé',
+              terrain_maps_link: (t.lat && t.lng) ? `https://www.google.com/maps?q=${t.lat},${t.lng}` : '',
               date_reservation: dateTxt,
               heure_reservation: timeTxt
             };
@@ -820,6 +824,9 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   if (stepBackBtn) {
     stepBackBtn.addEventListener('click', () => goToModalStep(Math.max(1, currentStep - 1)));
+  }
+  if (modalBackTop) {
+    modalBackTop.addEventListener('click', () => goToModalStep(Math.max(1, currentStep - 1)));
   }
 
   if (modalClose) modalClose.addEventListener('click', closeBookingModal);

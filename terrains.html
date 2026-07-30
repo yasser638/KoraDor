@@ -153,6 +153,44 @@
 
   </div>
 
+  <!-- ===== Fiche détaillée d'un terrain (galerie + description + horaires) ===== -->
+  <div class="kd-detail-overlay" id="kd-detail-overlay">
+    <div class="kd-detail-modal">
+      <button type="button" class="kd-detail-close" id="kd-detail-close" aria-label="Fermer">&times;</button>
+
+      <div class="kd-detail-gallery">
+        <img id="kd-detail-img" alt="Photo du terrain">
+        <button type="button" class="kd-detail-nav kd-detail-prev" id="kd-detail-prev" aria-label="Photo précédente">&#8249;</button>
+        <button type="button" class="kd-detail-nav kd-detail-next" id="kd-detail-next" aria-label="Photo suivante">&#8250;</button>
+        <span class="kd-detail-counter" id="kd-detail-counter"></span>
+        <span class="kd-badge kd-detail-gallery-badge" id="kd-detail-badge"></span>
+      </div>
+
+      <div class="kd-detail-body">
+        <h2 id="kd-detail-nom"></h2>
+        <div class="kd-quartier"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg><span id="kd-detail-quartier"></span></div>
+
+        <div class="kd-rating">
+          <span id="kd-detail-note"></span>
+          <span class="kd-rating-num" id="kd-detail-note-num"></span>
+          <span class="kd-rating-count" id="kd-detail-avis"></span>
+        </div>
+
+        <p class="kd-detail-description" id="kd-detail-description"></p>
+
+        <div class="kd-detail-info-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 15"></polyline></svg>
+          <span id="kd-detail-horaires"></span>
+        </div>
+
+        <div class="kd-detail-footer">
+          <div class="kd-price" id="kd-detail-prix"></div>
+          <a href="#" class="kd-book-btn" id="kd-detail-reserve">Réserver</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== Modale de réservation (multi-étapes) ===== -->
   <div class="kd-modal-overlay" id="kd-modal-overlay">
     <div class="kd-modal kd-modal-stepper">
@@ -175,6 +213,9 @@
         </aside>
 
         <div class="kd-stepper-content">
+          <button class="kd-modal-back-top" id="kd-modal-back-top" aria-label="Retour" hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          </button>
 
           <div class="kd-step-panel" data-panel="1">
             <h3>Sélectionnez une activité</h3>
@@ -258,44 +299,7 @@
 
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- ===== Fiche détaillée d'un terrain (galerie + description + horaires) ===== -->
-  <div class="kd-detail-overlay" id="kd-detail-overlay">
-    <div class="kd-detail-modal">
-      <button type="button" class="kd-detail-close" id="kd-detail-close" aria-label="Fermer">&times;</button>
-
-      <div class="kd-detail-gallery">
-        <img id="kd-detail-img" alt="Photo du terrain">
-        <button type="button" class="kd-detail-nav kd-detail-prev" id="kd-detail-prev" aria-label="Photo précédente">&#8249;</button>
-        <button type="button" class="kd-detail-nav kd-detail-next" id="kd-detail-next" aria-label="Photo suivante">&#8250;</button>
-        <span class="kd-detail-counter" id="kd-detail-counter"></span>
-        <span class="kd-badge kd-detail-gallery-badge" id="kd-detail-badge"></span>
-      </div>
-
-      <div class="kd-detail-body">
-        <h2 id="kd-detail-nom"></h2>
-        <div class="kd-quartier"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg><span id="kd-detail-quartier"></span></div>
-
-        <div class="kd-rating">
-          <span id="kd-detail-note"></span>
-          <span class="kd-rating-num" id="kd-detail-note-num"></span>
-          <span class="kd-rating-count" id="kd-detail-avis"></span>
-        </div>
-
-        <p class="kd-detail-description" id="kd-detail-description"></p>
-
-        <div class="kd-detail-info-row">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 15"></polyline></svg>
-          <span id="kd-detail-horaires"></span>
-        </div>
-
-        <div class="kd-detail-footer">
-          <div class="kd-price" id="kd-detail-prix"></div>
-          <a href="#" class="kd-book-btn" id="kd-detail-reserve">Réserver</a>
-        </div>
-      </div>
     </div>
   </div>
 

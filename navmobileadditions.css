@@ -1,0 +1,52 @@
+/* =========================================================
+   AJOUT : Menu hamburger mobile + Bouton WhatsApp flottant
+   À COLLER À LA FIN de style.css
+   ========================================================= */
+
+/* --- Bouton hamburger (masqué sur desktop) --- */
+.kd-burger{
+  display:none; flex-direction:column; justify-content:center; gap:5px;
+  width:38px; height:38px; background:none; border:none; cursor:pointer; padding:0;
+  z-index:60; position:relative;
+}
+.kd-burger span{
+  display:block; width:100%; height:2.5px; background:var(--green-dark); border-radius:2px;
+  transition:transform .3s ease, opacity .3s ease;
+}
+.kd-burger-open span:nth-child(1){ transform:translateY(7.5px) rotate(45deg); }
+.kd-burger-open span:nth-child(2){ opacity:0; }
+.kd-burger-open span:nth-child(3){ transform:translateY(-7.5px) rotate(-45deg); }
+
+/* --- Bouton WhatsApp flottant --- */
+.kd-whatsapp-float{
+  position:fixed; bottom:24px; right:24px; z-index:150;
+  width:56px; height:56px; border-radius:50%; background:#25D366; color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 8px 24px rgba(0,0,0,0.25); transition:transform .2s ease;
+}
+.kd-whatsapp-float:hover{ transform:scale(1.08); }
+
+@media (max-width:768px){
+  /* Le menu classique se transforme en panneau plein écran */
+  .kd-burger{ display:flex; }
+
+  .nav-menu{
+    position:fixed; inset:0; top:0; left:0; width:100%; height:100vh;
+    background:var(--cream); flex-direction:column; align-items:flex-start; justify-content:flex-start;
+    gap:0; padding:100px 32px 32px; transform:translateX(100%); transition:transform .3s ease;
+    z-index:55; overflow-y:auto;
+  }
+  .nav-menu.kd-menu-open{ transform:translateX(0); }
+
+  .nav-links{
+    flex-direction:column; align-items:flex-start; gap:0; width:100%; margin-bottom:28px;
+  }
+  .nav-links li{ width:100%; border-bottom:1px solid var(--green-line); }
+  .nav-links a{ display:block; padding:18px 0; font-size:18px; }
+
+  .nav-menu .btn-login{ width:100%; text-align:center; padding:14px; }
+
+  body.kd-noscroll{ overflow:hidden; }
+
+  .kd-whatsapp-float{ width:50px; height:50px; bottom:18px; right:18px; }
+}

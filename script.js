@@ -1,0 +1,895 @@
+document.addEventListener('DOMContentLoaded', async function () {
+
+  // Les terrains sont chargés depuis Supabase (table `terrains`) juste avant
+  // l'initialisation du carrousel, plus bas dans ce fichier.
+  let allTerrains = [];
+
+  function renderStars(note){
+    const pct = Math.max(0, Math.min(5, note)) / 5 * 100;
+    return `
+      <span class="kd-stars">
+        <span class="kd-stars-bg">★★★★★</span>
+        <span class="kd-stars-fg" style="width:${pct}%">★★★★★</span>
+      </span>`;
+  }
+
+  const track = document.getElementById('kd-track');
+  const dotsWrap = document.getElementById('kd-dots');
+
+  if (!track || !dotsWrap) {
+    console.error('Korador carousel: éléments #kd-track ou #kd-dots introuvables dans la page.');
+    return;
+  }
+
+  // ---------- Chargement des terrains depuis Supabase (table `terrains`) ----------
+  async function loadTerrainsFromSupabase(){
+    if (typeof supabaseClient === 'undefined') {
+      console.error('Korador: Supabase (auth.js) non chargé — impossible de récupérer les terrains.');
+      return [];
+    }
+
+    const { data, error } = await supabaseClient
+      .from('terrains')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Korador: erreur lors du chargement des terrains —', error);
+      return [];
+    }
+
+    return (data || []).map(t => ({
+      id: t.id,
+      nom: t.nom,
+      quartier: t.quartier,
+      prix: t.prix,
+      dispo: t.dispo !== false,
+      note: Number(t.note) || 0,
+      avis: t.avis || 0,
+      nbTerrains: t.nb_terrains || 1,
+      lat: t.lat !== null ? Number(t.lat) : null,
+      lng: t.lng !== null ? Number(t.lng) : null,
+      photo: t.photo || null,
+      description: t.description || '',
+      horaires: t.horaires || ''
+    }));
+  }
+
+  allTerrains = await loadTerrainsFromSupabase();
+
+  // ---------- Message de bienvenue après connexion/inscription ----------
+  (async function showWelcomeToastIfNeeded(){
+    if (!sessionStorage.getItem('kd-just-logged-in')) return;
+    sessionStorage.removeItem('kd-just-logged-in');
+
+    const toast = document.getElementById('kd-welcome-toast');
+    if (!toast) return;
+
+    let firstName = '';
+    if (typeof kdGetCurrentProfile !== 'undefined') {
+      try {
+        const profile = await kdGetCurrentProfile();
+        if (profile && profile.nom) firstName = profile.nom.trim().split(' ')[0];
+      } catch (err) { /* tant pis, message générique */ }
+    }
+
+    const titleEl = document.getElementById('kd-welcome-toast-title');
+    if (titleEl) titleEl.textContent = firstName ? `Bienvenue ${firstName} ! 👋` : 'Bienvenue ! 👋';
+
+    toast.hidden = false;
+    requestAnimationFrame(() => toast.classList.add('kd-show'));
+    setTimeout(() => {
+      toast.classList.remove('kd-show');
+      setTimeout(() => { toast.hidden = true; }, 350);
+    }, 4500);
+  })();
+
+  let terrains = allTerrains;
+  let index = 0;
+  let timer;
+
+  const visibleCount = () => window.innerWidth <= 600 ? 1 : window.innerWidth <= 900 ? 2 : 3;
+  const slideCount = () => Math.max(1, terrains.length - visibleCount() + 1);
+
+  function renderCards(){
+    if (terrains.length === 0) {
+      track.innerHTML = `<div class="kd-no-results">Aucun terrain ne correspond à ta recherche.</div>`;
+      dotsWrap.innerHTML = '';
+      return;
+    }
+
+    // évite qu'une seule carte reste minuscule à gauche avec un grand vide à droite
+    const effectiveVisible = Math.min(visibleCount(), terrains.length);
+    const slideBasis = 100 / effectiveVisible;
+
+    track.innerHTML = terrains.map((t, i) => `
+      <div class="kd-slide" style="flex:0 0 ${slideBasis}%;">
+        <div class="kd-card">
+          <div class="kd-card-img">
+            ${t.photo ? `<div class="kd-card-img-skeleton kd-skel-shimmer"></div>
+            <img src="${t.photo}" alt="${t.nom}" loading="lazy"
+                 onload="this.previousElementSibling.classList.add('kd-hide')"
+                 onerror="this.previousElementSibling.classList.add('kd-hide'); this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <div class="kd-img-fallback" style="display:none;"></div>` : `<div class="kd-img-fallback"></div>`}
+            <span class="kd-badge ${t.dispo ? '' : 'busy'}">${t.dispo ? 'Disponible' : 'Occupé'}</span>
+          </div>
+          <div class="kd-card-body">
+            <h3>${t.nom}</h3>
+            <div class="kd-quartier"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>${t.quartier}</div>
+            <div class="kd-rating">
+              ${renderStars(t.note)}
+              <span class="kd-rating-num">${t.note.toFixed(1)}</span>
+              <span class="kd-rating-count">(${t.avis} avis)</span>
+            </div>
+            <div class="kd-meta">
+              <div class="kd-price">${t.prix} DH <span>/heure</span></div>
+            </div>
+            <button class="kd-book-btn" data-index="${i}">Réserver</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    // brancher les boutons Réserver sur la modale
+    track.querySelectorAll('.kd-book-btn').forEach(btn => {
+      btn.addEventListener('click', () => openBookingModal(terrains[parseInt(btn.dataset.index, 10)]));
+    });
+
+    renderDots();
+    update();
+  }
+
+  function renderDots(){
+    dotsWrap.innerHTML = '';
+    for(let i=0; i<slideCount(); i++){
+      const d = document.createElement('div');
+      d.className = 'kd-dot' + (i === index ? ' active' : '');
+      d.addEventListener('click', () => { index = i; update(); resetTimer(); });
+      dotsWrap.appendChild(d);
+    }
+  }
+
+  function update(){
+    if (terrains.length === 0) return;
+    const firstSlide = track.querySelector('.kd-slide');
+    if (!firstSlide) return;
+    const slideWidth = firstSlide.offsetWidth;
+    track.style.transform = `translateX(-${index * slideWidth}px)`;
+    [...dotsWrap.children].forEach((d,i) =>
+      d.classList.toggle('active', i === index)
+    );
+  }
+
+  function next(){ if (terrains.length === 0) return; index = (index + 1) % slideCount(); update(); }
+  function prev(){ if (terrains.length === 0) return; index = (index - 1 + slideCount()) % slideCount(); update(); }
+
+  function resetTimer(){
+    clearInterval(timer);
+    timer = setInterval(next, 3500);
+  }
+
+  // === Recherche par quartier ===
+  const chips = document.querySelectorAll('.kd-chip');
+  const quartierValueEl = document.getElementById('kd-quartier-value');
+  const quartierWrap = document.querySelector('.kd-quartier-wrap');
+  const chipsPanel = document.getElementById('kd-chips');
+  const searchBtn = document.getElementById('kd-search-btn');
+  let selectedQuartier = '';
+
+  function applySearch(quartier){
+    selectedQuartier = quartier;
+    if (quartierValueEl) quartierValueEl.textContent = quartier === '' ? 'Tous les quartiers' : quartier;
+    terrains = quartier === '' ? allTerrains : allTerrains.filter(t => t.quartier === quartier);
+    index = 0;
+    renderCards();
+    resetTimer();
+  }
+
+  function closeAllSearchPanels(){
+    document.querySelectorAll('.kd-chips-panel.open, .kd-date-panel.open').forEach(p => p.classList.remove('open'));
+  }
+
+  // tap sur le champ = ouvre/ferme son panneau (utile sur mobile, où le survol ne marche pas)
+  if (quartierWrap && chipsPanel) {
+    quartierWrap.addEventListener('click', (e) => {
+      const wasOpen = chipsPanel.classList.contains('open');
+      closeAllSearchPanels();
+      if (!wasOpen) chipsPanel.classList.add('open');
+      e.stopPropagation();
+    });
+  }
+
+  chips.forEach(chip => {
+    chip.addEventListener('click', (e) => {
+      e.stopPropagation();
+      chips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      applySearch(chip.dataset.quartier);
+      closeAllSearchPanels();
+    });
+  });
+
+  if (searchBtn) {
+    searchBtn.addEventListener('click', () => applySearch(selectedQuartier));
+  }
+
+  // referme tous les panneaux si on tape ailleurs sur la page
+  document.addEventListener('click', closeAllSearchPanels);
+
+  // === Carrousel : boutons + auto-défilement ===
+  const nextBtn = document.getElementById('kd-next');
+  const prevBtn = document.getElementById('kd-prev');
+  if (nextBtn) nextBtn.addEventListener('click', () => { next(); resetTimer(); });
+  if (prevBtn) prevBtn.addEventListener('click', () => { prev(); resetTimer(); });
+
+  const viewport = document.querySelector('.kd-viewport');
+  if (viewport) {
+    viewport.addEventListener('mouseenter', () => clearInterval(timer));
+    viewport.addEventListener('mouseleave', resetTimer);
+
+    // Glissement tactile (swipe) pour mobile
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    viewport.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      clearInterval(timer); // on arrête l'auto-défilement pendant qu'on touche
+    }, { passive: true });
+
+    viewport.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      const delta = touchStartX - touchEndX;
+      const seuil = 40; // distance minimale en pixels pour compter comme un swipe
+
+      if (delta > seuil) {
+        next(); // glissé vers la gauche = terrain suivant
+      } else if (delta < -seuil) {
+        prev(); // glissé vers la droite = terrain précédent
+      }
+      resetTimer();
+    });
+  }
+
+  window.addEventListener('resize', () => { index = 0; renderDots(); update(); });
+
+  // === Calendrier visuel ===
+  const calGrid = document.getElementById('kd-cal-grid');
+  const calMonthLabel = document.getElementById('kd-cal-month-label');
+  const calPrev = document.getElementById('kd-cal-prev');
+  const calNext = document.getElementById('kd-cal-next');
+  const timeGrid = document.getElementById('kd-time-grid');
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  let viewYear = today.getFullYear();
+  let viewMonth = today.getMonth();
+  let selectedDate = null;
+  let selectedTime = null;
+  let reservedSlots = [];
+
+  function formatDateISO(d){
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function getCurrentModalNumeroTerrain(){
+    const subterrainSelectEl = document.getElementById('kd-modal-subterrain-select');
+    if (subterrainSelectEl && !subterrainSelectEl.hidden && subterrainSelectEl.value) {
+      return parseInt(subterrainSelectEl.value, 10);
+    }
+    return 1;
+  }
+
+  // Interroge Supabase pour savoir quels créneaux sont déjà pris sur ce terrain/date,
+  // et met à jour l'affichage des créneaux en conséquence.
+  async function refreshReservedSlots(){
+    reservedSlots = [];
+    const terrainSelectEl = document.getElementById('kd-modal-terrain-select');
+    const t = terrainSelectEl && terrainSelectEl.value !== '' ? allTerrains[parseInt(terrainSelectEl.value, 10)] : null;
+
+    if (!t || !t.id || !selectedDate || typeof kdGetReservedSlots === 'undefined') {
+      renderTimeSlots();
+      return;
+    }
+    try {
+      reservedSlots = await kdGetReservedSlots({
+        terrain_id: t.id,
+        numero_terrain: getCurrentModalNumeroTerrain(),
+        date_reservation: formatDateISO(selectedDate)
+      });
+    } catch (err) {
+      console.error('Korador: impossible de vérifier les créneaux réservés —', err);
+    }
+    if (selectedTime && reservedSlots.includes(selectedTime)) {
+      selectedTime = null; // le créneau qu'on avait choisi vient d'être pris
+    }
+    renderTimeSlots();
+  }
+
+  const moisNoms = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  const heures = ['08:00','09:00','10:00','11:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00'];
+
+  function renderCalendar(){
+    calMonthLabel.textContent = `${moisNoms[viewMonth]} ${viewYear}`;
+    calGrid.innerHTML = '';
+
+    const firstDay = new Date(viewYear, viewMonth, 1);
+    // lundi = 0 ... dimanche = 6
+    const startOffset = (firstDay.getDay() + 6) % 7;
+    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+    for (let i = 0; i < startOffset; i++) {
+      const filler = document.createElement('button');
+      filler.className = 'kd-cal-day other-month';
+      filler.disabled = true;
+      calGrid.appendChild(filler);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cellDate = new Date(viewYear, viewMonth, d);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'kd-cal-day';
+      btn.textContent = d;
+
+      if (cellDate < today) {
+        btn.classList.add('disabled');
+        btn.disabled = true;
+      } else {
+        if (selectedDate && cellDate.getTime() === selectedDate.getTime()) {
+          btn.classList.add('selected');
+        }
+        btn.addEventListener('click', () => {
+          selectedDate = cellDate;
+          renderCalendar();
+          refreshReservedSlots();
+        });
+      }
+      calGrid.appendChild(btn);
+    }
+  }
+
+  function renderTimeSlots(){
+    timeGrid.innerHTML = heures.map(h => {
+      const taken = reservedSlots.includes(h);
+      const classes = ['kd-time-slot'];
+      if (h === selectedTime) classes.push('selected');
+      if (taken) classes.push('kd-time-slot-taken');
+      return `<button type="button" class="${classes.join(' ')}" data-time="${h}" ${taken ? 'disabled title="Déjà réservé"' : ''}>${h}</button>`;
+    }).join('');
+    timeGrid.querySelectorAll('.kd-time-slot:not(.kd-time-slot-taken)').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedTime = btn.dataset.time;
+        renderTimeSlots();
+      });
+    });
+  }
+
+  if (calPrev) calPrev.addEventListener('click', () => {
+    viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+    renderCalendar();
+  });
+  if (calNext) calNext.addEventListener('click', () => {
+    viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+    renderCalendar();
+  });
+
+  if (calGrid) renderCalendar();
+  if (timeGrid) renderTimeSlots();
+
+  // === Calendrier et heures de la barre de recherche (haut de page, clic pour ouvrir) ===
+  const searchCalGrid = document.getElementById('kd-search-cal-grid');
+  const searchCalMonthLabel = document.getElementById('kd-search-cal-month-label');
+  const searchCalPrev = document.getElementById('kd-search-cal-prev');
+  const searchCalNext = document.getElementById('kd-search-cal-next');
+  const searchTimeGrid = document.getElementById('kd-search-time-grid');
+  const searchDateValueEl = document.getElementById('kd-search-date-value');
+  const searchTimeValueEl = document.getElementById('kd-search-time-value');
+  const searchDateWrap = document.getElementById('kd-search-date-wrap');
+  const searchTimeWrap = document.getElementById('kd-search-time-wrap');
+  const searchCalPanel = document.getElementById('kd-search-cal-panel');
+  const searchTimePanel = document.getElementById('kd-search-time-panel');
+
+  let searchViewYear = today.getFullYear();
+  let searchViewMonth = today.getMonth();
+  let searchSelectedDate = null;
+  let searchSelectedTime = null;
+
+  function renderSearchCalendar(){
+    if (!searchCalGrid) return;
+    searchCalMonthLabel.textContent = `${moisNoms[searchViewMonth]} ${searchViewYear}`;
+    searchCalGrid.innerHTML = '';
+
+    const firstDay = new Date(searchViewYear, searchViewMonth, 1);
+    const startOffset = (firstDay.getDay() + 6) % 7;
+    const daysInMonth = new Date(searchViewYear, searchViewMonth + 1, 0).getDate();
+
+    for (let i = 0; i < startOffset; i++) {
+      const filler = document.createElement('button');
+      filler.className = 'kd-cal-day other-month';
+      filler.disabled = true;
+      searchCalGrid.appendChild(filler);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cellDate = new Date(searchViewYear, searchViewMonth, d);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'kd-cal-day';
+      btn.textContent = d;
+
+      if (cellDate < today) {
+        btn.classList.add('disabled');
+        btn.disabled = true;
+      } else {
+        if (searchSelectedDate && cellDate.getTime() === searchSelectedDate.getTime()) {
+          btn.classList.add('selected');
+        }
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          searchSelectedDate = cellDate;
+          renderSearchCalendar();
+          searchDateValueEl.textContent = cellDate.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
+          closeAllSearchPanels();
+        });
+      }
+      searchCalGrid.appendChild(btn);
+    }
+  }
+
+  function renderSearchTimeSlots(){
+    if (!searchTimeGrid) return;
+    searchTimeGrid.innerHTML = heures.map(h =>
+      `<button type="button" class="kd-time-slot${h === searchSelectedTime ? ' selected' : ''}" data-time="${h}">${h}</button>`
+    ).join('');
+    searchTimeGrid.querySelectorAll('.kd-time-slot').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        searchSelectedTime = btn.dataset.time;
+        renderSearchTimeSlots();
+        searchTimeValueEl.textContent = searchSelectedTime;
+        closeAllSearchPanels();
+      });
+    });
+  }
+
+  if (searchCalPrev) searchCalPrev.addEventListener('click', (e) => {
+    e.stopPropagation();
+    searchViewMonth--; if (searchViewMonth < 0) { searchViewMonth = 11; searchViewYear--; }
+    renderSearchCalendar();
+  });
+  if (searchCalNext) searchCalNext.addEventListener('click', (e) => {
+    e.stopPropagation();
+    searchViewMonth++; if (searchViewMonth > 11) { searchViewMonth = 0; searchViewYear++; }
+    renderSearchCalendar();
+  });
+
+  // tap sur Date / Heure = ouvre/ferme son panneau (utile sur mobile)
+  if (searchDateWrap && searchCalPanel) {
+    searchDateWrap.addEventListener('click', (e) => {
+      const wasOpen = searchCalPanel.classList.contains('open');
+      closeAllSearchPanels();
+      if (!wasOpen) searchCalPanel.classList.add('open');
+      e.stopPropagation();
+    });
+  }
+  if (searchTimeWrap && searchTimePanel) {
+    searchTimeWrap.addEventListener('click', (e) => {
+      const wasOpen = searchTimePanel.classList.contains('open');
+      closeAllSearchPanels();
+      if (!wasOpen) searchTimePanel.classList.add('open');
+      e.stopPropagation();
+    });
+  }
+
+  renderSearchCalendar();
+  renderSearchTimeSlots();
+
+  // === Modale de réservation (multi-étapes) ===
+  const modalOverlay = document.getElementById('kd-modal-overlay');
+  const modalClose = document.getElementById('kd-modal-close');
+  const terrainSelect = document.getElementById('kd-modal-terrain-select');
+  const subterrainLabel = document.getElementById('kd-modal-subterrain-label');
+  const subterrainSelect = document.getElementById('kd-modal-subterrain-select');
+  const stepItems = document.querySelectorAll('.kd-step-item');
+  const stepPanels = document.querySelectorAll('.kd-step-panel');
+  const stepBackBtn = document.getElementById('kd-step-back');
+  const modalBackTop = document.getElementById('kd-modal-back-top');
+  const stepNextBtn = document.getElementById('kd-step-next');
+  const footer = document.getElementById('kd-stepper-footer');
+  let currentStep = 1;
+  const totalSteps = stepItems.length;
+
+  function fillModalDetails(t){
+    document.getElementById('kd-modal-quartier').textContent = t.quartier;
+    document.getElementById('kd-modal-prix').textContent = t.prix + ' DH / heure';
+    document.getElementById('kd-modal-note').textContent = t.note.toFixed(1) + ' ★ (' + t.avis + ' avis)';
+
+    // liste "Terrain 1 / Terrain 2 ..." si le complexe a plusieurs terrains
+    if (t.nbTerrains > 1) {
+      subterrainSelect.innerHTML = Array.from({ length: t.nbTerrains }, (_, i) =>
+        `<option value="${i + 1}">Terrain ${i + 1}</option>`
+      ).join('');
+      subterrainLabel.hidden = false;
+      subterrainSelect.hidden = false;
+    } else {
+      subterrainLabel.hidden = true;
+      subterrainSelect.hidden = true;
+    }
+  }
+
+  function goToStep(n){
+    currentStep = n;
+    stepItems.forEach(item => {
+      const s = parseInt(item.dataset.step, 10);
+      item.classList.toggle('active', s === n);
+      item.classList.toggle('done', s < n);
+    });
+    stepPanels.forEach(panel => {
+      panel.hidden = parseInt(panel.dataset.panel, 10) !== n;
+    });
+    stepBackBtn.hidden = n === 1;
+    if (modalBackTop) modalBackTop.hidden = n === 1;
+
+    if (n === totalSteps) {
+      // Étape paiement : les boutons PayPal remplacent le bouton "Continuer" classique.
+      footer.hidden = true;
+      initPayment();
+    } else {
+      stepNextBtn.textContent = 'Continuer';
+      footer.hidden = false;
+    }
+  }
+
+  // === Étape 4 : paiement PayPal ===
+  // Remplace <PROJECT_REF> par la référence de ton projet Supabase.
+  const SUPABASE_FUNCTIONS_BASE = 'https://klbgyejlqxeuyrxxorhy.supabase.co/functions/v1';
+
+  async function initPayment(){
+    const t = allTerrains[parseInt(terrainSelect.value, 10)];
+    const loadingEl = document.getElementById('kd-paypal-loading');
+    const buttonContainer = document.getElementById('kd-paypal-button-container');
+    const errorEl = document.getElementById('kd-pay-error');
+
+    document.getElementById('kd-pay-terrain-nom').textContent = t.nom;
+    document.getElementById('kd-pay-montant').textContent = t.prix + ' DH';
+
+    errorEl.textContent = '';
+    loadingEl.hidden = false;
+    buttonContainer.hidden = true;
+    buttonContainer.innerHTML = ''; // évite d'empiler les boutons si l'utilisateur revient à cette étape
+
+    try {
+      const res = await fetch(`${SUPABASE_FUNCTIONS_BASE}/create-paypal-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ terrain_id: t.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Impossible de créer la commande PayPal.');
+
+      loadingEl.hidden = true;
+      buttonContainer.hidden = false;
+
+      if (typeof paypal === 'undefined') {
+        errorEl.textContent = "Le module de paiement n'a pas pu se charger. Réessaie.";
+        return;
+      }
+
+      paypal.Buttons({
+        createOrder: () => data.order_id,
+        onApprove: async () => {
+          buttonContainer.innerHTML = '<p style="text-align:center; color:var(--text-soft); font-size:13.5px;">Validation du paiement...</p>';
+          try {
+            const captureRes = await fetch(`${SUPABASE_FUNCTIONS_BASE}/capture-paypal-order`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ order_id: data.order_id }),
+            });
+            const captureData = await captureRes.json();
+            if (!captureRes.ok || captureData.status !== 'COMPLETED') {
+              throw new Error(captureData.error || 'Le paiement a échoué.');
+            }
+            await finalizeBooking(captureData.capture_id);
+          } catch (err) {
+            console.error('Korador: erreur capture paiement —', err);
+            errorEl.textContent = "Le paiement n'a pas pu être confirmé. Réessaie.";
+            initPayment(); // recharge un nouvel ordre PayPal propre
+          }
+        },
+        onError: (err) => {
+          console.error('Korador: erreur PayPal —', err);
+          errorEl.textContent = 'Une erreur est survenue avec PayPal. Réessaie.';
+        },
+      }).render('#kd-paypal-button-container');
+
+    } catch (err) {
+      loadingEl.hidden = true;
+      errorEl.textContent = err.message || 'Impossible de préparer le paiement.';
+    }
+  }
+
+  // Enregistre la réservation dans Supabase APRÈS que le paiement PayPal a été capturé avec succès.
+  async function finalizeBooking(paypalCaptureId){
+    const t = allTerrains[parseInt(terrainSelect.value, 10)];
+    const subtxt = t.nbTerrains > 1 ? ` (Terrain ${subterrainSelect.value})` : '';
+    const dateTxt = selectedDate ? selectedDate.toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '—';
+    const timeTxt = selectedTime || '—';
+
+    const nom = document.getElementById('kd-modal-name').value.trim();
+    const telephone = document.getElementById('kd-modal-phone').value.trim();
+    const cin = document.getElementById('kd-modal-cin').value.trim();
+    const email = document.getElementById('kd-modal-email').value.trim();
+
+    try {
+      if (typeof kdCreateReservation === 'undefined') {
+        throw new Error("auth.js n'est pas chargé sur cette page.");
+      }
+
+      // La réservation n'est créée qu'ici, une fois l'argent réellement encaissé.
+      await kdCreateReservation({
+        terrain_id: t.id,
+        numero_terrain: getCurrentModalNumeroTerrain(),
+        date_reservation: formatDateISO(selectedDate),
+        heure_reservation: timeTxt,
+        nom_client: nom,
+        telephone_client: telephone,
+        cin_client: cin,
+        email_client: email,
+        paypal_capture_id: paypalCaptureId,
+      });
+
+      const detailsReservation = {
+        to_email: email,
+        client_nom: nom,
+        client_telephone: telephone,
+        client_cin: cin,
+        terrain_nom: t.nom + subtxt,
+        terrain_quartier: t.quartier,
+        terrain_prix: t.prix + ' DH / heure',
+        terrain_horaires: t.horaires || 'Non précisé',
+        terrain_maps_link: (t.lat && t.lng) ? `https://www.google.com/maps?q=${t.lat},${t.lng}` : '',
+        date_reservation: dateTxt,
+        heure_reservation: timeTxt,
+      };
+
+      const successDetails = `${t.nom}${subtxt} — ${t.quartier}, le ${dateTxt} à ${timeTxt}.`;
+      const waMessage = `⚽ On joue à ${t.nom}${subtxt} (${t.quartier}) le ${dateTxt} à ${timeTxt} ! Rejoins-nous 👇\nhttps://korador.vercel.app/index.html`;
+      const waUrl = `https://wa.me/?text=${encodeURIComponent(waMessage)}`;
+
+      if (typeof emailjs !== 'undefined') {
+        emailjs.send('SERVICE_ID', 'TEMPLATE_ID', detailsReservation)
+          .then(() => {
+            showBookingSuccess(`${successDetails} Un email de confirmation a été envoyé à ${email}.`, waUrl);
+          })
+          .catch((err) => {
+            console.error('Erreur envoi email :', err);
+            showBookingSuccess(`${successDetails} (l'email n'a pas pu être envoyé, vérifie la config EmailJS)`, waUrl);
+          });
+      } else {
+        showBookingSuccess(`${successDetails} (démo — EmailJS non chargé)`, waUrl);
+      }
+
+    } catch (err) {
+      if (err.code === 'SLOT_TAKEN') {
+        showModalError(err.message);
+        await refreshReservedSlots();
+        goToStep(2);
+      } else {
+        console.error('Korador: erreur création réservation après paiement —', err);
+        // ⚠️ Cas critique : l'argent a été encaissé mais la réservation n'a pas pu être créée.
+        // On garde la référence PayPal bien visible pour permettre un remboursement manuel côté support.
+        showModalError(
+          `Le paiement a été accepté, mais la réservation n'a pas pu être enregistrée. ` +
+          `Contacte le support Korador avec cette référence de paiement : <strong>${paypalCaptureId}</strong>`
+        );
+      }
+    }
+  }
+
+  // Pré-remplit nom/téléphone/CIN/email à l'étape 3 si l'utilisateur est déjà connecté,
+  // pour qu'il n'ait pas à les retaper à chaque réservation.
+  async function prefillUserInfo(){
+    if (typeof kdGetCurrentProfile === 'undefined') return;
+    try {
+      const profile = await kdGetCurrentProfile();
+      if (!profile) return;
+
+      const nameInput = document.getElementById('kd-modal-name');
+      const phoneInput = document.getElementById('kd-modal-phone');
+      const cinInput = document.getElementById('kd-modal-cin');
+      const emailInput = document.getElementById('kd-modal-email');
+
+      if (nameInput && !nameInput.value && profile.nom) nameInput.value = profile.nom;
+      if (phoneInput && !phoneInput.value && profile.telephone) phoneInput.value = profile.telephone;
+      if (cinInput && !cinInput.value && profile.cin) cinInput.value = profile.cin;
+      if (emailInput && !emailInput.value && profile.email) emailInput.value = profile.email;
+    } catch (err) {
+      // Pas grave : l'utilisateur remplit simplement le formulaire manuellement.
+    }
+  }
+
+  function showBookingSuccess(detailsText, whatsappUrl){
+    stepPanels.forEach(panel => { panel.hidden = true; });
+    const successPanel = document.querySelector('.kd-step-panel[data-panel="success"]');
+    if (successPanel) successPanel.hidden = false;
+
+    stepNextBtn.disabled = false;
+    stepNextBtn.textContent = 'Continuer';
+
+    const detailsEl = document.getElementById('kd-booking-success-details');
+    if (detailsEl) detailsEl.textContent = detailsText;
+
+    const waBtn = document.getElementById('kd-whatsapp-invite-btn');
+    if (waBtn) waBtn.href = whatsappUrl;
+
+    footer.hidden = true;
+
+    stepItems.forEach(item => item.classList.add('done'));
+  }
+
+  const bookingSuccessCloseBtn = document.getElementById('kd-booking-success-close');
+  if (bookingSuccessCloseBtn) {
+    bookingSuccessCloseBtn.addEventListener('click', closeBookingModal);
+  }
+
+  function openBookingModal(t){
+    // remplit la liste déroulante avec tous les terrains, celui cliqué pré-sélectionné
+    terrainSelect.innerHTML = allTerrains.map((x, i) =>
+      `<option value="${i}" ${x.nom === t.nom ? 'selected' : ''}>${x.nom} — ${x.quartier}</option>`
+    ).join('');
+    fillModalDetails(t);
+    selectedDate = null;
+    selectedTime = null;
+    renderCalendar();
+    refreshReservedSlots();
+    goToStep(1);
+    if (modalOverlay) modalOverlay.classList.add('open');
+    prefillUserInfo();
+  }
+
+  function closeBookingModal(){
+    if (modalOverlay) modalOverlay.classList.remove('open');
+  }
+
+  if (terrainSelect) {
+    terrainSelect.addEventListener('change', (e) => {
+      const t = allTerrains[parseInt(e.target.value, 10)];
+      if (t) fillModalDetails(t);
+      refreshReservedSlots();
+    });
+  }
+  if (subterrainSelect) {
+    subterrainSelect.addEventListener('change', refreshReservedSlots);
+  }
+
+  // === Validation des informations (étape 3) ===
+
+  // Téléphone marocain : 06/07/05 XX XX XX XX, ou +212/00212 6/7/5 XX XX XX XX
+  function isValidMoroccanPhone(v){
+    const cleaned = v.replace(/[\s.-]/g, '');
+    return /^(?:\+212|00212|0)[5-7][0-9]{8}$/.test(cleaned);
+  }
+
+  // CIN marocaine : 1 ou 2 lettres suivies de 1 à 7 chiffres (ex: A123456, AB123456)
+  function isValidCIN(v){
+    return /^[A-Za-z]{1,2}[0-9]{1,7}$/.test(v.trim());
+  }
+
+  function isValidEmail(v){
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+  }
+
+  function setFieldState(input, errorEl, valide, message){
+    if (!input) return;
+    input.classList.toggle('kd-input-error', !valide);
+    if (errorEl) {
+      errorEl.textContent = valide ? '' : message;
+      errorEl.classList.toggle('kd-show', !valide);
+    }
+  }
+
+  function validateStep3(){
+    const nameInput = document.getElementById('kd-modal-name');
+    const phoneInput = document.getElementById('kd-modal-phone');
+    const cinInput = document.getElementById('kd-modal-cin');
+    const emailInput = document.getElementById('kd-modal-email');
+
+    const nameOk = nameInput && nameInput.value.trim().length >= 2;
+    const phoneOk = phoneInput && isValidMoroccanPhone(phoneInput.value);
+    const cinOk = cinInput && isValidCIN(cinInput.value);
+    const emailOk = emailInput && isValidEmail(emailInput.value);
+
+    setFieldState(nameInput, document.getElementById('kd-modal-name-error'), nameOk, 'Merci d\'indiquer ton nom complet.');
+    setFieldState(phoneInput, document.getElementById('kd-modal-phone-error'), phoneOk, 'Numéro invalide (ex: 06 12 34 56 78).');
+    setFieldState(cinInput, document.getElementById('kd-modal-cin-error'), cinOk, 'CIN invalide (ex: AB123456).');
+    setFieldState(emailInput, document.getElementById('kd-modal-email-error'), emailOk, 'Adresse email invalide.');
+
+    return nameOk && phoneOk && cinOk && emailOk;
+  }
+
+  // Efface l'erreur dès que l'utilisateur corrige le champ, sans attendre le prochain "Continuer"
+  ['kd-modal-name', 'kd-modal-phone', 'kd-modal-cin', 'kd-modal-email'].forEach(id => {
+    const input = document.getElementById(id);
+    if (input) input.addEventListener('input', () => {
+      if (input.classList.contains('kd-input-error')) validateStep3();
+    });
+  });
+
+
+  // Remplace "TA_CLE_PUBLIQUE" par ta vraie clé publique EmailJS (Account > General)
+  if (typeof emailjs !== 'undefined') {
+    emailjs.init({ publicKey: 'TA_CLE_PUBLIQUE' });
+  }
+
+  function showModalError(html){
+    let el = document.getElementById('kd-modal-generic-error');
+    if (!el) {
+      el = document.createElement('p');
+      el.id = 'kd-modal-generic-error';
+      el.style.cssText = 'color:#b32e2e; background:#fdecec; border-radius:8px; padding:10px 14px; font-size:13px; margin:10px 24px 0; text-align:center;';
+      const footer = document.getElementById('kd-stepper-footer');
+      if (footer && footer.parentNode) footer.parentNode.insertBefore(el, footer);
+    }
+    el.innerHTML = html;
+  }
+  function clearModalError(){
+    const el = document.getElementById('kd-modal-generic-error');
+    if (el) el.remove();
+  }
+
+  if (stepNextBtn) {
+    stepNextBtn.addEventListener('click', () => {
+      if (currentStep === 2 && (!selectedDate || !selectedTime)) {
+        stepNextBtn.classList.add('kd-shake');
+        setTimeout(() => stepNextBtn.classList.remove('kd-shake'), 400);
+        return;
+      }
+
+      if (currentStep === 3) {
+        if (!validateStep3()) {
+          stepNextBtn.classList.add('kd-shake');
+          setTimeout(() => stepNextBtn.classList.remove('kd-shake'), 400);
+          return;
+        }
+      }
+
+      // Étapes 1→2→3→4 : simple avancement. L'étape 4 (paiement) et la création
+      // de la réservation sont gérées par initPayment()/finalizeBooking() ci-dessus.
+      if (currentStep < totalSteps) {
+        clearModalError();
+        goToStep(currentStep + 1);
+      }
+    });
+  }
+
+  if (stepBackBtn) {
+    stepBackBtn.addEventListener('click', () => goToStep(Math.max(1, currentStep - 1)));
+  }
+  if (modalBackTop) {
+    modalBackTop.addEventListener('click', () => goToStep(Math.max(1, currentStep - 1)));
+  }
+
+  if (modalClose) modalClose.addEventListener('click', closeBookingModal);
+  if (modalOverlay) {
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeBookingModal(); });
+  }
+
+  renderCards();
+  resetTimer();
+
+  // === Ouvre automatiquement la réservation si on arrive depuis la carte (index.html#reserve=...) ===
+  const hash = window.location.hash; // ex: "#reserve=Stade%20Hay%20Hassani"
+  if (hash.startsWith('#reserve=')) {
+    const terrainName = decodeURIComponent(hash.replace('#reserve=', ''));
+    const match = allTerrains.find(t => t.nom === terrainName);
+    if (match) {
+      openBookingModal(match);
+      const section = document.getElementById('kd-terrains');
+      if (section) section.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
+});

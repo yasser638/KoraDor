@@ -82,7 +82,7 @@ async function kdGetReservedSlots({ terrain_id, numero_terrain, date_reservation
 
 // ---------- Crée une réservation ----------
 // Fonctionne aussi pour un visiteur non connecté (user_id sera alors null).
-async function kdCreateReservation({ terrain_id, numero_terrain, date_reservation, heure_reservation, nom_client, telephone_client, cin_client, email_client }) {
+async function kdCreateReservation({ terrain_id, numero_terrain, date_reservation, heure_reservation, nom_client, telephone_client, cin_client, email_client, paypal_capture_id }) {
   const session = await kdCheckSession();
 
   const { error } = await supabaseClient
@@ -97,6 +97,7 @@ async function kdCreateReservation({ terrain_id, numero_terrain, date_reservatio
       telephone_client,
       cin_client,
       email_client,
+      paypal_capture_id: paypal_capture_id || null,
       statut: 'en_attente'
     });
 

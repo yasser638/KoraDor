@@ -564,8 +564,159 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
     stepBackBtn.hidden = n === 1;
     if (modalBackTop) modalBackTop.hidden = n === 1;
-    stepNextBtn.textContent = n === totalSteps ? 'Confirmer la réservation' : 'Continuer';
-    footer.hidden = false;
+
+    if (n === totalSteps) {
+      // Étape paiement : les boutons PayPal remplacent le bouton "Continuer" classique.
+      footer.hidden = true;
+      initPayment();
+    } else {
+      stepNextBtn.textContent = 'Continuer';
+      footer.hidden = false;
+    }
+  }
+
+  // === Étape 4 : paiement PayPal ===
+  // Remplace <PROJECT_REF> par la référence de ton projet Supabase.
+  const SUPABASE_FUNCTIONS_BASE = 'https://klbgyejlqxeuyrxxorhy.supabase.co/functions/v1';
+
+  async function initPayment(){
+    const t = allTerrains[parseInt(terrainSelect.value, 10)];
+    const loadingEl = document.getElementById('kd-paypal-loading');
+    const buttonContainer = document.getElementById('kd-paypal-button-container');
+    const errorEl = document.getElementById('kd-pay-error');
+
+    document.getElementById('kd-pay-terrain-nom').textContent = t.nom;
+    document.getElementById('kd-pay-montant').textContent = t.prix + ' DH';
+
+    errorEl.textContent = '';
+    loadingEl.hidden = false;
+    buttonContainer.hidden = true;
+    buttonContainer.innerHTML = ''; // évite d'empiler les boutons si l'utilisateur revient à cette étape
+
+    try {
+      const res = await fetch(`${SUPABASE_FUNCTIONS_BASE}/create-paypal-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ terrain_id: t.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Impossible de créer la commande PayPal.');
+
+      loadingEl.hidden = true;
+      buttonContainer.hidden = false;
+
+      if (typeof paypal === 'undefined') {
+        errorEl.textContent = "Le module de paiement n'a pas pu se charger. Réessaie.";
+        return;
+      }
+
+      paypal.Buttons({
+        createOrder: () => data.order_id,
+        onApprove: async () => {
+          buttonContainer.innerHTML = '<p style="text-align:center; color:var(--text-soft); font-size:13.5px;">Validation du paiement...</p>';
+          try {
+            const captureRes = await fetch(`${SUPABASE_FUNCTIONS_BASE}/capture-paypal-order`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ order_id: data.order_id }),
+            });
+            const captureData = await captureRes.json();
+            if (!captureRes.ok || captureData.status !== 'COMPLETED') {
+              throw new Error(captureData.error || 'Le paiement a échoué.');
+            }
+            await finalizeBooking(captureData.capture_id);
+          } catch (err) {
+            console.error('Korador: erreur capture paiement —', err);
+            errorEl.textContent = "Le paiement n'a pas pu être confirmé. Réessaie.";
+            initPayment(); // recharge un nouvel ordre PayPal propre
+          }
+        },
+        onError: (err) => {
+          console.error('Korador: erreur PayPal —', err);
+          errorEl.textContent = 'Une erreur est survenue avec PayPal. Réessaie.';
+        },
+      }).render('#kd-paypal-button-container');
+
+    } catch (err) {
+      loadingEl.hidden = true;
+      errorEl.textContent = err.message || 'Impossible de préparer le paiement.';
+    }
+  }
+
+  // Enregistre la réservation dans Supabase APRÈS que le paiement PayPal a été capturé avec succès.
+  async function finalizeBooking(paypalCaptureId){
+    const t = allTerrains[parseInt(terrainSelect.value, 10)];
+    const subtxt = t.nbTerrains > 1 ? ` (Terrain ${subterrainSelect.value})` : '';
+    const dateTxt = modalSelectedDate ? modalSelectedDate.toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '—';
+    const timeTxt = modalSelectedTime || '—';
+
+    const nom = document.getElementById('kd-modal-name').value.trim();
+    const telephone = document.getElementById('kd-modal-phone').value.trim();
+    const cin = document.getElementById('kd-modal-cin').value.trim();
+    const email = document.getElementById('kd-modal-email').value.trim();
+
+    try {
+      if (typeof kdCreateReservation === 'undefined') {
+        throw new Error("auth.js n'est pas chargé sur cette page.");
+      }
+
+      // La réservation n'est créée qu'ici, une fois l'argent réellement encaissé.
+      await kdCreateReservation({
+        terrain_id: t.id,
+        numero_terrain: getCurrentModalNumeroTerrain(),
+        date_reservation: formatDateISO(modalSelectedDate),
+        heure_reservation: timeTxt,
+        nom_client: nom,
+        telephone_client: telephone,
+        cin_client: cin,
+        email_client: email,
+        paypal_capture_id: paypalCaptureId,
+      });
+
+      const detailsReservation = {
+        to_email: email,
+        client_nom: nom,
+        client_telephone: telephone,
+        client_cin: cin,
+        terrain_nom: t.nom + subtxt,
+        terrain_quartier: t.quartier,
+        terrain_prix: t.prix + ' DH / heure',
+        terrain_horaires: t.horaires || 'Non précisé',
+        terrain_maps_link: (t.lat && t.lng) ? `https://www.google.com/maps?q=${t.lat},${t.lng}` : '',
+        date_reservation: dateTxt,
+        heure_reservation: timeTxt,
+      };
+
+      const successDetails = `${t.nom}${subtxt} — ${t.quartier}, le ${dateTxt} à ${timeTxt}.`;
+      const waMessage = `⚽ On joue à ${t.nom}${subtxt} (${t.quartier}) le ${dateTxt} à ${timeTxt} ! Rejoins-nous 👇\nhttps://korador.vercel.app/terrains.html`;
+      const waUrl = `https://wa.me/?text=${encodeURIComponent(waMessage)}`;
+
+      if (typeof emailjs !== 'undefined') {
+        emailjs.send('SERVICE_ID', 'TEMPLATE_ID', detailsReservation)
+          .then(() => {
+            showBookingSuccess(`${successDetails} Un email de confirmation a été envoyé à ${email}.`, waUrl);
+          })
+          .catch((err) => {
+            console.error('Erreur envoi email :', err);
+            showBookingSuccess(`${successDetails} (l'email n'a pas pu être envoyé, vérifie la config EmailJS)`, waUrl);
+          });
+      } else {
+        showBookingSuccess(`${successDetails} (démo — EmailJS non chargé)`, waUrl);
+      }
+
+    } catch (err) {
+      if (err.code === 'SLOT_TAKEN') {
+        showModalError(err.message);
+        await refreshReservedSlots();
+        goToModalStep(2);
+      } else {
+        console.error('Korador: erreur création réservation après paiement —', err);
+        showModalError(
+          `Le paiement a été accepté, mais la réservation n'a pas pu être enregistrée. ` +
+          `Contacte le support Korador avec cette référence de paiement : <strong>${paypalCaptureId}</strong>`
+        );
+      }
+    }
   }
 
   // Affiche l'écran de succès (avec le lien d'invitation WhatsApp) à la place du formulaire
@@ -730,90 +881,12 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
       }
 
+      // Étapes 1→2→3→4 : simple avancement. L'étape 4 (paiement) et la création
+      // de la réservation sont gérées par initPayment()/finalizeBooking() ci-dessus.
       if (currentStep < totalSteps) {
-        goToModalStep(currentStep + 1);
-      } else {
-        const t = allTerrains[parseInt(terrainSelect.value, 10)];
-        const subtxt = t.nbTerrains > 1 ? ` (Terrain ${subterrainSelect.value})` : '';
-        const dateTxt = modalSelectedDate ? modalSelectedDate.toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '—';
-        const timeTxt = modalSelectedTime || '—';
-
-        const nom = document.getElementById('kd-modal-name').value.trim();
-        const telephone = document.getElementById('kd-modal-phone').value.trim();
-        const cin = document.getElementById('kd-modal-cin').value.trim();
-        const email = document.getElementById('kd-modal-email').value.trim();
-
         clearModalError();
-        stepNextBtn.disabled = true;
-        const originalLabel = stepNextBtn.textContent;
-        stepNextBtn.textContent = 'Réservation en cours...';
-
-        (async () => {
-          try {
-            if (typeof kdCreateReservation === 'undefined') {
-              throw new Error("auth.js n'est pas chargé sur cette page.");
-            }
-
-            // 1) On enregistre VRAIMENT la réservation dans Supabase (bloque les doubles-réservations)
-            await kdCreateReservation({
-              terrain_id: t.id,
-              numero_terrain: getCurrentModalNumeroTerrain(),
-              date_reservation: formatDateISO(modalSelectedDate),
-              heure_reservation: timeTxt,
-              nom_client: nom,
-              telephone_client: telephone,
-              cin_client: cin,
-              email_client: email
-            });
-
-            const detailsReservation = {
-              to_email: email,
-              client_nom: nom,
-              client_telephone: telephone,
-              client_cin: cin,
-              terrain_nom: t.nom + subtxt,
-              terrain_quartier: t.quartier,
-              terrain_prix: t.prix + ' DH / heure',
-              terrain_horaires: t.horaires || 'Non précisé',
-              terrain_maps_link: (t.lat && t.lng) ? `https://www.google.com/maps?q=${t.lat},${t.lng}` : '',
-              date_reservation: dateTxt,
-              heure_reservation: timeTxt
-            };
-
-            const successDetails = `${t.nom}${subtxt} — ${t.quartier}, le ${dateTxt} à ${timeTxt}.`;
-            const waMessage = `⚽ On joue à ${t.nom}${subtxt} (${t.quartier}) le ${dateTxt} à ${timeTxt} ! Rejoins-nous 👇\nhttps://korador.vercel.app/terrains.html`;
-            const waUrl = `https://wa.me/?text=${encodeURIComponent(waMessage)}`;
-
-            if (typeof emailjs !== 'undefined') {
-              // Remplace "SERVICE_ID" et "TEMPLATE_ID" par les tiens (EmailJS > Email Services / Email Templates)
-              emailjs.send('SERVICE_ID', 'TEMPLATE_ID', detailsReservation)
-                .then(() => {
-                  showBookingSuccess(`${successDetails} Un email de confirmation a été envoyé à ${email}.`, waUrl);
-                })
-                .catch((err) => {
-                  console.error('Erreur envoi email :', err);
-                  showBookingSuccess(`${successDetails} (l'email n'a pas pu être envoyé, vérifie la config EmailJS)`, waUrl);
-                });
-            } else {
-              showBookingSuccess(`${successDetails} (démo — EmailJS non chargé)`, waUrl);
-            }
-
-          } catch (err) {
-            stepNextBtn.disabled = false;
-            stepNextBtn.textContent = originalLabel;
-
-            if (err.code === 'SLOT_TAKEN') {
-              showModalError(err.message);
-              await refreshReservedSlots();
-              goToModalStep(2);
-            } else {
-              console.error('Korador: erreur création réservation —', err);
-              showModalError("Une erreur est survenue, réessaie dans un instant.");
-            }
-          }
-        })();
+        goToModalStep(currentStep + 1);
       }
-
     });
   }
 

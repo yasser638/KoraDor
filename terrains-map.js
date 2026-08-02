@@ -596,7 +596,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     try {
       const res = await fetch(`${SUPABASE_FUNCTIONS_BASE}/create-paypal-order`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        },
         body: JSON.stringify({ terrain_id: t.id }),
       });
       const data = await res.json();
@@ -617,7 +621,11 @@ document.addEventListener('DOMContentLoaded', async function () {
           try {
             const captureRes = await fetch(`${SUPABASE_FUNCTIONS_BASE}/capture-paypal-order`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+              },
               body: JSON.stringify({ order_id: data.order_id }),
             });
             const captureData = await captureRes.json();
@@ -692,7 +700,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       const waUrl = `https://wa.me/?text=${encodeURIComponent(waMessage)}`;
 
       if (typeof emailjs !== 'undefined') {
-        emailjs.send('SERVICE_ID', 'TEMPLATE_ID', detailsReservation)
+        emailjs.send('service_p0i5n0c', 'db96gce', detailsReservation)
           .then(() => {
             showBookingSuccess(`${successDetails} Un email de confirmation a été envoyé à ${email}.`, waUrl);
           })
@@ -846,7 +854,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   // Remplace "TA_CLE_PUBLIQUE" par ta vraie clé publique EmailJS (Account > General)
   if (typeof emailjs !== 'undefined') {
-    emailjs.init({ publicKey: 'TA_CLE_PUBLIQUE' });
+    emailjs.init({ publicKey: 'Id1WriGb6iLu_qjrO' });
   }
 
   function showModalError(html){

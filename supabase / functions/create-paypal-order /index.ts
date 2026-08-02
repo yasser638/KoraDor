@@ -1,14 +1,20 @@
-// supabase/functions/capture-paypal-order/index.ts
+// supabase/functions/create-paypal-order/index.ts
 //
-// Deploy:  supabase functions deploy capture-paypal-order
-// Same secrets as create-paypal-order.
+// Deploy:  supabase functions deploy create-paypal-order
+// Secrets: supabase secrets set PAYPAL_CLIENT_ID=xxx PAYPAL_CLIENT_SECRET=xxx PAYPAL_API_BASE=https://api-m.sandbox.paypal.com
+
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const PAYPAL_API_BASE = Deno.env.get("PAYPAL_API_BASE")!;
 const PAYPAL_CLIENT_ID = Deno.env.get("PAYPAL_CLIENT_ID")!;
 const PAYPAL_CLIENT_SECRET = Deno.env.get("PAYPAL_CLIENT_SECRET")!;
 
+// PayPal doesn't support MAD. Fixed conversion rate — update this periodically,
+// or swap for a live exchange-rate API call if you want it to stay current automatically.
+const MAD_TO_USD = 0.10; // 1 MAD ≈ 0.10 USD — VERIFY this rate before going live
+
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "*", // remplace par ton domaine Vercel en production
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
@@ -33,40 +39,72 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { order_id } = await req.json();
+    const { terrain_id } = await req.json();
 
-    if (!order_id) {
+    if (!terrain_id) {
       return new Response(
-        JSON.stringify({ error: "Missing order_id" }),
+        JSON.stringify({ error: "Missing terrain_id" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    const accessToken = await getPayPalAccessToken();
-    const captureRes = await fetch(
-      `${PAYPAL_API_BASE}/v2/checkout/orders/${order_id}/capture`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      },
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const capture = await captureRes.json();
+    // Prix en DH récupéré côté serveur — jamais envoyé par le client, pour éviter toute manipulation.
+    const { data: terrain, error: terrainError } = await supabase
+      .from("terrains")
+      .select("id, nom, prix")
+      .eq("id", terrain_id)
+      .single();
 
-    if (!captureRes.ok || capture.status !== "COMPLETED") {
+    if (terrainError || !terrain) {
       return new Response(
-        JSON.stringify({ error: "Payment capture failed", details: capture }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        JSON.stringify({ error: "Terrain not found" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    const captureId = capture.purchase_units?.[0]?.payments?.captures?.[0]?.id ?? null;
+    const amountUsd = (terrain.prix * MAD_TO_USD).toFixed(2);
+
+    const accessToken = await getPayPalAccessToken();
+    const orderRes = await fetch(`${PAYPAL_API_BASE}/v2/checkout/orders`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        intent: "CAPTURE",
+        purchase_units: [
+          {
+            description: `Réservation ${terrain.nom} - Korador`,
+            amount: {
+              currency_code: "USD",
+              value: amountUsd,
+            },
+          },
+        ],
+      }),
+    });
+
+    const order = await orderRes.json();
+
+    if (!orderRes.ok) {
+      return new Response(
+        JSON.stringify({ error: "PayPal order creation failed", details: order }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     return new Response(
-      JSON.stringify({ status: "COMPLETED", capture_id: captureId }),
+      JSON.stringify({
+        order_id: order.id,
+        amount_dh: terrain.prix,
+        amount_usd: amountUsd,
+      }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {

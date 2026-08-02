@@ -26,6 +26,10 @@
   <meta name="twitter:title" content="Korador — Réservation de terrains de foot à Casablanca">
   <meta name="twitter:description" content="Trouve un terrain disponible, réserve en 3 clics et paie en ligne. Zéro double réservation, garanti.">
   <meta name="twitter:image" content="https://korador.ma/og-image.png">
+  <style>
+    .kd-pay-loading{ text-align:center; color:var(--text-soft); font-size:13.5px; padding:18px 0; }
+    #kd-paypal-button-container{ min-height:45px; margin:14px 0; }
+  </style>
 </head>
 <body>
 
@@ -297,6 +301,10 @@
             <span class="kd-step-dot">3</span>
             <span>Vos informations</span>
           </div>
+          <div class="kd-step-item" data-step="4">
+            <span class="kd-step-dot">4</span>
+            <span>Paiement</span>
+          </div>
         </aside>
 
         <div class="kd-stepper-content">
@@ -362,6 +370,21 @@
             </div>
           </div>
 
+          <div class="kd-step-panel" data-panel="4" hidden>
+            <h3>Paiement</h3>
+            <div class="kd-modal-row"><span>Terrain</span><strong id="kd-pay-terrain-nom"></strong></div>
+            <div class="kd-modal-row"><span>Montant</span><strong id="kd-pay-montant"></strong></div>
+
+            <div id="kd-paypal-loading" class="kd-pay-loading">Préparation du paiement...</div>
+            <div id="kd-paypal-button-container" hidden></div>
+            <p class="kd-field-error" id="kd-pay-error"></p>
+
+            <div class="kd-secure-badge">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <span>Paiement sécurisé via PayPal — carte bancaire acceptée sans compte PayPal.</span>
+            </div>
+          </div>
+
           <div class="kd-step-panel" data-panel="success" hidden>
             <div class="kd-booking-success">
               <div class="kd-booking-success-icon">
@@ -400,6 +423,7 @@
 
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://www.paypal.com/sdk/js?client-id=AYaFzh776hgyAW_WhcfSB7Rj9beT9dJDblfNbLSTsSU1W70fDhJO9dKcKkhIGsyec63QueO6ULEJ4Fb7&currency=USD&locale=fr_MA"></script>
   <script src="auth.js"></script>
   <script src="reveal.js"></script>
   <script src="script.js"></script>

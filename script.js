@@ -668,7 +668,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       const waUrl = `https://wa.me/?text=${encodeURIComponent(waMessage)}`;
 
       if (typeof emailjs !== 'undefined') {
-        emailjs.send('service_p0i5n0c', 'db96gce', detailsReservation)
+        emailjs.send('service_p0i5n0c', 'template_ifwj78s', detailsReservation)
           .then(() => {
             showBookingSuccess(`${successDetails} Un email de confirmation a été envoyé à ${email}.`, waUrl);
           })

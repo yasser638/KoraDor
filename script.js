@@ -668,7 +668,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       const waUrl = `https://wa.me/?text=${encodeURIComponent(waMessage)}`;
 
       if (typeof emailjs !== 'undefined') {
-        emailjs.send('SERVICE_ID', 'TEMPLATE_ID', detailsReservation)
+        emailjs.send('service_p0i5n0c', 'db96gce', detailsReservation)
           .then(() => {
             showBookingSuccess(`${successDetails} Un email de confirmation a été envoyé à ${email}.`, waUrl);
           })
@@ -829,7 +829,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   // Remplace "TA_CLE_PUBLIQUE" par ta vraie clé publique EmailJS (Account > General)
   if (typeof emailjs !== 'undefined') {
-    emailjs.init({ publicKey: 'TA_CLE_PUBLIQUE' });
+    emailjs.init({ publicKey: 'Id1WriGb6iLu_qjrO' });
   }
 
   function showModalError(html){

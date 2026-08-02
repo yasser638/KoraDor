@@ -66,19 +66,55 @@ async function kdCheckSession() {
   return session;
 }
 
-// ---------- Récupère les créneaux déjà réservés pour un terrain (et sous-terrain) à une date donnée ----------
-// Passe par une fonction SQL dédiée (get_reserved_slots) plutôt que par une lecture directe
-// de la table `reservations`, pour que n'importe quel visiteur puisse voir les horaires pris
-// SANS avoir accès aux infos privées des autres clients (nom, téléphone, CIN, email).
+// ---------- Jeton de session (identifie cet onglet/navigateur pour les holds temporaires) ----------
+const kdSessionToken = (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+
+// ---------- Récupère les créneaux déjà réservés OU actuellement "tenus" par un autre visiteur ----------
 async function kdGetReservedSlots({ terrain_id, numero_terrain, date_reservation }) {
   const { data, error } = await supabaseClient.rpc('get_reserved_slots', {
     p_terrain_id: terrain_id,
     p_numero_terrain: numero_terrain,
-    p_date: date_reservation
+    p_date: date_reservation,
+    p_session_token: kdSessionToken
   });
   if (error) throw error;
   return (data || []).map(r => r.heure_reservation);
 }
+
+// ---------- Verrouille temporairement un créneau (5 min) pendant que l'utilisateur finalise sa réservation ----------
+async function kdCreateHold({ terrain_id, numero_terrain, date_reservation, heure_reservation }) {
+  const { data, error } = await supabaseClient.rpc('create_hold', {
+    p_terrain_id: terrain_id,
+    p_numero_terrain: numero_terrain,
+    p_date: date_reservation,
+    p_heure: heure_reservation,
+    p_session_token: kdSessionToken
+  });
+  if (error) {
+    if (error.message && error.message.includes('SLOT_TAKEN')) {
+      const e = new Error("Ce créneau vient d'être réservé par quelqu'un d'autre.");
+      e.code = 'SLOT_TAKEN';
+      throw e;
+    }
+    if (error.message && error.message.includes('SLOT_HELD')) {
+      const e = new Error("Quelqu'un d'autre est en train de réserver ce créneau. Réessaie dans quelques minutes.");
+      e.code = 'SLOT_HELD';
+      throw e;
+    }
+    throw error;
+  }
+  return data; // id du hold
+}
+
+// ---------- Libère le hold de cette session (annulation, retour en arrière, fermeture du modal) ----------
+async function kdReleaseHold() {
+  try {
+    await supabaseClient.rpc('release_hold', { p_session_token: kdSessionToken });
+  } catch (err) {
+    console.error('Korador: erreur libération hold —', err);
+  }
+}
+
 
 // ---------- Crée une réservation ----------
 // Fonctionne aussi pour un visiteur non connecté (user_id sera alors null).

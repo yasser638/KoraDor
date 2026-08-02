@@ -681,6 +681,8 @@ document.addEventListener('DOMContentLoaded', async function () {
         paypal_capture_id: paypalCaptureId,
       });
 
+      kdReleaseHold(); // la vraie réservation existe maintenant, plus besoin du verrou temporaire
+
       const detailsReservation = {
         to_email: email,
         client_nom: nom,
@@ -714,8 +716,37 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     } catch (err) {
       if (err.code === 'SLOT_TAKEN') {
-        showModalError(err.message);
+        // Quelqu'un d'autre a pris ce créneau entre le paiement et l'enregistrement.
+        // On rembourse automatiquement le client au lieu de le laisser payer pour rien.
+        showModalError("Ce créneau vient d'être pris par quelqu'un d'autre. Remboursement en cours...");
+        try {
+          const refundRes = await fetch(`${SUPABASE_FUNCTIONS_BASE}/refund-paypal-order`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            },
+            body: JSON.stringify({ capture_id: paypalCaptureId }),
+          });
+          const refundData = await refundRes.json();
+          if (refundRes.ok) {
+            showModalError("Ce créneau vient d'être pris par quelqu'un d'autre. Tu as été remboursé automatiquement — choisis un autre créneau.");
+          } else {
+            console.error('Korador: échec remboursement —', refundData);
+            showModalError(
+              `Ce créneau vient d'être pris. Le remboursement automatique a échoué — ` +
+              `contacte le support avec cette référence : <strong>${paypalCaptureId}</strong>`
+            );
+          }
+        } catch (refundErr) {
+          console.error('Korador: erreur appel remboursement —', refundErr);
+          showModalError(
+            `Ce créneau vient d'être pris. Contacte le support pour ton remboursement, référence : <strong>${paypalCaptureId}</strong>`
+          );
+        }
         await refreshReservedSlots();
+        kdReleaseHold();
         goToModalStep(2);
       } else {
         console.error('Korador: erreur création réservation après paiement —', err);
@@ -889,7 +920,32 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
       }
 
-      // Étapes 1→2→3→4 : simple avancement. L'étape 4 (paiement) et la création
+      // En quittant l'étape 2 (créneau choisi), on verrouille ce créneau 5 min pour
+      // que personne d'autre ne puisse le prendre pendant que l'utilisateur finalise.
+      if (currentStep === 2) {
+        const t = allTerrains[parseInt(terrainSelect.value, 10)];
+        clearModalError();
+        stepNextBtn.disabled = true;
+        (async () => {
+          try {
+            await kdCreateHold({
+              terrain_id: t.id,
+              numero_terrain: getCurrentModalNumeroTerrain(),
+              date_reservation: formatDateISO(modalSelectedDate),
+              heure_reservation: modalSelectedTime,
+            });
+            stepNextBtn.disabled = false;
+            goToModalStep(currentStep + 1);
+          } catch (err) {
+            stepNextBtn.disabled = false;
+            showModalError(err.message || "Ce créneau n'est plus disponible.");
+            await refreshReservedSlots();
+          }
+        })();
+        return;
+      }
+
+      // Étapes 1→3→4 : simple avancement. L'étape 4 (paiement) et la création
       // de la réservation sont gérées par initPayment()/finalizeBooking() ci-dessus.
       if (currentStep < totalSteps) {
         clearModalError();
@@ -904,15 +960,21 @@ document.addEventListener('DOMContentLoaded', async function () {
   }
 
   if (stepBackBtn) {
-    stepBackBtn.addEventListener('click', () => goToModalStep(Math.max(1, currentStep - 1)));
+    stepBackBtn.addEventListener('click', () => {
+      kdReleaseHold();
+      goToModalStep(Math.max(1, currentStep - 1));
+    });
   }
   if (modalBackTop) {
-    modalBackTop.addEventListener('click', () => goToModalStep(Math.max(1, currentStep - 1)));
+    modalBackTop.addEventListener('click', () => {
+      kdReleaseHold();
+      goToModalStep(Math.max(1, currentStep - 1));
+    });
   }
 
-  if (modalClose) modalClose.addEventListener('click', closeBookingModal);
+  if (modalClose) modalClose.addEventListener('click', () => { kdReleaseHold(); closeBookingModal(); });
   if (modalOverlay) {
-    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeBookingModal(); });
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) { kdReleaseHold(); closeBookingModal(); } });
   }
 
   // ---------- Chargement des terrains depuis Supabase (table `terrains`) ----------

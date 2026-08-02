@@ -545,7 +545,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   // === Étape 4 : paiement PayPal ===
   // Remplace <PROJECT_REF> par la référence de ton projet Supabase.
-  const SUPABASE_FUNCTIONS_BASE = 'https://<PROJECT_REF>.supabase.co/functions/v1';
+  const SUPABASE_FUNCTIONS_BASE = 'https://klbgyejlqxeuyrxxorhy.supabase.co/functions/v1';
 
   async function initPayment(){
     const t = allTerrains[parseInt(terrainSelect.value, 10)];
@@ -564,7 +564,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     try {
       const res = await fetch(`${SUPABASE_FUNCTIONS_BASE}/create-paypal-order`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        },
         body: JSON.stringify({ terrain_id: t.id }),
       });
       const data = await res.json();
@@ -585,7 +589,11 @@ document.addEventListener('DOMContentLoaded', async function () {
           try {
             const captureRes = await fetch(`${SUPABASE_FUNCTIONS_BASE}/capture-paypal-order`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+              },
               body: JSON.stringify({ order_id: data.order_id }),
             });
             const captureData = await captureRes.json();

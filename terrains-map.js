@@ -409,6 +409,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   let modalViewMonth = today.getMonth();
   let modalSelectedDate = null;
   let modalSelectedTime = null;
+  let holdExpiresAt = null; // timestamp (ms) où le verrou de 5 min sur le créneau expire
   let reservedSlots = [];
 
   function formatDateISO(d){
@@ -807,6 +808,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     fillModalDetails(t);
     modalSelectedDate = null;
     modalSelectedTime = null;
+    holdExpiresAt = null;
     renderModalCalendar();
     refreshReservedSlots();
     const footer = document.getElementById('kd-stepper-footer');
@@ -819,6 +821,21 @@ document.addEventListener('DOMContentLoaded', async function () {
   function closeBookingModal(){
     if (modalOverlay) modalOverlay.classList.remove('open');
   }
+
+  // Si l'ordinateur a été mis en veille (ou l'onglet inactif longtemps) pendant que le
+  // créneau était verrouillé, le verrou de 5 min peut avoir expiré côté serveur pendant
+  // ce temps. Au retour, on renvoie l'utilisateur vers la liste des terrains plutôt que
+  // de le laisser sur une étape (paiement, infos) qui n'est plus valable.
+  function checkHoldExpiry(){
+    if (holdExpiresAt && Date.now() > holdExpiresAt && modalOverlay && modalOverlay.classList.contains('open') && currentStep >= 3) {
+      holdExpiresAt = null;
+      showModalError("Ton créneau réservé a expiré (5 minutes écoulées). Choisis à nouveau un créneau.");
+      kdReleaseHold();
+      setTimeout(() => { closeBookingModal(); }, 2200);
+    }
+  }
+  setInterval(checkHoldExpiry, 5000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkHoldExpiry(); });
 
   // Pont global : nécessaire car le popup Leaflet est injecté comme HTML brut
   // (pas de closure JS directe possible depuis son contenu)
@@ -934,6 +951,7 @@ document.addEventListener('DOMContentLoaded', async function () {
               date_reservation: formatDateISO(modalSelectedDate),
               heure_reservation: modalSelectedTime,
             });
+            holdExpiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes, doit matcher le SQL (create_hold)
             stepNextBtn.disabled = false;
             goToModalStep(currentStep + 1);
           } catch (err) {

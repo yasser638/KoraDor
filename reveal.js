@@ -115,4 +115,27 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     })();
   }
+
+  // === Lien "Espace propriétaire" dans le menu (visible seulement pour les comptes propriétaire connectés) ===
+  // Indépendant du bloc ci-dessus pour marcher aussi sur les pages qui ont leur propre script
+  // de connexion (mes-reservations.html, etc.).
+  (async function setupOwnerNavLink(){
+    if (typeof kdCheckSession === 'undefined' || typeof kdGetProfile === 'undefined') return;
+    if (window.location.pathname.endsWith('dashboard-proprietaire.html')) return; // déjà sur la page
+
+    let session = null;
+    try { session = await kdCheckSession(); } catch (err) { return; }
+    if (!session) return;
+
+    let profile = null;
+    try { profile = await kdGetProfile(session.user.id); } catch (err) { return; }
+    if (!profile || profile.role !== 'proprietaire') return;
+
+    const navLinks = document.querySelector('.nav-links');
+    if (!navLinks || navLinks.querySelector('a[href="dashboard-proprietaire.html"]')) return;
+
+    const li = document.createElement('li');
+    li.innerHTML = '<a href="dashboard-proprietaire.html">🏟️ Espace propriétaire</a>';
+    navLinks.appendChild(li);
+  })();
 });

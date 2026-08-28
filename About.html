@@ -76,24 +76,45 @@
     .kdap-tcard h3{ font-family:var(--font-display); font-size:17px; color:var(--green-dark); margin-bottom:6px; }
     .kdap-tcard p{ font-size:13.5px; color:var(--text-soft); line-height:1.6; margin:0; }
 
-    /* --- Équipe : badges à icônes --- */
-    .kdap-team-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:18px; }
-    @media (max-width:640px){ .kdap-team-grid{ grid-template-columns:1fr; } }
-    .kdap-team-card{
-      background:#fff; border:1px solid var(--green-line); border-radius:16px; padding:24px;
-      display:flex; gap:16px; align-items:flex-start;
-      transition:transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s ease, border-color .3s ease;
+    /* --- Équipe : composition sur un mini terrain ("feuille de match") --- */
+    .kdap-pitch{
+      position:relative; background:linear-gradient(180deg, #2b7a37 0%, #256b30 100%);
+      border-radius:20px; padding:38px 20px 46px; overflow:hidden;
+      box-shadow:inset 0 0 0 3px rgba(255,255,255,0.18), 0 18px 40px rgba(30,70,32,0.18);
     }
-    .kdap-team-card:hover{
-      transform:translateY(-4px); border-color:var(--green-mid);
-      box-shadow:0 16px 34px rgba(30,70,32,0.11);
+    .kdap-pitch::before{
+      content:""; position:absolute; inset:0;
+      background:repeating-linear-gradient(90deg, rgba(255,255,255,0.045) 0 40px, transparent 40px 80px);
+      pointer-events:none;
     }
-    .kdap-team-icon{
-      flex-shrink:0; width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center;
-      color:var(--cream);
+    .kdap-pitch-lines{ position:absolute; inset:16px; border:2px solid rgba(255,255,255,0.35); border-radius:8px; pointer-events:none; }
+    .kdap-pitch-circle{
+      position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+      width:120px; height:120px; border:2px solid rgba(255,255,255,0.35); border-radius:50%; pointer-events:none;
     }
-    .kdap-team-card h3{ font-family:var(--font-display); font-size:16.5px; color:var(--green-dark); margin-bottom:5px; }
-    .kdap-team-card p{ font-size:13px; color:var(--text-soft); line-height:1.55; margin:0; }
+    .kdap-pitch-halfway{ position:absolute; top:50%; left:16px; right:16px; height:2px; background:rgba(255,255,255,0.35); pointer-events:none; }
+    .kdap-lineup{
+      position:relative; z-index:1; display:grid; gap:34px; max-width:560px; margin:0 auto; padding-top:6px;
+    }
+    .kdap-lineup-row{ display:flex; justify-content:center; gap:20px; flex-wrap:wrap; }
+    .kdap-player{ display:flex; flex-direction:column; align-items:center; width:118px; text-align:center; cursor:default; }
+    .kdap-jersey{
+      width:56px; height:56px; border-radius:50%; background:#fff; color:var(--green-dark);
+      display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:800; font-size:19px;
+      box-shadow:0 6px 16px rgba(0,0,0,0.22); border:3px solid var(--cream);
+      transition:transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s ease;
+    }
+    .kdap-player:hover .kdap-jersey{ transform:translateY(-6px) scale(1.06); box-shadow:0 12px 22px rgba(0,0,0,0.28); }
+    .kdap-player-name{ color:#fff; font-family:var(--font-display); font-weight:700; font-size:12.5px; margin-top:9px; }
+    .kdap-player-pos{ color:rgba(255,255,255,0.72); font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; margin-top:1px; }
+    .kdap-player-desc{
+      color:rgba(255,255,255,0.55); font-size:10.5px; line-height:1.4; margin-top:6px; max-height:0; overflow:hidden;
+      transition:max-height .35s ease, opacity .3s ease; opacity:0;
+    }
+    .kdap-player:hover .kdap-player-desc{ max-height:60px; opacity:1; }
+
+    /* --- Chiffres clés : style tableau d'affichage de stade --- */
+    .kdap-stat-card .kd-stat-num{ font-family:'Courier New', monospace; letter-spacing:1px; }
 
     /* --- Révélation en cascade (réutilise .kd-fade / .kd-visible déjà géré par reveal.js) --- */
     .kd-fade.kd-visible .kdap-tcard,
@@ -198,45 +219,49 @@
         </div>
       </section>
 
-      <!-- ===== Équipe ===== -->
+      <!-- ===== Équipe : composition d'équipe ===== -->
       <section class="kd-howitworks kd-fade" style="padding-top:0;">
         <span class="kd-eyebrow">L'équipe</span>
-        <h2 class="kd-slider-title" style="margin-bottom:36px;">Quatre associés, un seul objectif</h2>
-        <div class="kdap-team-grid">
-          <div class="kdap-team-card">
-            <div class="kdap-team-icon" style="background:var(--green-dark);">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+        <h2 class="kd-slider-title" style="margin-bottom:8px;">Quatre associés, un seul objectif</h2>
+        <p style="color:var(--text-soft); max-width:520px; margin-bottom:28px;">
+          Une équipe, une seule composition. Voici qui joue où chez Korador.
+        </p>
+
+        <div class="kdap-pitch">
+          <div class="kdap-pitch-lines" aria-hidden="true"></div>
+          <div class="kdap-pitch-halfway" aria-hidden="true"></div>
+          <div class="kdap-pitch-circle" aria-hidden="true"></div>
+
+          <div class="kdap-lineup">
+            <div class="kdap-lineup-row">
+              <div class="kdap-player">
+                <div class="kdap-jersey">7</div>
+                <div class="kdap-player-name">Marketing &amp; Content</div>
+                <div class="kdap-player-pos">Ailier</div>
+                <div class="kdap-player-desc">Création vidéo, community management et pub sur les réseaux — la vitesse et le flair.</div>
+              </div>
+              <div class="kdap-player">
+                <div class="kdap-jersey">9</div>
+                <div class="kdap-player-name">Commercial</div>
+                <div class="kdap-player-pos">Attaquant</div>
+                <div class="kdap-player-desc">Prospection terrain, signature des complexes — celui qui marque les buts.</div>
+              </div>
             </div>
-            <div>
-              <h3>Tech &amp; Product</h3>
-              <p>Développement de l'application, maintenance et intégration du paiement.</p>
+            <div class="kdap-lineup-row">
+              <div class="kdap-player">
+                <div class="kdap-jersey">10</div>
+                <div class="kdap-player-name">Tech &amp; Product</div>
+                <div class="kdap-player-pos">Milieu</div>
+                <div class="kdap-player-desc">Développement, maintenance et intégration du paiement — le moteur de l'équipe.</div>
+              </div>
             </div>
-          </div>
-          <div class="kdap-team-card">
-            <div class="kdap-team-icon" style="background:var(--green-mid);">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-            </div>
-            <div>
-              <h3>Commercial</h3>
-              <p>Prospection terrain, signature des complexes et relation avec les propriétaires.</p>
-            </div>
-          </div>
-          <div class="kdap-team-card">
-            <div class="kdap-team-icon" style="background:var(--red-accent);">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2"></rect></svg>
-            </div>
-            <div>
-              <h3>Marketing &amp; Content</h3>
-              <p>Création vidéo, community management et publicité sur les réseaux sociaux.</p>
-            </div>
-          </div>
-          <div class="kdap-team-card">
-            <div class="kdap-team-icon" style="background:var(--green-dark);">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-            </div>
-            <div>
-              <h3>Gestion &amp; Finance</h3>
-              <p>Facturation, comptabilité et support client / gardien au quotidien.</p>
+            <div class="kdap-lineup-row">
+              <div class="kdap-player">
+                <div class="kdap-jersey">1</div>
+                <div class="kdap-player-name">Gestion &amp; Finance</div>
+                <div class="kdap-player-pos">Gardien</div>
+                <div class="kdap-player-desc">Facturation, comptabilité et support au quotidien — la dernière ligne de défense.</div>
+              </div>
             </div>
           </div>
         </div>

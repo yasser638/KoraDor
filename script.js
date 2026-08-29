@@ -1029,4 +1029,76 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
   }
 
+  // ---------- Révélation du texte hero, en mots, au chargement ----------
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduceMotion) {
+    function splitIntoWords(el, baseDelay){
+      if (!el) return;
+      const nodes = Array.from(el.childNodes);
+      el.innerHTML = '';
+      let wordIndex = 0;
+      nodes.forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          node.textContent.split(/(\s+)/).forEach(chunk => {
+            if (chunk.trim() === '') { el.appendChild(document.createTextNode(chunk)); return; }
+            const span = document.createElement('span');
+            span.className = 'kd-word';
+            span.textContent = chunk;
+            span.style.animationDelay = `${baseDelay + wordIndex * 0.07}s`;
+            el.appendChild(span);
+            wordIndex++;
+          });
+        } else {
+          // élément déjà présent (ex: <br>, <span class="accent">) : on le garde tel quel,
+          // mais on applique quand même la révélation si c'est un span de texte simple.
+          if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'SPAN') {
+            node.classList.add('kd-word');
+            node.style.animationDelay = `${baseDelay + wordIndex * 0.07}s`;
+            wordIndex++;
+          }
+          el.appendChild(node);
+        }
+      });
+    }
+    splitIntoWords(document.getElementById('kd-hero-eyebrow'), 0);
+    splitIntoWords(document.getElementById('kd-hero-title'), 0.25);
+    splitIntoWords(document.getElementById('kd-hero-subtitle'), 0.55);
+  }
+
+  // ---------- Boutons magnétiques (suivent légèrement le curseur au survol) ----------
+  if (!reduceMotion && !window.matchMedia('(pointer: coarse)').matches) {
+    document.querySelectorAll('.kd-magnetic').forEach(btn => {
+      btn.addEventListener('mousemove', (e) => {
+        const rect = btn.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+        btn.style.transition = 'transform .08s linear';
+        btn.style.transform = `translate(${x * 0.28}px, ${y * 0.35}px)`;
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.transition = 'transform .4s cubic-bezier(.34,1.56,.64,1)';
+        btn.style.transform = 'translate(0, 0)';
+      });
+    });
+  }
+
+  // ---------- Parallax léger sur le hero au scroll ----------
+  if (!reduceMotion) {
+    const heroContent = document.getElementById('kd-hero-content');
+    if (heroContent) {
+      let ticking = false;
+      window.addEventListener('scroll', () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+          const y = window.scrollY;
+          const fadeRange = 500;
+          heroContent.style.transform = `translateY(${y * 0.18}px)`;
+          heroContent.style.opacity = String(Math.max(0, 1 - y / fadeRange));
+          ticking = false;
+        });
+      }, { passive: true });
+    }
+  }
+
 });

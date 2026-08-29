@@ -157,4 +157,23 @@ document.addEventListener('DOMContentLoaded', function () {
     `;
     document.head.appendChild(vtStyle);
   }
+
+  // === Boutons magnétiques (site entier) — suivent légèrement le curseur au survol ===
+  // N'importe quel bouton/lien avec la classe "kd-magnetic" bénéficie de l'effet, sur toutes les pages.
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
+      !window.matchMedia('(pointer: coarse)').matches) {
+    document.querySelectorAll('.kd-magnetic').forEach(btn => {
+      btn.addEventListener('mousemove', (e) => {
+        const rect = btn.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+        btn.style.transition = 'transform .08s linear';
+        btn.style.transform = `translate(${x * 0.28}px, ${y * 0.35}px)`;
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.transition = 'transform .4s cubic-bezier(.34,1.56,.64,1)';
+        btn.style.transform = 'translate(0, 0)';
+      });
+    });
+  }
 });

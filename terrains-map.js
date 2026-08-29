@@ -20,8 +20,13 @@ document.addEventListener('DOMContentLoaded', async function () {
   function updateHeroStats(){
     const totalEl = document.getElementById('kd-count-total');
     const dispoEl = document.getElementById('kd-count-dispo');
+    const noteEl = document.getElementById('kd-count-note');
     if (totalEl) totalEl.textContent = allTerrains.length;
     if (dispoEl) dispoEl.textContent = allTerrains.filter(t => t.dispo).length;
+    if (noteEl && allTerrains.length) {
+      const moyenne = allTerrains.reduce((sum, t) => sum + (t.note || 0), 0) / allTerrains.length;
+      noteEl.textContent = moyenne.toFixed(1);
+    }
   }
 
   // ---------- Puces de quartier (panneau, comme sur l'accueil) ----------
@@ -103,7 +108,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                onload="this.previousElementSibling.classList.add('kd-hide')"
                onerror="this.previousElementSibling.classList.add('kd-hide'); this.style.display='none'; this.nextElementSibling.style.display='block';">
           <div class="kd-img-fallback" style="display:none;"></div>` : `<div class="kd-img-fallback"></div>`}
-          <span class="kd-badge ${t.dispo ? '' : 'busy'}">${t.dispo ? 'Disponible' : 'Occupé'}</span>
+          ${(() => {
+            const known = t.dispoSlot !== undefined && t.dispoSlot !== null;
+            const isDispo = known ? t.dispoSlot : t.dispo;
+            const label = known ? (isDispo ? 'Disponible à cette heure' : 'Occupé à cette heure') : (isDispo ? 'Disponible' : 'Occupé');
+            return `<span class="kd-badge ${isDispo ? '' : 'busy'}">${label}</span>`;
+          })()}
         </div>
         <div class="kd-card-body">
           <h3>${t.nom}</h3>
@@ -216,15 +226,53 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
   }
 
-  // ---------- Filtrage par quartier (déclenché par "Rechercher") ----------
+  // ---------- Filtrage par quartier + créneau (déclenché par "Rechercher") ----------
   const searchMsg = document.getElementById('kd-map-search-msg');
 
-  function applyFilters(){
+  async function applyFilters(){
     terrains = selectedQuartier === '' ? allTerrains : allTerrains.filter(t => t.quartier === selectedQuartier);
 
-    if (searchMsg) {
-      searchMsg.hidden = terrains.length !== 0;
-      searchMsg.textContent = 'Aucun terrain ne correspond à ta recherche.';
+    // Si une date ET une heure précises sont choisies, on vérifie la vraie disponibilité
+    // de chaque terrain à ce créneau (avant, la date/heure n'avaient aucun effet réel sur la recherche).
+    if (tSelectedDate && tSelectedTime && typeof kdGetReservedSlots !== 'undefined') {
+      searchBtn.disabled = true;
+      const originalLabel = searchBtn.textContent;
+      searchBtn.textContent = 'Recherche...';
+
+      const dateIso = formatDateISO(tSelectedDate);
+      await Promise.all(terrains.map(async (t) => {
+        const nbSous = t.nbTerrains || 1;
+        try {
+          // Un terrain est dispo à ce créneau si AU MOINS un de ses sous-terrains est libre.
+          const results = await Promise.all(
+            Array.from({ length: nbSous }, (_, i) =>
+              kdGetReservedSlots({ terrain_id: t.id, numero_terrain: i + 1, date_reservation: dateIso })
+            )
+          );
+          t.dispoSlot = results.some(reserved => !reserved.includes(tSelectedTime));
+        } catch (err) {
+          console.error('Korador: erreur vérification créneau —', err);
+          t.dispoSlot = null; // on ne sait pas — on n'affiche rien de trompeur
+        }
+      }));
+
+      const dispoCount = terrains.filter(t => t.dispoSlot).length;
+      if (searchMsg) {
+        searchMsg.hidden = false;
+        searchMsg.textContent = dispoCount > 0
+          ? `${dispoCount} terrain${dispoCount > 1 ? 's' : ''} disponible${dispoCount > 1 ? 's' : ''} le ${tSelectedDate.toLocaleDateString('fr-FR', { day:'numeric', month:'long' })} à ${tSelectedTime}.`
+          : `Aucun terrain disponible le ${tSelectedDate.toLocaleDateString('fr-FR', { day:'numeric', month:'long' })} à ${tSelectedTime} — essaie un autre créneau.`;
+      }
+
+      searchBtn.disabled = false;
+      searchBtn.textContent = originalLabel;
+    } else {
+      // Pas de créneau précis choisi : on revient au badge statique habituel.
+      terrains.forEach(t => { t.dispoSlot = undefined; });
+      if (searchMsg) {
+        searchMsg.hidden = terrains.length !== 0;
+        searchMsg.textContent = 'Aucun terrain ne correspond à ta recherche.';
+      }
     }
 
     renderGrid();

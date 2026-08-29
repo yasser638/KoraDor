@@ -55,6 +55,21 @@
       .kd-partner-badge, .kd-testimonial{ transition:none; }
       #kd-track .kd-slide{ animation:none; }
     }
+
+    /* --- Révélation du texte hero (mots en cascade au chargement) --- */
+    #kd-hero-eyebrow, #kd-hero-title, #kd-hero-subtitle{ overflow:visible; }
+    .kd-word{ display:inline-block; opacity:0; transform:translateY(22px); animation:kd-word-in .6s cubic-bezier(.2,.8,.2,1) forwards; }
+    @keyframes kd-word-in{ to{ opacity:1; transform:translateY(0); } }
+
+    /* --- Bouton magnétique (suit légèrement le curseur au survol) --- */
+    .kd-magnetic{ will-change:transform; }
+
+    /* --- Parallax léger sur le hero au scroll --- */
+    #kd-hero-content{ will-change:transform, opacity; }
+
+    @media (prefers-reduced-motion: reduce){
+      .kd-word{ animation:none; opacity:1; transform:none; }
+    }
   </style>
 </head>
 <body>
@@ -79,14 +94,14 @@
     </nav>
 
     <main class="hero-block">
-      <div class="hero-content">
-        <span class="kd-eyebrow">🦁 100% marocain, 100% foot amateur</span>
-        <h1 class="hero-title">Kora<span class="accent">dor</span></h1>
-        <p class="hero-subtitle">
+      <div class="hero-content" id="kd-hero-content">
+        <span class="kd-eyebrow" id="kd-hero-eyebrow">🦁 100% marocain, 100% foot amateur</span>
+        <h1 class="hero-title" id="kd-hero-title">Kora<span class="accent">dor</span></h1>
+        <p class="hero-subtitle" id="kd-hero-subtitle">
           Réservez vos terrains facilement à Casablanca.<br>
           Trouvez votre créneau, rassemblez votre équipe et jouez.
         </p>
-        <a href="#kd-terrains" class="btn-explore">
+        <a href="#kd-terrains" class="btn-explore kd-magnetic">
           Explorer les terrains
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -156,7 +171,7 @@
           </div>
         </div>
 
-        <button class="kd-search-btn" id="kd-search-btn">Rechercher</button>
+        <button class="kd-search-btn kd-magnetic" id="kd-search-btn">Rechercher</button>
       </div>
 
       <div class="kd-slider-header">

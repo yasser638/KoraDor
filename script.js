@@ -57,6 +57,13 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   allTerrains = await loadTerrainsFromSupabase();
 
+  // ---------- Bandeau "Ils nous font confiance" (liste des terrains partenaires) ----------
+  (function renderPartnersStrip(){
+    const strip = document.getElementById('kd-partners-strip');
+    if (!strip || !allTerrains.length) return;
+    strip.innerHTML = allTerrains.map(t => `<span class="kd-partner-badge">${t.nom}</span>`).join('');
+  })();
+
   // ---------- Message de bienvenue après connexion/inscription ----------
   (async function showWelcomeToastIfNeeded(){
     if (!sessionStorage.getItem('kd-just-logged-in')) return;
@@ -111,7 +118,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                  onload="this.previousElementSibling.classList.add('kd-hide')"
                  onerror="this.previousElementSibling.classList.add('kd-hide'); this.style.display='none'; this.nextElementSibling.style.display='block';">
             <div class="kd-img-fallback" style="display:none;"></div>` : `<div class="kd-img-fallback"></div>`}
-            <span class="kd-badge ${t.dispo ? '' : 'busy'}">${t.dispo ? 'Disponible' : 'Occupé'}</span>
+            ${(() => {
+              const known = t.dispoSlot !== undefined && t.dispoSlot !== null;
+              const isDispo = known ? t.dispoSlot : t.dispo;
+              const label = known ? (isDispo ? 'Disponible à cette heure' : 'Occupé à cette heure') : (isDispo ? 'Disponible' : 'Occupé');
+              return `<span class="kd-badge ${isDispo ? '' : 'busy'}">${label}</span>`;
+            })()}
           </div>
           <div class="kd-card-body">
             <h3>${t.nom}</h3>
@@ -185,6 +197,43 @@ document.addEventListener('DOMContentLoaded', async function () {
     resetTimer();
   }
 
+  async function performFullSearch(){
+    terrains = selectedQuartier === '' ? allTerrains : allTerrains.filter(t => t.quartier === selectedQuartier);
+
+    // Si une date ET une heure précises sont choisies, on vérifie la vraie disponibilité
+    // de chaque terrain à ce créneau (avant, la date/heure du haut de page n'avaient aucun effet réel).
+    if (searchSelectedDate && searchSelectedTime && typeof kdGetReservedSlots !== 'undefined') {
+      searchBtn.disabled = true;
+      const originalLabel = searchBtn.textContent;
+      searchBtn.textContent = 'Recherche...';
+
+      const dateIso = formatDateISO(searchSelectedDate);
+      await Promise.all(terrains.map(async (t) => {
+        const nbSous = t.nbTerrains || 1;
+        try {
+          const results = await Promise.all(
+            Array.from({ length: nbSous }, (_, i) =>
+              kdGetReservedSlots({ terrain_id: t.id, numero_terrain: i + 1, date_reservation: dateIso })
+            )
+          );
+          t.dispoSlot = results.some(reserved => !reserved.includes(searchSelectedTime));
+        } catch (err) {
+          console.error('Korador: erreur vérification créneau —', err);
+          t.dispoSlot = null;
+        }
+      }));
+
+      searchBtn.disabled = false;
+      searchBtn.textContent = originalLabel;
+    } else {
+      terrains.forEach(t => { t.dispoSlot = undefined; });
+    }
+
+    index = 0;
+    renderCards();
+    resetTimer();
+  }
+
   function closeAllSearchPanels(){
     document.querySelectorAll('.kd-chips-panel.open, .kd-date-panel.open').forEach(p => p.classList.remove('open'));
   }
@@ -210,7 +259,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   });
 
   if (searchBtn) {
-    searchBtn.addEventListener('click', () => applySearch(selectedQuartier));
+    searchBtn.addEventListener('click', () => performFullSearch());
   }
 
   // referme tous les panneaux si on tape ailleurs sur la page
@@ -265,6 +314,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   let viewMonth = today.getMonth();
   let selectedDate = null;
   let selectedTime = null;
+  let holdExpiresAt = null; // timestamp (ms) où le verrou de 5 min sur le créneau expire
   let reservedSlots = [];
 
   function formatDateISO(d){
@@ -782,6 +832,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     fillModalDetails(t);
     selectedDate = null;
     selectedTime = null;
+    holdExpiresAt = null;
     renderCalendar();
     refreshReservedSlots();
     goToStep(1);
@@ -792,6 +843,21 @@ document.addEventListener('DOMContentLoaded', async function () {
   function closeBookingModal(){
     if (modalOverlay) modalOverlay.classList.remove('open');
   }
+
+  // Si l'ordinateur a été mis en veille (ou l'onglet inactif longtemps) pendant que le
+  // créneau était verrouillé, le verrou de 5 min peut avoir expiré côté serveur pendant
+  // ce temps. Au retour, on renvoie l'utilisateur vers la liste des terrains plutôt que
+  // de le laisser sur une étape (paiement, infos) qui n'est plus valable.
+  function checkHoldExpiry(){
+    if (holdExpiresAt && Date.now() > holdExpiresAt && modalOverlay && modalOverlay.classList.contains('open') && currentStep >= 3) {
+      holdExpiresAt = null;
+      showModalError("Ton créneau réservé a expiré (5 minutes écoulées). Choisis à nouveau un créneau.");
+      kdReleaseHold();
+      setTimeout(() => { closeBookingModal(); }, 2200);
+    }
+  }
+  setInterval(checkHoldExpiry, 5000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkHoldExpiry(); });
 
   if (terrainSelect) {
     terrainSelect.addEventListener('change', (e) => {
@@ -909,6 +975,7 @@ document.addEventListener('DOMContentLoaded', async function () {
               date_reservation: formatDateISO(selectedDate),
               heure_reservation: selectedTime,
             });
+            holdExpiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes, doit matcher le SQL (create_hold)
             stepNextBtn.disabled = false;
             goToStep(currentStep + 1);
           } catch (err) {

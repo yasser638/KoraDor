@@ -1,0 +1,81 @@
+/* =========================================================
+   AJOUT : Polish "smoothness" — transitions modale, retour
+   tactile des boutons, entrée de page en fondu.
+   À COLLER À LA FIN de style.css
+   ========================================================= */
+
+/* --- Modale : fondu + léger scale d'entrée au lieu d'un pop instantané --- */
+.kd-modal-overlay{
+  display:flex;
+  opacity:0; visibility:hidden; pointer-events:none;
+  transition:opacity .28s cubic-bezier(.4,0,.2,1), visibility 0s linear .28s;
+}
+.kd-modal-overlay.open{
+  opacity:1; visibility:visible; pointer-events:auto;
+  transition:opacity .28s cubic-bezier(.4,0,.2,1), visibility 0s linear 0s;
+}
+.kd-modal, .kd-avis-modal, .kd-login-split{
+  transform:translateY(18px) scale(.97); opacity:0;
+  transition:transform .32s cubic-bezier(.34,1.56,.64,1), opacity .28s ease;
+}
+.kd-modal-overlay.open .kd-modal,
+.kd-avis-overlay.open .kd-avis-modal{
+  transform:translateY(0) scale(1); opacity:1;
+}
+
+/* --- Transition fluide entre les étapes du stepper (step 1→2→3→4) --- */
+.kd-step-panel:not([hidden]){
+  animation: kd-step-in .32s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes kd-step-in{
+  from{ opacity:0; transform:translateX(14px); }
+  to{ opacity:1; transform:translateX(0); }
+}
+
+/* --- Retour tactile au clic sur les boutons principaux --- */
+.btn-explore:active,
+.btn-login:active,
+.kd-btn-next:active,
+.kd-btn-back:active,
+.kd-book-btn:active,
+.kd-search-btn:active,
+.kd-dash-export-btn:active,
+.kd-res-action-btn:active,
+.kd-mr-btn:active,
+.kd-role-btn:active,
+.kd-otp-resend:active,
+.kd-avis-star:active,
+.kd-login-submit:active,
+.kd-contact-submit:active{
+  transform:scale(.96);
+  transition-duration:.08s;
+}
+
+/* --- Entrée en fondu du contenu principal au chargement de page --- */
+main{
+  animation:kd-page-in .5s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes kd-page-in{
+  from{ opacity:0; transform:translateY(8px); }
+  to{ opacity:1; transform:translateY(0); }
+}
+
+/* --- Respect du "reduced motion" (accessibilité) --- */
+@media (prefers-reduced-motion: reduce){
+  .kd-modal-overlay, .kd-modal, .kd-avis-modal, .kd-login-split,
+  .kd-step-panel,
+  main,
+  .btn-explore, .btn-login, .kd-btn-next, .kd-btn-back, .kd-book-btn,
+  .kd-search-btn, .kd-dash-export-btn, .kd-res-action-btn, .kd-mr-btn,
+  .kd-role-btn, .kd-otp-resend, .kd-avis-star, .kd-login-submit, .kd-contact-submit{
+    animation:none !important;
+    transition:none !important;
+    transform:none !important;
+  }
+}
+
+/* --- Bouton magnétique (partagé, site entier — logique JS dans reveal.js) --- */
+.kd-magnetic{ will-change:transform; display:inline-flex; }
+@media (prefers-reduced-motion: reduce){
+  .kd-magnetic{ transform:none !important; }
+}

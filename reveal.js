@@ -158,6 +158,16 @@ document.addEventListener('DOMContentLoaded', function () {
     document.head.appendChild(vtStyle);
   }
 
+  // Nettoyage console : quand une transition entre pages est interrompue (ex: double-clic
+  // rapide sur 2 liens), le navigateur rejette proprement la transition précédente.
+  // C'est un comportement natif attendu, sans impact sur la navigation — on évite juste
+  // le bruit dans la console.
+  window.addEventListener('unhandledrejection', (e) => {
+    if (e.reason && e.reason.name === 'AbortError' && /transition/i.test(e.reason.message || '')) {
+      e.preventDefault();
+    }
+  });
+
   // === Boutons magnétiques (site entier) — suivent légèrement le curseur au survol ===
   // N'importe quel bouton/lien avec la classe "kd-magnetic" bénéficie de l'effet, sur toutes les pages.
   if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches &&

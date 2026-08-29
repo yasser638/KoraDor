@@ -1065,22 +1065,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     splitIntoWords(document.getElementById('kd-hero-subtitle'), 0.55);
   }
 
-  // ---------- Boutons magnétiques (suivent légèrement le curseur au survol) ----------
-  if (!reduceMotion && !window.matchMedia('(pointer: coarse)').matches) {
-    document.querySelectorAll('.kd-magnetic').forEach(btn => {
-      btn.addEventListener('mousemove', (e) => {
-        const rect = btn.getBoundingClientRect();
-        const x = e.clientX - rect.left - rect.width / 2;
-        const y = e.clientY - rect.top - rect.height / 2;
-        btn.style.transition = 'transform .08s linear';
-        btn.style.transform = `translate(${x * 0.28}px, ${y * 0.35}px)`;
-      });
-      btn.addEventListener('mouseleave', () => {
-        btn.style.transition = 'transform .4s cubic-bezier(.34,1.56,.64,1)';
-        btn.style.transform = 'translate(0, 0)';
-      });
-    });
-  }
+  // (Boutons magnétiques : logique déplacée dans reveal.js, partagée sur tout le site)
 
   // ---------- Parallax léger sur le hero au scroll ----------
   if (!reduceMotion) {

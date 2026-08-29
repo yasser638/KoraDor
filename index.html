@@ -29,6 +29,32 @@
   <style>
     .kd-pay-loading{ text-align:center; color:var(--text-soft); font-size:13.5px; padding:18px 0; }
     #kd-paypal-button-container{ min-height:45px; margin:14px 0; }
+
+    /* --- Bandeau partenaires (avant : section vide) --- */
+    .partners-section{ text-align:center; padding:32px 0 8px; }
+    .kd-partners-label{ font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-soft); margin-bottom:16px; }
+    .kd-partners-strip{ display:flex; flex-wrap:wrap; justify-content:center; gap:10px; max-width:820px; margin:0 auto; }
+    .kd-partner-badge{
+      display:inline-block; background:#fff; border:1px solid var(--green-line); border-radius:999px;
+      padding:8px 18px; font-size:13px; font-weight:700; color:var(--green-dark);
+      transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s ease, border-color .25s ease;
+    }
+    .kd-partner-badge:hover{ transform:translateY(-3px); border-color:var(--green-mid); box-shadow:0 10px 20px rgba(30,70,32,0.10); }
+
+    /* --- Entrée en fondu des cartes du carrousel (avant : remplacement instantané des squelettes) --- */
+    #kd-track .kd-slide{ animation:kd-card-in .4s cubic-bezier(.2,.8,.2,1) both; }
+    #kd-track .kd-slide:nth-child(2){ animation-delay:.06s; }
+    #kd-track .kd-slide:nth-child(3){ animation-delay:.12s; }
+    @keyframes kd-card-in{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+
+    /* --- Polish témoignages : léger relief au survol --- */
+    .kd-testimonial{ transition:transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s ease; }
+    .kd-testimonial:hover{ transform:translateY(-4px); box-shadow:0 14px 30px rgba(30,70,32,0.09); }
+
+    @media (prefers-reduced-motion: reduce){
+      .kd-partner-badge, .kd-testimonial{ transition:none; }
+      #kd-track .kd-slide{ animation:none; }
+    }
   </style>
 </head>
 <body>
@@ -183,8 +209,12 @@
       </div>
     </section>
 
-    <section class="partners-section">
-      </section>
+    <section class="partners-section kd-fade">
+      <p class="kd-partners-label">Ils nous font confiance</p>
+      <div class="kd-partners-strip" id="kd-partners-strip">
+        <!-- généré en JS à partir des terrains partenaires -->
+      </div>
+    </section>
 
     <!-- ===== Témoignages ===== -->
     <section class="kd-howitworks kd-fade">
@@ -229,7 +259,7 @@
             <span class="kd-faq-icon">+</span>
           </button>
           <div class="kd-faq-answer">
-            <p>Selon le délai avant le créneau, des frais d'annulation peuvent s'appliquer. Plus tu annules tôt, moins il y a de frais — les détails exacts s'affichent avant confirmation.</p>
+            <p>Pour l'instant l'annulation est gratuite, quel que soit le délai. Une politique d'annulation plus détaillée pourra évoluer à l'avenir.</p>
           </div>
         </div>
         <div class="kd-faq-item">
@@ -238,7 +268,7 @@
             <span class="kd-faq-icon">+</span>
           </button>
           <div class="kd-faq-answer">
-            <p>Oui, le paiement passera par un prestataire marocain certifié. Aucune donnée bancaire n'est stockée par Korador.</p>
+            <p>Oui, le paiement passe par PayPal (carte bancaire acceptée, compte PayPal non requis). Aucune donnée bancaire n'est stockée par Korador.</p>
           </div>
         </div>
         <div class="kd-faq-item">

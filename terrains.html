@@ -27,6 +27,18 @@
   <style>
     .kd-pay-loading{ text-align:center; color:var(--text-soft); font-size:13.5px; padding:18px 0; }
     #kd-paypal-button-container{ min-height:45px; margin:14px 0; }
+
+    /* Entrée en fondu des cartes terrain (avant : remplacement instantané des squelettes, sans transition) */
+    .kd-terrains-grid .kd-card{ animation:kd-card-in .4s cubic-bezier(.2,.8,.2,1) both; }
+    .kd-terrains-grid .kd-card:nth-child(2){ animation-delay:.05s; }
+    .kd-terrains-grid .kd-card:nth-child(3){ animation-delay:.10s; }
+    .kd-terrains-grid .kd-card:nth-child(4){ animation-delay:.15s; }
+    .kd-terrains-grid .kd-card:nth-child(5){ animation-delay:.20s; }
+    .kd-terrains-grid .kd-card:nth-child(6){ animation-delay:.25s; }
+    @keyframes kd-card-in{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+    @media (prefers-reduced-motion: reduce){
+      .kd-terrains-grid .kd-card{ animation:none; }
+    }
   </style>
 </head>
 <body>
@@ -60,7 +72,7 @@
         <div class="kd-terrains-hero-stats">
           <div><strong id="kd-count-total">6</strong><span>terrains</span></div>
           <div><strong id="kd-count-dispo">4</strong><span>disponibles</span></div>
-          <div><strong>4.5</strong><span>note moyenne</span></div>
+          <div><strong id="kd-count-note">4.5</strong><span>note moyenne</span></div>
         </div>
       </section>
 
@@ -328,8 +340,7 @@
 
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- Remplace YOUR_PAYPAL_CLIENT_ID par le Client ID PUBLIC de ton app PayPal (sandbox ou live) -->
- <script src="https://www.paypal.com/sdk/js?client-id=AYaFzh776hgyAW_WhcfSB7Rj9beT9dJDblfNbLSTsSU1W70fDhJO9dKcKkhIGsyec63QueO6ULEJ4Fb7&currency=USD&locale=fr_MA"></script>
+  <script src="https://www.paypal.com/sdk/js?client-id=AYaFzh776hgyAW_WhcfSB7Rj9beT9dJDblfNbLSTsSU1W70fDhJO9dKcKkhIGsyec63QueO6ULEJ4Fb7&currency=USD&locale=fr_MA"></script>
   <script src="auth.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="reveal.js"></script>

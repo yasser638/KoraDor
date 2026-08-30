@@ -64,22 +64,57 @@ document.addEventListener('DOMContentLoaded', async function () {
     const badges = allTerrains.map(t => `
       <span class="kd-partner-badge" data-terrain-id="${t.id}">
         ${t.photo ? `<img src="${t.photo}" alt="${t.nom}" loading="lazy">` : ''}
-        <div class="kd-partner-tooltip">
-          <strong>${t.nom}</strong>
-          <p>${t.quartier}${t.horaires ? ' · ' + t.horaires : ''}${t.prix ? ' · ' + t.prix + ' DH/heure' : ''}</p>
-          <button type="button" class="kd-partner-book-btn" data-terrain-id="${t.id}">Réserver maintenant</button>
-        </div>
       </span>
     `).join('');
     // Contenu dupliqué (x2) : la piste fait defiler -50% de sa largeur en boucle,
     // donc il faut deux copies identiques bout à bout pour que la boucle soit invisible.
     strip.innerHTML = badges + badges;
 
-    // Délégation : un seul listener pour tous les boutons "Réserver maintenant" du bandeau
-    strip.addEventListener('click', (e) => {
-      const btn = e.target.closest('.kd-partner-book-btn');
-      if (!btn) return;
-      const t = allTerrains.find(x => x.id === btn.dataset.terrainId);
+    // Un seul tooltip partagé, injecté directement dans <body> (position:fixed) —
+    // évite tout piège de "stacking context" créé par des ancêtres (transform, mask...).
+    let tooltip = document.getElementById('kd-partner-tooltip');
+    if (!tooltip) {
+      tooltip = document.createElement('div');
+      tooltip.id = 'kd-partner-tooltip';
+      tooltip.innerHTML = `
+        <strong id="kd-pt-nom"></strong>
+        <p id="kd-pt-infos"></p>
+        <button type="button" class="kd-partner-book-btn" id="kd-pt-book-btn">Réserver maintenant</button>
+      `;
+      document.body.appendChild(tooltip);
+    }
+    const ptNom = tooltip.querySelector('#kd-pt-nom');
+    const ptInfos = tooltip.querySelector('#kd-pt-infos');
+    const ptBookBtn = tooltip.querySelector('#kd-pt-book-btn');
+    let currentTerrainId = null;
+
+    function positionTooltip(badge){
+      const rect = badge.getBoundingClientRect();
+      tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+      tooltip.style.top = (rect.top - 14) + 'px';
+    }
+
+    strip.querySelectorAll('.kd-partner-badge').forEach(badge => {
+      badge.addEventListener('mouseenter', () => {
+        const t = allTerrains.find(x => x.id === badge.dataset.terrainId);
+        if (!t) return;
+        currentTerrainId = t.id;
+        ptNom.textContent = t.nom;
+        ptInfos.textContent = [t.quartier, t.horaires, t.prix ? `${t.prix} DH/heure` : ''].filter(Boolean).join(' · ');
+        positionTooltip(badge);
+        requestAnimationFrame(() => {
+          tooltip.classList.add('kd-tt-visible');
+          positionTooltip(badge);
+        });
+      });
+      badge.addEventListener('mouseleave', () => {
+        tooltip.classList.remove('kd-tt-visible');
+      });
+    });
+
+    // Le tooltip est un élément à part (hors du bandeau) : un seul listener suffit pour son bouton.
+    ptBookBtn.addEventListener('click', () => {
+      const t = allTerrains.find(x => x.id === currentTerrainId);
       if (t) openBookingModal(t);
     });
   })();

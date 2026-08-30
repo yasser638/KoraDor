@@ -70,52 +70,67 @@ document.addEventListener('DOMContentLoaded', async function () {
     // donc il faut deux copies identiques bout à bout pour que la boucle soit invisible.
     strip.innerHTML = badges + badges;
 
-    // Un seul tooltip partagé, injecté directement dans <body> (position:fixed) —
+    // Une seule carte de prévisualisation partagée, injectée dans <body> (position:fixed) —
     // évite tout piège de "stacking context" créé par des ancêtres (transform, mask...).
     let tooltip = document.getElementById('kd-partner-tooltip');
     if (!tooltip) {
       tooltip = document.createElement('div');
       tooltip.id = 'kd-partner-tooltip';
       tooltip.innerHTML = `
-        <strong id="kd-pt-nom"></strong>
-        <p id="kd-pt-infos"></p>
-        <button type="button" class="kd-partner-book-btn" id="kd-pt-book-btn">Réserver maintenant</button>
+        <img id="kd-pt-photo" src="" alt="">
+        <button type="button" id="kd-pt-close" aria-label="Fermer">✕</button>
+        <div id="kd-pt-body">
+          <strong id="kd-pt-nom"></strong>
+          <p id="kd-pt-infos"></p>
+          <button type="button" class="kd-partner-book-btn" id="kd-pt-book-btn">Réserver maintenant</button>
+        </div>
       `;
       document.body.appendChild(tooltip);
     }
+    const ptPhoto = tooltip.querySelector('#kd-pt-photo');
     const ptNom = tooltip.querySelector('#kd-pt-nom');
     const ptInfos = tooltip.querySelector('#kd-pt-infos');
     const ptBookBtn = tooltip.querySelector('#kd-pt-book-btn');
+    const ptCloseBtn = tooltip.querySelector('#kd-pt-close');
     let currentTerrainId = null;
+    let hideTimer = null;
 
     function positionTooltip(badge){
       const rect = badge.getBoundingClientRect();
       tooltip.style.left = (rect.left + rect.width / 2) + 'px';
       tooltip.style.top = (rect.top - 14) + 'px';
     }
+    function showTooltip(badge, t){
+      clearTimeout(hideTimer);
+      currentTerrainId = t.id;
+      ptPhoto.src = t.photo || '';
+      ptNom.textContent = t.nom;
+      ptInfos.textContent = [t.quartier, t.horaires, t.prix ? `${t.prix} DH/heure` : ''].filter(Boolean).join(' · ');
+      positionTooltip(badge);
+      requestAnimationFrame(() => { tooltip.classList.add('kd-tt-visible'); });
+    }
+    // Petit délai avant fermeture : laisse le temps à la souris de rejoindre la carte
+    // (photo + description + bouton) sans que tout se ferme entre les deux.
+    function scheduleHide(){
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(() => tooltip.classList.remove('kd-tt-visible'), 180);
+    }
 
     strip.querySelectorAll('.kd-partner-badge').forEach(badge => {
       badge.addEventListener('mouseenter', () => {
         const t = allTerrains.find(x => x.id === badge.dataset.terrainId);
-        if (!t) return;
-        currentTerrainId = t.id;
-        ptNom.textContent = t.nom;
-        ptInfos.textContent = [t.quartier, t.horaires, t.prix ? `${t.prix} DH/heure` : ''].filter(Boolean).join(' · ');
-        positionTooltip(badge);
-        requestAnimationFrame(() => {
-          tooltip.classList.add('kd-tt-visible');
-          positionTooltip(badge);
-        });
+        if (t) showTooltip(badge, t);
       });
-      badge.addEventListener('mouseleave', () => {
-        tooltip.classList.remove('kd-tt-visible');
-      });
+      badge.addEventListener('mouseleave', scheduleHide);
     });
 
-    // Le tooltip est un élément à part (hors du bandeau) : un seul listener suffit pour son bouton.
+    tooltip.addEventListener('mouseenter', () => clearTimeout(hideTimer));
+    tooltip.addEventListener('mouseleave', scheduleHide);
+    ptCloseBtn.addEventListener('click', () => tooltip.classList.remove('kd-tt-visible'));
+
     ptBookBtn.addEventListener('click', () => {
       const t = allTerrains.find(x => x.id === currentTerrainId);
-      if (t) openBookingModal(t);
+      if (t) { tooltip.classList.remove('kd-tt-visible'); openBookingModal(t); }
     });
   })();
 

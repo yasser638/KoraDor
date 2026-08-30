@@ -187,78 +187,173 @@ document.addEventListener('DOMContentLoaded', async function () {
     URL.revokeObjectURL(url);
   }
 
-  // ---------- 6) Affiche le tableau des réservations ----------
+  // ---------- 6) Affiche les réservations, avec filtres (statut / terrain / recherche) ----------
   const wrap = document.getElementById('kd-dash-reservations-wrap');
 
   if (!reservations.length) {
     wrap.innerHTML = `<div class="kd-dash-empty">Aucune réservation pour l'instant sur tes terrains.</div>`;
   } else {
-    wrap.innerHTML = `
-      <table class="kd-res-table">
-        <thead>
-          <tr>
-            <th>Date &amp; heure</th>
-            <th>Terrain</th>
-            <th>Client</th>
-            <th>Contact</th>
-            <th>Statut</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${reservations.map(r => {
-            const t = terrainsById[r.terrain_id];
-            const dateTxt = new Date(r.date_reservation + 'T00:00:00').toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
-            return `
-              <tr data-id="${r.id}">
-                <td>${dateTxt}<span class="kd-res-sub">${r.heure_reservation}</span></td>
-                <td>${t ? t.nom : '—'}${t && t.quartier ? `<span class="kd-res-sub">${t.quartier}${r.numero_terrain > 1 ? ' · Terrain ' + r.numero_terrain : ''}</span>` : ''}</td>
-                <td>${r.nom_client}<span class="kd-res-sub">${r.cin_client || ''}</span></td>
-                <td>${r.telephone_client}<span class="kd-res-sub">${r.email_client || ''}</span></td>
-                <td><span class="kd-res-badge ${r.statut}">${statutLabel(r.statut)}</span></td>
-                <td>
-                  <div class="kd-res-actions">
-                    <button type="button" class="kd-res-action-btn confirm" data-action="confirmee" ${r.statut !== 'en_attente' ? 'disabled' : ''}>Confirmer</button>
-                    <button type="button" class="kd-res-action-btn cancel" data-action="annulee" ${r.statut === 'annulee' ? 'disabled' : ''}>Annuler</button>
-                  </div>
-                </td>
-              </tr>
-            `;
-          }).join('')}
-        </tbody>
-      </table>
-    `;
 
-    wrap.querySelectorAll('.kd-res-action-btn').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const row = btn.closest('tr');
-        const reservationId = row.dataset.id;
-        const newStatut = btn.dataset.action;
+    let statutFilter = 'all';
+    let terrainFilter = 'all';
+    let searchQuery = '';
 
-        row.querySelectorAll('.kd-res-action-btn').forEach(b => b.disabled = true);
-
-        const { error } = await supabaseClient
-          .from('reservations')
-          .update({ statut: newStatut })
-          .eq('id', reservationId);
-
-        if (error) {
-          console.error('Korador: erreur mise à jour statut —', error);
-          row.querySelectorAll('.kd-res-action-btn').forEach(b => b.disabled = false);
-          return;
+    function getFilteredReservations(){
+      return reservations.filter(r => {
+        if (statutFilter !== 'all' && r.statut !== statutFilter) return false;
+        if (terrainFilter !== 'all' && r.terrain_id !== terrainFilter) return false;
+        if (searchQuery) {
+          const haystack = `${r.nom_client} ${r.telephone_client}`.toLowerCase();
+          if (!haystack.includes(searchQuery.toLowerCase())) return false;
         }
-
-        const badge = row.querySelector('.kd-res-badge');
-        badge.className = `kd-res-badge ${newStatut}`;
-        badge.textContent = statutLabel(newStatut);
-        row.querySelector('.confirm').disabled = newStatut !== 'en_attente';
-        row.querySelector('.cancel').disabled = newStatut === 'annulee';
-
-        // Met à jour le compteur "Confirmées" affiché en haut
-        const confirmedNowCount = wrap.querySelectorAll('.kd-res-badge.confirmee').length;
-        document.getElementById('kd-dash-stat-confirmed').textContent = confirmedNowCount;
+        return true;
       });
-    });
+    }
+
+    function tabCount(statut){
+      return statut === 'all' ? reservations.length : reservations.filter(r => r.statut === statut).length;
+    }
+
+    const terrainOptions = terrains.length > 1
+      ? `<select class="kd-res-terrain-select" id="kd-res-terrain-select">
+          <option value="all">Tous les terrains</option>
+          ${terrains.map(t => `<option value="${t.id}">${t.nom}</option>`).join('')}
+        </select>`
+      : '';
+
+    function renderFilterBar(){
+      return `
+        <div class="kd-res-filterbar">
+          <div class="kd-res-tabs" id="kd-res-tabs">
+            <button type="button" class="kd-res-tab ${statutFilter === 'all' ? 'active' : ''}" data-statut="all">Toutes (${tabCount('all')})</button>
+            <button type="button" class="kd-res-tab ${statutFilter === 'en_attente' ? 'active' : ''}" data-statut="en_attente">En attente (${tabCount('en_attente')})</button>
+            <button type="button" class="kd-res-tab ${statutFilter === 'confirmee' ? 'active' : ''}" data-statut="confirmee">Confirmées (${tabCount('confirmee')})</button>
+            <button type="button" class="kd-res-tab ${statutFilter === 'annulee' ? 'active' : ''}" data-statut="annulee">Annulées (${tabCount('annulee')})</button>
+          </div>
+          ${terrainOptions}
+          <input type="text" class="kd-res-search" id="kd-res-search" placeholder="Chercher un client (nom, téléphone)..." value="${searchQuery}">
+        </div>
+      `;
+    }
+
+    function renderTableRows(list){
+      if (!list.length) {
+        return `<div class="kd-res-empty-filtered">Aucune réservation ne correspond à ce filtre.</div>`;
+      }
+      return `
+        <table class="kd-res-table">
+          <thead>
+            <tr>
+              <th>Date &amp; heure</th>
+              <th>Terrain</th>
+              <th>Client</th>
+              <th>Contact</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${list.map(r => {
+              const t = terrainsById[r.terrain_id];
+              const dateTxt = new Date(r.date_reservation + 'T00:00:00').toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
+              return `
+                <tr data-id="${r.id}">
+                  <td data-label="Date">${dateTxt}<span class="kd-res-sub">${r.heure_reservation}</span></td>
+                  <td data-label="Terrain">${t ? t.nom : '—'}${t && t.quartier ? `<span class="kd-res-sub">${t.quartier}${r.numero_terrain > 1 ? ' · Terrain ' + r.numero_terrain : ''}</span>` : ''}</td>
+                  <td data-label="Client">${r.nom_client}<span class="kd-res-sub">${r.cin_client || ''}</span></td>
+                  <td data-label="Contact">${r.telephone_client}<span class="kd-res-sub">${r.email_client || ''}</span></td>
+                  <td data-label="Statut"><span class="kd-res-badge ${r.statut}">${statutLabel(r.statut)}</span></td>
+                  <td data-label="Actions">
+                    <div class="kd-res-actions">
+                      <button type="button" class="kd-res-action-btn confirm" data-action="confirmee" ${r.statut !== 'en_attente' ? 'disabled' : ''}>Confirmer</button>
+                      <button type="button" class="kd-res-action-btn cancel" data-action="annulee" ${r.statut === 'annulee' ? 'disabled' : ''}>Annuler</button>
+                    </div>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function attachRowActions(){
+      wrap.querySelectorAll('.kd-res-action-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const row = btn.closest('tr');
+          const reservationId = row.dataset.id;
+          const newStatut = btn.dataset.action;
+
+          // Sécurité : une annulation ne peut pas être annulée depuis cette interface,
+          // donc on demande une confirmation explicite avant de l'appliquer.
+          if (newStatut === 'annulee' && !confirm('Annuler cette réservation ? Cette action ne peut pas être défaite ici.')) {
+            return;
+          }
+
+          row.querySelectorAll('.kd-res-action-btn').forEach(b => b.disabled = true);
+
+          const { error } = await supabaseClient
+            .from('reservations')
+            .update({ statut: newStatut })
+            .eq('id', reservationId);
+
+          if (error) {
+            console.error('Korador: erreur mise à jour statut —', error);
+            row.querySelectorAll('.kd-res-action-btn').forEach(b => b.disabled = false);
+            return;
+          }
+
+          // Met à jour la donnée source pour que les filtres/compteurs restent corrects
+          const r = reservations.find(x => x.id === reservationId);
+          if (r) r.statut = newStatut;
+
+          const confirmedNowCount = reservations.filter(x => x.statut === 'confirmee').length;
+          document.getElementById('kd-dash-stat-confirmed').textContent = confirmedNowCount;
+
+          renderAll();
+        });
+      });
+    }
+
+    function attachFilterHandlers(){
+      document.querySelectorAll('.kd-res-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          statutFilter = tab.dataset.statut;
+          renderAll();
+        });
+      });
+      const terrainSelect = document.getElementById('kd-res-terrain-select');
+      if (terrainSelect) {
+        terrainSelect.value = terrainFilter;
+        terrainSelect.addEventListener('change', () => {
+          terrainFilter = terrainSelect.value;
+          renderAll();
+        });
+      }
+      const searchInput = document.getElementById('kd-res-search');
+      if (searchInput) {
+        searchInput.addEventListener('input', () => {
+          searchQuery = searchInput.value;
+          renderAll();
+        });
+      }
+    }
+
+    function renderAll(){
+      const activeElementWasSearch = document.activeElement && document.activeElement.id === 'kd-res-search';
+      const cursorPos = activeElementWasSearch ? document.activeElement.selectionStart : null;
+
+      wrap.innerHTML = renderFilterBar() + renderTableRows(getFilteredReservations());
+      attachFilterHandlers();
+      attachRowActions();
+
+      if (activeElementWasSearch) {
+        const input = document.getElementById('kd-res-search');
+        if (input) { input.focus(); input.setSelectionRange(cursorPos, cursorPos); }
+      }
+    }
+
+    renderAll();
   }
 
   function statutLabel(statut){

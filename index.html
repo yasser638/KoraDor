@@ -44,7 +44,7 @@
     .kd-marquee::before{ left:0; background:linear-gradient(90deg, var(--cream) 0%, rgba(250,246,226,0) 100%); }
     .kd-marquee::after{ right:0; background:linear-gradient(270deg, var(--cream) 0%, rgba(250,246,226,0) 100%); }
     .kd-marquee-track{
-      display:flex; width:max-content; gap:26px; padding:10px 7px;
+      display:flex; width:max-content; gap:34px; padding:14px 7px;
       animation:kd-marquee-scroll 26s linear infinite;
     }
     .kd-marquee:hover .kd-marquee-track{ animation-play-state:paused; }
@@ -52,8 +52,8 @@
       position:relative; display:inline-flex; padding:0; border:none; background:none; cursor:pointer;
     }
     .kd-partner-badge img{
-      width:110px; height:110px; border-radius:50%; object-fit:cover; flex-shrink:0;
-      border:4px solid #fff; box-shadow:0 8px 22px rgba(30,70,32,0.16);
+      width:150px; height:150px; border-radius:50%; object-fit:cover; flex-shrink:0;
+      border:5px solid #fff; box-shadow:0 10px 26px rgba(30,70,32,0.18);
       transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s ease;
     }
     .kd-partner-badge:hover img{ transform:translateY(-3px) scale(1.04); box-shadow:0 12px 28px rgba(30,70,32,0.22); }
@@ -63,31 +63,31 @@
          échapper à tout "stacking context" parent (transform, mask...) qui le ferait
          passer derrière les sections suivantes de la page. --- */
     #kd-partner-tooltip{
-      position:fixed; width:230px; background:rgba(20,26,20,0.96); backdrop-filter:blur(6px);
-      border-radius:16px; overflow:hidden; text-align:left; color:#fff;
+      position:fixed; width:min(30vw, 420px); min-width:320px; background:rgba(20,26,20,0.96); backdrop-filter:blur(6px);
+      border-radius:20px; overflow:hidden; text-align:left; color:#fff;
       opacity:0; visibility:hidden; pointer-events:none; z-index:99999;
       transition:opacity .2s ease, transform .2s cubic-bezier(.2,.8,.2,1), visibility 0s linear .2s;
       transform:translate(-50%, calc(-100% + 8px));
-      box-shadow:0 20px 50px rgba(0,0,0,0.35);
+      box-shadow:0 24px 60px rgba(0,0,0,0.4);
     }
     #kd-partner-tooltip.kd-tt-visible{
       opacity:1; visibility:visible; pointer-events:auto; transform:translate(-50%, -100%);
       transition:opacity .2s ease, transform .2s cubic-bezier(.2,.8,.2,1), visibility 0s linear 0s;
     }
-    #kd-pt-photo{ width:100%; height:120px; object-fit:cover; display:block; }
+    #kd-pt-photo{ width:100%; height:min(30vh, 260px); object-fit:cover; display:block; }
     #kd-pt-close{
-      position:absolute; top:10px; right:10px; width:26px; height:26px; border-radius:50%;
-      background:rgba(0,0,0,0.45); border:none; color:#fff; font-size:15px; line-height:1;
+      position:absolute; top:14px; right:14px; width:34px; height:34px; border-radius:50%;
+      background:rgba(0,0,0,0.5); border:none; color:#fff; font-size:18px; line-height:1;
       cursor:pointer; display:flex; align-items:center; justify-content:center;
       transition:background .2s ease;
     }
-    #kd-pt-close:hover{ background:rgba(0,0,0,0.7); }
-    #kd-pt-body{ padding:14px 16px 16px; }
-    #kd-partner-tooltip strong{ display:block; font-family:var(--font-display); font-size:14.5px; margin-bottom:4px; }
-    #kd-partner-tooltip p{ font-size:12px; color:rgba(255,255,255,0.7); line-height:1.5; margin:0 0 12px; }
+    #kd-pt-close:hover{ background:rgba(0,0,0,0.75); }
+    #kd-pt-body{ padding:20px 22px 22px; }
+    #kd-partner-tooltip strong{ display:block; font-family:var(--font-display); font-size:19px; margin-bottom:7px; }
+    #kd-partner-tooltip p{ font-size:13.5px; color:rgba(255,255,255,0.7); line-height:1.6; margin:0 0 16px; }
     .kd-partner-book-btn{
-      display:block; width:100%; background:#fff; color:var(--green-dark); border:none; border-radius:8px;
-      padding:9px; font-size:12.5px; font-weight:700; font-family:inherit; cursor:pointer;
+      display:block; width:100%; background:#fff; color:var(--green-dark); border:none; border-radius:10px;
+      padding:13px; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer;
       transition:transform .2s ease;
     }
     .kd-partner-book-btn:hover{ transform:scale(1.03); }

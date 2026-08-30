@@ -62,14 +62,26 @@ document.addEventListener('DOMContentLoaded', async function () {
     const strip = document.getElementById('kd-partners-strip');
     if (!strip || !allTerrains.length) return;
     const badges = allTerrains.map(t => `
-      <span class="kd-partner-badge">
-        ${t.photo ? `<img src="${t.photo}" alt="" loading="lazy">` : ''}
-        ${t.nom}
+      <span class="kd-partner-badge" data-terrain-id="${t.id}">
+        ${t.photo ? `<img src="${t.photo}" alt="${t.nom}" loading="lazy">` : ''}
+        <div class="kd-partner-tooltip">
+          <strong>${t.nom}</strong>
+          <p>${t.quartier}${t.horaires ? ' · ' + t.horaires : ''}${t.prix ? ' · ' + t.prix + ' DH/heure' : ''}</p>
+          <button type="button" class="kd-partner-book-btn" data-terrain-id="${t.id}">Réserver maintenant</button>
+        </div>
       </span>
     `).join('');
     // Contenu dupliqué (x2) : la piste fait defiler -50% de sa largeur en boucle,
     // donc il faut deux copies identiques bout à bout pour que la boucle soit invisible.
     strip.innerHTML = badges + badges;
+
+    // Délégation : un seul listener pour tous les boutons "Réserver maintenant" du bandeau
+    strip.addEventListener('click', (e) => {
+      const btn = e.target.closest('.kd-partner-book-btn');
+      if (!btn) return;
+      const t = allTerrains.find(x => x.id === btn.dataset.terrainId);
+      if (t) openBookingModal(t);
+    });
   })();
 
   // ---------- Message de bienvenue après connexion/inscription ----------

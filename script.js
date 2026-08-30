@@ -61,7 +61,12 @@ document.addEventListener('DOMContentLoaded', async function () {
   (function renderPartnersStrip(){
     const strip = document.getElementById('kd-partners-strip');
     if (!strip || !allTerrains.length) return;
-    const badges = allTerrains.map(t => `<span class="kd-partner-badge">${t.nom}</span>`).join('');
+    const badges = allTerrains.map(t => `
+      <span class="kd-partner-badge">
+        ${t.photo ? `<img src="${t.photo}" alt="" loading="lazy">` : ''}
+        ${t.nom}
+      </span>
+    `).join('');
     // Contenu dupliqué (x2) : la piste fait defiler -50% de sa largeur en boucle,
     // donc il faut deux copies identiques bout à bout pour que la boucle soit invisible.
     strip.innerHTML = badges + badges;

@@ -37,11 +37,11 @@
     /* --- Marquee infini (inspiré des bandeaux "trusted by" des sites pro/Awwwards) --- */
     .kd-marquee{
       position:relative; overflow-x:hidden; overflow-y:visible; width:100%;
-      -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 64px, #000 calc(100% - 64px), transparent 100%);
-      mask-image:linear-gradient(90deg, transparent 0, #000 64px, #000 calc(100% - 64px), transparent 100%);
+      -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 90px, #000 calc(100% - 90px), transparent 100%);
+      mask-image:linear-gradient(90deg, transparent 0, #000 90px, #000 calc(100% - 90px), transparent 100%);
     }
     .kd-marquee-track{
-      display:flex; width:max-content; gap:14px; padding:2px 7px;
+      display:flex; width:max-content; gap:26px; padding:10px 7px;
       animation:kd-marquee-scroll 26s linear infinite;
     }
     .kd-marquee:hover .kd-marquee-track{ animation-play-state:paused; }
@@ -49,8 +49,8 @@
       position:relative; display:inline-flex; padding:0; border:none; background:none; cursor:pointer;
     }
     .kd-partner-badge img{
-      width:52px; height:52px; border-radius:50%; object-fit:cover; flex-shrink:0;
-      border:3px solid #fff; box-shadow:0 4px 14px rgba(30,70,32,0.14);
+      width:110px; height:110px; border-radius:50%; object-fit:cover; flex-shrink:0;
+      border:4px solid #fff; box-shadow:0 8px 22px rgba(30,70,32,0.16);
       filter:grayscale(1); opacity:.8;
       transition:filter .25s ease, opacity .25s ease, transform .25s cubic-bezier(.2,.8,.2,1);
     }

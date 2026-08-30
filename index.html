@@ -51,7 +51,11 @@
       color:var(--text-soft); filter:grayscale(1); opacity:.72;
       transition:color .25s ease, border-color .25s ease, filter .25s ease, opacity .25s ease, transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s ease;
     }
-    .kd-partner-badge::before{ content:"⚽"; font-size:12px; }
+    .kd-partner-badge img{
+      width:22px; height:22px; border-radius:50%; object-fit:cover; flex-shrink:0;
+      filter:grayscale(1); transition:filter .25s ease;
+    }
+    .kd-partner-badge:hover img{ filter:grayscale(0); }
     .kd-partner-badge:hover{
       color:var(--green-dark); border-color:var(--green-mid); filter:grayscale(0); opacity:1;
       transform:translateY(-3px); box-shadow:0 10px 20px rgba(30,70,32,0.10);

@@ -546,10 +546,10 @@ document.addEventListener('DOMContentLoaded', async function () {
           date_reservation: formatDateISO(selectedDate),
           heure_reservation: heure,
           user_id: sessionData?.session?.user?.id || null,
-         nom_client: 'Client sur place',
-telephone_client: '—',
-cin_client: '—',
+          nom_client: 'Client sur place',
+          telephone_client: '—',
           cin_client: '—',
+          email_client: '—',
           // Réservation prise en personne sur le terrain, payée cash : confirmée directement.
           statut: 'confirmee',
         });

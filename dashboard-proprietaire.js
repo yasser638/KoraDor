@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   // ---------- 3) Récupère les terrains de ce propriétaire ----------
   const { data: terrains, error: terrainsError } = await supabaseClient
     .from('terrains')
-    .select('id, nom, quartier, prix')
+    .select('id, nom, quartier, prix, nb_terrains')
     .eq('proprietaire_id', session.user.id);
 
   if (terrainsError) {
@@ -67,6 +67,8 @@ document.addEventListener('DOMContentLoaded', async function () {
   const terrainsById = {};
   terrains.forEach(t => { terrainsById[t.id] = t; });
   const terrainIds = terrains.map(t => t.id);
+
+  setupOnSiteBooking(terrains);
 
   // ---------- 4) Récupère les réservations de ces terrains ----------
   const { data: reservations, error: resError } = await supabaseClient
@@ -367,6 +369,180 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (statut === 'confirmee') return 'Confirmée';
     if (statut === 'annulee') return 'Annulée';
     return 'En attente';
+  }
+
+  const HEURES = ['08:00','09:00','10:00','11:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00'];
+
+  function setupOnSiteBooking(monTerrains){
+    let selectedTerrain = monTerrains[0];
+    let selectedNumeroTerrain = 1;
+    let selectedDate = new Date();
+    let reservedSlots = [];
+
+    function formatDateISO(d){
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    // ---------- Sélecteur de terrain (affiché seulement si le propriétaire en gère plusieurs) ----------
+    const terrainPicker = document.getElementById('kdop-terrain-picker');
+    if (monTerrains.length > 1) {
+      terrainPicker.innerHTML = monTerrains.map((t, i) =>
+        `<button type="button" class="kdop-picker-btn ${i === 0 ? 'active' : ''}" data-id="${t.id}">${t.nom}</button>`
+      ).join('');
+      terrainPicker.querySelectorAll('.kdop-picker-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          terrainPicker.querySelectorAll('.kdop-picker-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedTerrain = monTerrains.find(t => t.id === btn.dataset.id);
+          selectedNumeroTerrain = 1;
+          renderSubTerrainPicker();
+          refreshSlots();
+        });
+      });
+    }
+
+    // ---------- Sélecteur de sous-terrain (affiché seulement si le terrain en a plusieurs) ----------
+    const subPicker = document.getElementById('kdop-subterrain-picker');
+    function renderSubTerrainPicker(){
+      const nb = selectedTerrain.nb_terrains || 1;
+      if (nb <= 1) { subPicker.innerHTML = ''; return; }
+      subPicker.innerHTML = Array.from({ length: nb }, (_, i) => i + 1).map(n =>
+        `<button type="button" class="kdop-picker-btn ${n === selectedNumeroTerrain ? 'active' : ''}" data-n="${n}">Terrain ${n}</button>`
+      ).join('');
+      subPicker.querySelectorAll('.kdop-picker-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          subPicker.querySelectorAll('.kdop-picker-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedNumeroTerrain = parseInt(btn.dataset.n, 10);
+          refreshSlots();
+        });
+      });
+    }
+    renderSubTerrainPicker();
+
+    // ---------- Sélecteur de date ----------
+    const todayBtn = document.getElementById('kdop-date-today');
+    const tomorrowBtn = document.getElementById('kdop-date-tomorrow');
+    const customDateInput = document.getElementById('kdop-date-custom');
+
+    function setActiveDateBtn(btn){
+      [todayBtn, tomorrowBtn].forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+    }
+
+    todayBtn.addEventListener('click', () => {
+      selectedDate = new Date();
+      customDateInput.value = '';
+      setActiveDateBtn(todayBtn);
+      refreshSlots();
+    });
+    tomorrowBtn.addEventListener('click', () => {
+      selectedDate = new Date();
+      selectedDate.setDate(selectedDate.getDate() + 1);
+      customDateInput.value = '';
+      setActiveDateBtn(tomorrowBtn);
+      refreshSlots();
+    });
+    customDateInput.addEventListener('change', () => {
+      if (!customDateInput.value) return;
+      selectedDate = new Date(customDateInput.value + 'T00:00:00');
+      setActiveDateBtn(null);
+      refreshSlots();
+    });
+
+    // ---------- Grille des créneaux ----------
+    const slotsEl = document.getElementById('kdop-slots');
+
+    async function refreshSlots(){
+      slotsEl.innerHTML = HEURES.map(h => `<button class="kdop-slot-btn loading" disabled>${h}</button>`).join('');
+      try {
+        reservedSlots = await kdGetReservedSlots({
+          terrain_id: selectedTerrain.id,
+          numero_terrain: selectedNumeroTerrain,
+          date_reservation: formatDateISO(selectedDate),
+        });
+      } catch (err) {
+        console.error('Korador: erreur chargement créneaux —', err);
+        reservedSlots = [];
+      }
+      renderSlots();
+    }
+
+    function renderSlots(){
+      slotsEl.innerHTML = HEURES.map(h => {
+        const occupe = reservedSlots.includes(h);
+        return `<button type="button" class="kdop-slot-btn ${occupe ? 'occupe' : 'dispo'}" data-heure="${h}" ${occupe ? 'disabled' : ''}>${h}</button>`;
+      }).join('');
+      slotsEl.querySelectorAll('.kdop-slot-btn.dispo').forEach(btn => {
+        btn.addEventListener('click', () => openPanel(btn.dataset.heure));
+      });
+    }
+
+    // ---------- Panneau de réservation rapide ----------
+    const overlay = document.getElementById('kdop-overlay');
+    const panelTitle = document.getElementById('kdop-panel-title');
+    const panelNom = document.getElementById('kdop-panel-nom');
+    const panelTel = document.getElementById('kdop-panel-tel');
+    const panelConfirm = document.getElementById('kdop-panel-confirm');
+    const panelCancel = document.getElementById('kdop-panel-cancel');
+    let currentHeure = null;
+
+    function openPanel(heure){
+      currentHeure = heure;
+      panelTitle.textContent = `Réserver ${heure}`;
+      panelNom.value = '';
+      panelTel.value = '';
+      overlay.classList.add('open');
+    }
+    function closePanel(){
+      overlay.classList.remove('open');
+      currentHeure = null;
+    }
+    panelCancel.addEventListener('click', closePanel);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closePanel(); });
+
+    panelConfirm.addEventListener('click', async () => {
+      if (!currentHeure) return;
+      panelConfirm.disabled = true;
+      panelConfirm.textContent = 'Réservation...';
+
+      const { data: session } = await supabaseClient.auth.getSession();
+
+      const { error } = await supabaseClient
+        .from('reservations')
+        .insert({
+          terrain_id: selectedTerrain.id,
+          numero_terrain: selectedNumeroTerrain,
+          date_reservation: formatDateISO(selectedDate),
+          heure_reservation: currentHeure,
+          user_id: session?.session?.user?.id || null,
+          nom_client: panelNom.value.trim() || 'Client sur place',
+          telephone_client: panelTel.value.trim() || '—',
+          // Réservation prise en personne sur le terrain, payée cash : confirmée directement.
+          statut: 'confirmee',
+        });
+
+      panelConfirm.disabled = false;
+      panelConfirm.textContent = 'Confirmer';
+
+      if (error) {
+        console.error('Korador: erreur réservation sur place —', error);
+        closePanel();
+        await refreshSlots();
+        return;
+      }
+
+      closePanel();
+      await refreshSlots();
+      // Recharge légère de la page pour que le tableau "Réservations" + les stats
+      // reflètent immédiatement cette nouvelle réservation.
+      window.location.reload();
+    });
+
+    refreshSlots();
   }
 
   loadingEl.hidden = true;

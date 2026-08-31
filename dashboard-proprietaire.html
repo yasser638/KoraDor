@@ -39,6 +39,50 @@
     .kd-dash-chart-empty{ text-align:center; color:var(--text-soft); font-size:13.5px; padding:20px 0; }
     .kd-dash-chart-dot{ fill:#fff; stroke:var(--green-dark); stroke-width:2.5; transition:r .15s ease; }
 
+    /* --- Réserver sur place (créneau pris directement par le propriétaire, cash sur place) --- */
+    .kdop-card{ background:#fff; border:1px solid var(--green-line); border-radius:14px; padding:24px 26px 26px; margin-bottom:36px; }
+    .kdop-picker{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+    .kdop-picker-btn{
+      border:2px solid var(--green-line); background:#fff; color:var(--green-dark);
+      font-size:13.5px; font-weight:700; padding:10px 16px; border-radius:10px; cursor:pointer; font-family:inherit;
+    }
+    .kdop-picker-btn.active{ background:var(--green-dark); border-color:var(--green-dark); color:#fff; }
+    .kdop-date-input{
+      border:2px solid var(--green-line); border-radius:10px; padding:10px 14px; font-size:13.5px; font-family:inherit;
+      color:var(--green-dark); margin-bottom:18px;
+    }
+    .kdop-legend{ display:flex; gap:18px; margin-bottom:14px; font-size:12.5px; color:var(--text-soft); }
+    .kdop-legend span{ display:inline-flex; align-items:center; gap:6px; }
+    .kdop-legend i{ width:12px; height:12px; border-radius:4px; display:inline-block; }
+    .kdop-slots{ display:grid; grid-template-columns:repeat(auto-fill, minmax(90px, 1fr)); gap:10px; }
+    .kdop-slot-btn{
+      border:none; border-radius:10px; padding:14px 6px; font-size:14px; font-weight:800; font-family:var(--font-display);
+      cursor:pointer; color:#fff; transition:transform .15s ease;
+    }
+    .kdop-slot-btn:active{ transform:scale(.95); }
+    .kdop-slot-btn.dispo{ background:var(--green-vivid); }
+    .kdop-slot-btn.occupe{ background:#c0453f; cursor:default; }
+    .kdop-slot-btn.loading{ background:var(--green-line); color:var(--text-soft); cursor:wait; }
+    .kdop-empty{ text-align:center; color:var(--text-soft); font-size:13.5px; padding:24px 0; }
+
+    .kdop-overlay{
+      display:none; position:fixed; inset:0; background:rgba(30,70,32,0.55);
+      align-items:center; justify-content:center; z-index:200; padding:20px;
+    }
+    .kdop-overlay.open{ display:flex; }
+    .kdop-panel{ background:#fff; border-radius:20px; padding:28px; max-width:380px; width:100%; }
+    .kdop-panel h3{ font-family:var(--font-display); font-size:20px; color:var(--green-dark); margin-bottom:16px; }
+    .kdop-panel label{ display:block; font-size:12.5px; font-weight:700; color:var(--text-soft); margin:12px 0 5px; }
+    .kdop-panel input{
+      width:100%; border:2px solid var(--green-line); border-radius:10px; padding:12px; font-size:15px; font-family:inherit;
+    }
+    .kdop-panel-actions{ display:flex; gap:10px; margin-top:20px; }
+    .kdop-panel-btn{
+      flex:1; border:none; border-radius:10px; padding:13px; font-size:14.5px; font-weight:800; cursor:pointer; font-family:inherit;
+    }
+    .kdop-panel-btn.confirm{ background:var(--green-dark); color:#fff; }
+    .kdop-panel-btn.cancel{ background:var(--cream-2); color:var(--green-dark); }
+
     .kd-dash-stats{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px; margin-bottom:36px; }
     .kd-dash-stat-card{
       background:#fff; border:1px solid var(--green-line); border-radius:14px; padding:20px 22px;
@@ -181,6 +225,22 @@
           <div id="kd-dash-revenue-chart"></div>
         </div>
 
+        <h2 class="kd-dash-section-title">Réserver sur place</h2>
+        <div class="kdop-card">
+          <div class="kdop-picker" id="kdop-terrain-picker"></div>
+          <div class="kdop-picker" id="kdop-subterrain-picker"></div>
+          <div class="kdop-picker">
+            <button type="button" class="kdop-picker-btn active" id="kdop-date-today">Aujourd'hui</button>
+            <button type="button" class="kdop-picker-btn" id="kdop-date-tomorrow">Demain</button>
+          </div>
+          <input type="date" class="kdop-date-input" id="kdop-date-custom">
+          <div class="kdop-legend">
+            <span><i style="background:var(--green-vivid);"></i> Disponible</span>
+            <span><i style="background:#c0453f;"></i> Déjà réservé</span>
+          </div>
+          <div class="kdop-slots" id="kdop-slots"></div>
+        </div>
+
         <h2 class="kd-dash-section-title">Réservations</h2>
         <div id="kd-dash-reservations-wrap"></div>
       </div>
@@ -191,6 +251,21 @@
       <p class="copyright">© 2026 Korador. Tous droits réservés.</p>
     </footer>
 
+  </div>
+
+  <!-- Panneau de réservation rapide (sur place) -->
+  <div class="kdop-overlay" id="kdop-overlay">
+    <div class="kdop-panel">
+      <h3 id="kdop-panel-title">Réserver 18:00</h3>
+      <label>Nom du client (optionnel)</label>
+      <input type="text" id="kdop-panel-nom" placeholder="Ex: Yassine">
+      <label>Téléphone (optionnel)</label>
+      <input type="tel" id="kdop-panel-tel" placeholder="06 XX XX XX XX">
+      <div class="kdop-panel-actions">
+        <button type="button" class="kdop-panel-btn cancel" id="kdop-panel-cancel">Annuler</button>
+        <button type="button" class="kdop-panel-btn confirm" id="kdop-panel-confirm">Confirmer</button>
+      </div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

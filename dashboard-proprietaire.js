@@ -92,99 +92,152 @@ document.addEventListener('DOMContentLoaded', async function () {
   document.getElementById('kd-dash-stat-confirmed').textContent = confirmed.length;
   document.getElementById('kd-dash-stat-revenue').textContent = revenue.toLocaleString('fr-FR') + ' DH';
 
-  // ---------- 5b) Graphique du revenu par mois ----------
+  // ---------- 5b) Graphique du revenu par mois (courbe + dégradé + badge de tendance) ----------
   renderRevenueChart(reservations, terrainsById);
 
-  // ---------- 5c) Export CSV ----------
+  // ---------- 5c) Export PDF (liste des clients ayant réservé) ----------
   const exportBtn = document.getElementById('kd-dash-export-btn');
   if (exportBtn) {
-    exportBtn.addEventListener('click', () => exportReservationsToCSV(reservations, terrainsById));
+    exportBtn.addEventListener('click', () => exportClientsToPDF(reservations, terrainsById, profile));
   }
 
   function renderRevenueChart(reservations, terrainsById){
     const container = document.getElementById('kd-dash-revenue-chart');
+    const trendBadge = document.getElementById('kd-dash-trend-badge');
     if (!container) return;
 
-    // Regroupe le revenu (réservations non annulées) par mois (les 6 derniers mois avec activité)
     const byMonth = {};
     reservations
       .filter(r => r.statut !== 'annulee')
       .forEach(r => {
-        const monthKey = r.date_reservation.slice(0, 7); // "YYYY-MM"
+        const monthKey = r.date_reservation.slice(0, 7);
         const prix = terrainsById[r.terrain_id]?.prix || 0;
         byMonth[monthKey] = (byMonth[monthKey] || 0) + prix;
       });
 
-    const months = Object.keys(byMonth).sort().slice(-6); // 6 derniers mois avec des réservations
+    const months = Object.keys(byMonth).sort().slice(-6);
 
     if (!months.length) {
       container.innerHTML = `<div class="kd-dash-chart-empty">Pas encore assez de données pour afficher un graphique.</div>`;
+      if (trendBadge) trendBadge.textContent = '';
       return;
     }
 
     const values = months.map(m => byMonth[m]);
     const maxVal = Math.max(...values, 1);
-    const width = 640, height = 200, padding = 30, barGap = 14;
-    const barWidth = (width - padding * 2 - barGap * (months.length - 1)) / months.length;
+    const width = 640, height = 200, padding = 34;
+    const stepX = months.length > 1 ? (width - padding * 2) / (months.length - 1) : 0;
+
+    const points = values.map((val, i) => {
+      const x = months.length > 1 ? padding + i * stepX : width / 2;
+      const y = height - padding - (val / maxVal) * (height - padding * 2 - 20);
+      return { x, y, val };
+    });
+
+    // Courbe lissée : on relie les points avec des courbes de Bézier plutôt que des lignes droites
+    let linePath = `M ${points[0].x},${points[0].y}`;
+    for (let i = 1; i < points.length; i++) {
+      const prev = points[i - 1], curr = points[i];
+      const midX = (prev.x + curr.x) / 2;
+      linePath += ` C ${midX},${prev.y} ${midX},${curr.y} ${curr.x},${curr.y}`;
+    }
+    const areaPath = `${linePath} L ${points[points.length - 1].x},${height - padding} L ${points[0].x},${height - padding} Z`;
 
     const monthLabel = (key) => {
       const [y, m] = key.split('-');
       return new Date(parseInt(y, 10), parseInt(m, 10) - 1, 1).toLocaleDateString('fr-FR', { month: 'short' });
     };
 
-    let bars = '';
-    months.forEach((m, i) => {
-      const val = byMonth[m];
-      const barHeight = (val / maxVal) * (height - padding - 30);
-      const x = padding + i * (barWidth + barGap);
-      const y = height - padding - barHeight;
-      bars += `
-        <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="6" fill="#2F5D34"></rect>
-        <text x="${x + barWidth / 2}" y="${y - 8}" text-anchor="middle" class="kd-dash-chart-value-label">${val.toLocaleString('fr-FR')}</text>
-        <text x="${x + barWidth / 2}" y="${height - padding + 18}" text-anchor="middle" class="kd-dash-chart-bar-label">${monthLabel(m)}</text>
-      `;
-    });
+    const dots = points.map((p, i) => `
+      <circle class="kd-dash-chart-dot" cx="${p.x}" cy="${p.y}" r="4"></circle>
+      <text x="${p.x}" y="${p.y - 12}" text-anchor="middle" class="kd-dash-chart-value-label">${p.val.toLocaleString('fr-FR')}</text>
+      <text x="${p.x}" y="${height - padding + 20}" text-anchor="middle" class="kd-dash-chart-bar-label">${monthLabel(months[i])}</text>
+    `).join('');
 
-    container.innerHTML = `<svg viewBox="0 0 ${width} ${height}" style="width:100%; height:auto; max-height:220px;">${bars}</svg>`;
+    container.innerHTML = `
+      <svg viewBox="0 0 ${width} ${height}" style="width:100%; height:auto; max-height:220px;">
+        <defs>
+          <linearGradient id="kd-chart-fade" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#2F5D34" stop-opacity="0.28"></stop>
+            <stop offset="100%" stop-color="#2F5D34" stop-opacity="0"></stop>
+          </linearGradient>
+        </defs>
+        <path d="${areaPath}" fill="url(#kd-chart-fade)"></path>
+        <path d="${linePath}" fill="none" stroke="#2F5D34" stroke-width="2.5" stroke-linecap="round"></path>
+        ${dots}
+      </svg>
+    `;
+
+    // Badge de tendance : compare le dernier mois au précédent
+    if (trendBadge) {
+      if (values.length < 2) {
+        trendBadge.textContent = '';
+      } else {
+        const last = values[values.length - 1];
+        const prev = values[values.length - 2];
+        const diff = prev === 0 ? 100 : Math.round(((last - prev) / prev) * 100);
+        const cls = diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat';
+        const arrow = diff > 0 ? '↗' : diff < 0 ? '↘' : '→';
+        trendBadge.innerHTML = `<span class="kd-dash-trend-badge ${cls}">${arrow} ${diff > 0 ? '+' : ''}${diff}% vs mois précédent</span>`;
+      }
+    }
   }
 
-  function exportReservationsToCSV(reservations, terrainsById){
-    const headers = ['Date', 'Heure', 'Terrain', 'Quartier', 'Client', 'Téléphone', 'Email', 'CIN', 'Statut', 'Montant (DH)', 'Référence PayPal'];
+  function exportClientsToPDF(reservations, terrainsById, profile){
+    if (typeof window.jspdf === 'undefined') {
+      alert("Le module PDF n'a pas pu se charger. Réessaie dans un instant.");
+      return;
+    }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt' });
+    const pageWidth = doc.internal.pageSize.getWidth();
 
-    const escapeCsv = (val) => {
-      const s = (val === null || val === undefined) ? '' : String(val);
-      return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-    };
+    // En-tête
+    doc.setFontSize(18);
+    doc.setTextColor(30, 70, 32);
+    doc.text('Korador — Clients ayant réservé', 40, 40);
+    doc.setFontSize(10);
+    doc.setTextColor(120, 120, 120);
+    doc.text(`Exporté le ${new Date().toLocaleDateString('fr-FR')} — ${profile?.nom || ''}`, 40, 58);
 
-    const rows = reservations.map(r => {
+    const headers = ['Date', 'Heure', 'Terrain', 'Client', 'Téléphone', 'Email', 'Statut', 'Montant (DH)'];
+    const colWidths = [65, 50, 130, 110, 90, 140, 80, 80];
+    let colX = [];
+    let acc = 40;
+    colWidths.forEach(w => { colX.push(acc); acc += w; });
+
+    let y = 90;
+    doc.setFillColor(226, 244, 230);
+    doc.rect(40, y - 14, pageWidth - 80, 20, 'F');
+    doc.setFontSize(9.5);
+    doc.setTextColor(30, 70, 32);
+    headers.forEach((h, i) => doc.text(h, colX[i] + 4, y));
+    y += 20;
+
+    doc.setFontSize(9);
+    reservations.forEach((r, idx) => {
+      if (y > 560) { doc.addPage(); y = 50; }
       const t = terrainsById[r.terrain_id];
-      return [
+      if (idx % 2 === 0) {
+        doc.setFillColor(250, 246, 226);
+        doc.rect(40, y - 13, pageWidth - 80, 18, 'F');
+      }
+      doc.setTextColor(50, 50, 50);
+      const row = [
         r.date_reservation,
         r.heure_reservation,
-        t ? t.nom : '',
-        t ? t.quartier : '',
+        t ? t.nom : '—',
         r.nom_client,
         r.telephone_client,
-        r.email_client || '',
-        r.cin_client || '',
+        r.email_client || '—',
         statutLabel(r.statut),
-        r.statut !== 'annulee' ? (t?.prix || 0) : 0,
-        r.paypal_capture_id || ''
-      ].map(escapeCsv).join(',');
+        r.statut !== 'annulee' ? String(t?.prix || 0) : '0',
+      ];
+      row.forEach((val, i) => doc.text(String(val).slice(0, 28), colX[i] + 4, y));
+      y += 18;
     });
 
-    const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n'); // \uFEFF = BOM pour accents corrects dans Excel
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    const today = new Date().toISOString().slice(0, 10);
-    a.href = url;
-    a.download = `korador-reservations-${today}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    doc.save(`korador-clients-${new Date().toISOString().slice(0, 10)}.pdf`);
   }
 
   // ---------- 6) Affiche les réservations, avec filtres (statut / terrain / recherche) ----------
@@ -249,7 +302,6 @@ document.addEventListener('DOMContentLoaded', async function () {
               <th>Client</th>
               <th>Contact</th>
               <th>Statut</th>
-              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -263,56 +315,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                   <td data-label="Client">${r.nom_client}<span class="kd-res-sub">${r.cin_client || ''}</span></td>
                   <td data-label="Contact">${r.telephone_client}<span class="kd-res-sub">${r.email_client || ''}</span></td>
                   <td data-label="Statut"><span class="kd-res-badge ${r.statut}">${statutLabel(r.statut)}</span></td>
-                  <td data-label="Actions">
-                    <div class="kd-res-actions">
-                      <button type="button" class="kd-res-action-btn confirm" data-action="confirmee" ${r.statut !== 'en_attente' ? 'disabled' : ''}>Confirmer</button>
-                      <button type="button" class="kd-res-action-btn cancel" data-action="annulee" ${r.statut === 'annulee' ? 'disabled' : ''}>Annuler</button>
-                    </div>
-                  </td>
                 </tr>
               `;
             }).join('')}
           </tbody>
         </table>
       `;
-    }
-
-    function attachRowActions(){
-      wrap.querySelectorAll('.kd-res-action-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const row = btn.closest('tr');
-          const reservationId = row.dataset.id;
-          const newStatut = btn.dataset.action;
-
-          // Sécurité : une annulation ne peut pas être annulée depuis cette interface,
-          // donc on demande une confirmation explicite avant de l'appliquer.
-          if (newStatut === 'annulee' && !confirm('Annuler cette réservation ? Cette action ne peut pas être défaite ici.')) {
-            return;
-          }
-
-          row.querySelectorAll('.kd-res-action-btn').forEach(b => b.disabled = true);
-
-          const { error } = await supabaseClient
-            .from('reservations')
-            .update({ statut: newStatut })
-            .eq('id', reservationId);
-
-          if (error) {
-            console.error('Korador: erreur mise à jour statut —', error);
-            row.querySelectorAll('.kd-res-action-btn').forEach(b => b.disabled = false);
-            return;
-          }
-
-          // Met à jour la donnée source pour que les filtres/compteurs restent corrects
-          const r = reservations.find(x => x.id === reservationId);
-          if (r) r.statut = newStatut;
-
-          const confirmedNowCount = reservations.filter(x => x.statut === 'confirmee').length;
-          document.getElementById('kd-dash-stat-confirmed').textContent = confirmedNowCount;
-
-          renderAll();
-        });
-      });
     }
 
     function attachFilterHandlers(){
@@ -345,7 +353,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
       wrap.innerHTML = renderFilterBar() + renderTableRows(getFilteredReservations());
       attachFilterHandlers();
-      attachRowActions();
 
       if (activeElementWasSearch) {
         const input = document.getElementById('kd-res-search');

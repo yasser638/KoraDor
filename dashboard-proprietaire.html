@@ -25,10 +25,19 @@
 
     .kd-dash-chart-card{
       background:#fff; border:1px solid var(--green-line); border-radius:14px; padding:24px 26px 18px; margin-bottom:36px;
+      position:relative;
     }
+    .kd-dash-chart-header{ display:flex; align-items:center; justify-content:flex-end; margin-bottom:6px; min-height:20px; }
+    .kd-dash-trend-badge{
+      display:inline-flex; align-items:center; gap:5px; font-size:12.5px; font-weight:700; padding:5px 11px; border-radius:999px;
+    }
+    .kd-dash-trend-badge.up{ background:#e2f4e6; color:var(--green-dark); }
+    .kd-dash-trend-badge.down{ background:#fdecec; color:#b32e2e; }
+    .kd-dash-trend-badge.flat{ background:var(--cream-2); color:var(--text-soft); }
     .kd-dash-chart-bar-label{ font-size:11px; fill:var(--text-soft); font-family:inherit; }
     .kd-dash-chart-value-label{ font-size:11.5px; fill:var(--green-dark); font-weight:700; font-family:inherit; }
     .kd-dash-chart-empty{ text-align:center; color:var(--text-soft); font-size:13.5px; padding:20px 0; }
+    .kd-dash-chart-dot{ fill:#fff; stroke:var(--green-dark); stroke-width:2.5; transition:r .15s ease; }
 
     .kd-dash-stats{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px; margin-bottom:36px; }
     .kd-dash-stat-card{
@@ -141,7 +150,7 @@
           </div>
           <button type="button" class="kd-dash-export-btn" id="kd-dash-export-btn">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            Exporter en CSV
+            Exporter en PDF
           </button>
         </div>
 
@@ -166,6 +175,9 @@
 
         <h2 class="kd-dash-section-title">Revenu par mois</h2>
         <div class="kd-dash-chart-card">
+          <div class="kd-dash-chart-header">
+            <span id="kd-dash-trend-badge"></span>
+          </div>
           <div id="kd-dash-revenue-chart"></div>
         </div>
 
@@ -182,6 +194,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="auth.js"></script>
   <script src="dashboard-proprietaire.js"></script>
 

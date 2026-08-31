@@ -2,6 +2,8 @@
 // KORADOR — Tableau de bord propriétaire
 // ==========================================================
 
+const HEURES = ['08:00','09:00','10:00','11:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00'];
+
 document.addEventListener('DOMContentLoaded', async function () {
 
   const loadingEl = document.getElementById('kd-dash-loading');
@@ -371,8 +373,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     return 'En attente';
   }
 
-  const HEURES = ['08:00','09:00','10:00','11:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00'];
-
   function setupOnSiteBooking(monTerrains){
     let selectedTerrain = monTerrains[0];
     let selectedNumeroTerrain = 1;
@@ -533,9 +533,14 @@ document.addEventListener('DOMContentLoaded', async function () {
 
       const { data: sessionData } = await supabaseClient.auth.getSession();
 
-      const { data: inserted, error } = await supabaseClient
+      // On génère l'id nous-mêmes : évite de dépendre d'une lecture après l'insertion
+      // (qui peut être bloquée par les policies RLS même quand l'insertion elle-même réussit).
+      const newId = crypto.randomUUID();
+
+      const { error } = await supabaseClient
         .from('reservations')
         .insert({
+          id: newId,
           terrain_id: selectedTerrain.id,
           numero_terrain: selectedNumeroTerrain,
           date_reservation: formatDateISO(selectedDate),
@@ -545,9 +550,7 @@ document.addEventListener('DOMContentLoaded', async function () {
           telephone_client: '—',
           // Réservation prise en personne sur le terrain, payée cash : confirmée directement.
           statut: 'confirmee',
-        })
-        .select()
-        .single();
+        });
 
       if (error) {
         console.error('Korador: erreur réservation sur place —', error);
@@ -560,7 +563,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       reservedSlots.push(heure);
       todayBookedCount++;
       updateCountBadge();
-      showUndoToast(heure, inserted.id);
+      showUndoToast(heure, newId);
     }
 
     updateCountBadge();

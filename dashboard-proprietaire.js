@@ -378,12 +378,18 @@ document.addEventListener('DOMContentLoaded', async function () {
     let selectedNumeroTerrain = 1;
     let selectedDate = new Date();
     let reservedSlots = [];
+    let todayBookedCount = 0;
 
     function formatDateISO(d){
       const y = d.getFullYear();
       const m = String(d.getMonth() + 1).padStart(2, '0');
       const day = String(d.getDate()).padStart(2, '0');
       return `${y}-${m}-${day}`;
+    }
+
+    const countBadge = document.getElementById('kdop-count-badge');
+    function updateCountBadge(){
+      countBadge.textContent = `⚡ ${todayBookedCount} réservé(s) aujourd'hui`;
     }
 
     // ---------- Sélecteur de terrain (affiché seulement si le propriétaire en gère plusieurs) ----------
@@ -453,7 +459,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       refreshSlots();
     });
 
-    // ---------- Grille des créneaux ----------
+    // ---------- Grille des créneaux (billets de match, un seul tap pour réserver) ----------
     const slotsEl = document.getElementById('kdop-slots');
 
     async function refreshSlots(){
@@ -474,74 +480,90 @@ document.addEventListener('DOMContentLoaded', async function () {
     function renderSlots(){
       slotsEl.innerHTML = HEURES.map(h => {
         const occupe = reservedSlots.includes(h);
-        return `<button type="button" class="kdop-slot-btn ${occupe ? 'occupe' : 'dispo'}" data-heure="${h}" ${occupe ? 'disabled' : ''}>${h}</button>`;
+        return `
+          <button type="button" class="kdop-slot-btn ${occupe ? 'occupe' : 'dispo'}" data-heure="${h}" ${occupe ? 'disabled' : ''}>
+            <span class="kdop-slot-ball">⚽</span>
+            <span class="kdop-slot-heure">${h}</span>
+          </button>
+        `;
       }).join('');
       slotsEl.querySelectorAll('.kdop-slot-btn.dispo').forEach(btn => {
-        btn.addEventListener('click', () => openPanel(btn.dataset.heure));
+        btn.addEventListener('click', () => bookSlot(btn));
       });
     }
 
-    // ---------- Panneau de réservation rapide ----------
-    const overlay = document.getElementById('kdop-overlay');
-    const panelTitle = document.getElementById('kdop-panel-title');
-    const panelNom = document.getElementById('kdop-panel-nom');
-    const panelTel = document.getElementById('kdop-panel-tel');
-    const panelConfirm = document.getElementById('kdop-panel-confirm');
-    const panelCancel = document.getElementById('kdop-panel-cancel');
-    let currentHeure = null;
+    // ---------- Toast de confirmation avec "Annuler" ----------
+    const toastEl = document.getElementById('kdop-toast');
+    const toastMsg = document.getElementById('kdop-toast-msg');
+    const toastUndo = document.getElementById('kdop-toast-undo');
+    let hideToastTimer = null;
+    let lastBookingId = null;
 
-    function openPanel(heure){
-      currentHeure = heure;
-      panelTitle.textContent = `Réserver ${heure}`;
-      panelNom.value = '';
-      panelTel.value = '';
-      overlay.classList.add('open');
+    function showUndoToast(heure, reservationId){
+      lastBookingId = reservationId;
+      toastMsg.textContent = `${heure} réservé ✓`;
+      toastEl.classList.add('show');
+      toastUndo.hidden = false;
+      clearTimeout(hideToastTimer);
+      hideToastTimer = setTimeout(() => {
+        toastEl.classList.remove('show');
+        lastBookingId = null;
+      }, 5000);
     }
-    function closePanel(){
-      overlay.classList.remove('open');
-      currentHeure = null;
-    }
-    panelCancel.addEventListener('click', closePanel);
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) closePanel(); });
 
-    panelConfirm.addEventListener('click', async () => {
-      if (!currentHeure) return;
-      panelConfirm.disabled = true;
-      panelConfirm.textContent = 'Réservation...';
+    toastUndo.addEventListener('click', async () => {
+      if (!lastBookingId) return;
+      const idToUndo = lastBookingId;
+      lastBookingId = null;
+      clearTimeout(hideToastTimer);
+      toastEl.classList.remove('show');
 
-      const { data: session } = await supabaseClient.auth.getSession();
+      const { error } = await supabaseClient.from('reservations').delete().eq('id', idToUndo);
+      if (!error) {
+        todayBookedCount = Math.max(0, todayBookedCount - 1);
+        updateCountBadge();
+        refreshSlots();
+      }
+    });
 
-      const { error } = await supabaseClient
+    // ---------- Réservation en un seul tap ----------
+    async function bookSlot(btn){
+      const heure = btn.dataset.heure;
+      btn.disabled = true;
+
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+
+      const { data: inserted, error } = await supabaseClient
         .from('reservations')
         .insert({
           terrain_id: selectedTerrain.id,
           numero_terrain: selectedNumeroTerrain,
           date_reservation: formatDateISO(selectedDate),
-          heure_reservation: currentHeure,
-          user_id: session?.session?.user?.id || null,
-          nom_client: panelNom.value.trim() || 'Client sur place',
-          telephone_client: panelTel.value.trim() || '—',
+          heure_reservation: heure,
+          user_id: sessionData?.session?.user?.id || null,
+          nom_client: 'Client sur place',
+          telephone_client: '—',
           // Réservation prise en personne sur le terrain, payée cash : confirmée directement.
           statut: 'confirmee',
-        });
-
-      panelConfirm.disabled = false;
-      panelConfirm.textContent = 'Confirmer';
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error('Korador: erreur réservation sur place —', error);
-        closePanel();
-        await refreshSlots();
+        btn.disabled = false;
         return;
       }
 
-      closePanel();
-      await refreshSlots();
-      // Recharge légère de la page pour que le tableau "Réservations" + les stats
-      // reflètent immédiatement cette nouvelle réservation.
-      window.location.reload();
-    });
+      btn.classList.remove('dispo');
+      btn.classList.add('occupe', 'just-booked');
+      reservedSlots.push(heure);
+      todayBookedCount++;
+      updateCountBadge();
+      showUndoToast(heure, inserted.id);
+    }
 
+    updateCountBadge();
     refreshSlots();
   }
 

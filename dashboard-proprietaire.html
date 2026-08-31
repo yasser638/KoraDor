@@ -41,6 +41,12 @@
 
     /* --- Réserver sur place (créneau pris directement par le propriétaire, cash sur place) --- */
     .kdop-card{ background:#fff; border:1px solid var(--green-line); border-radius:14px; padding:24px 26px 26px; margin-bottom:36px; }
+    .kdop-header{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:16px; }
+    .kdop-header p{ font-size:12.5px; color:var(--text-soft); margin:0; }
+    .kdop-count-badge{
+      display:inline-flex; align-items:center; gap:6px; background:var(--cream-2); color:var(--green-dark);
+      font-size:12.5px; font-weight:700; padding:6px 14px; border-radius:999px;
+    }
     .kdop-picker{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
     .kdop-picker-btn{
       border:2px solid var(--green-line); background:#fff; color:var(--green-dark);
@@ -54,34 +60,52 @@
     .kdop-legend{ display:flex; gap:18px; margin-bottom:14px; font-size:12.5px; color:var(--text-soft); }
     .kdop-legend span{ display:inline-flex; align-items:center; gap:6px; }
     .kdop-legend i{ width:12px; height:12px; border-radius:4px; display:inline-block; }
-    .kdop-slots{ display:grid; grid-template-columns:repeat(auto-fill, minmax(90px, 1fr)); gap:10px; }
+
+    /* Créneaux en forme de "billet de match" : coin arrondi + encoche pointillée */
+    .kdop-slots{ display:grid; grid-template-columns:repeat(auto-fill, minmax(96px, 1fr)); gap:12px; }
     .kdop-slot-btn{
-      border:none; border-radius:10px; padding:14px 6px; font-size:14px; font-weight:800; font-family:var(--font-display);
-      cursor:pointer; color:#fff; transition:transform .15s ease;
+      position:relative; border:none; border-radius:12px; padding:16px 8px 12px; cursor:pointer; font-family:inherit;
+      display:flex; flex-direction:column; align-items:center; gap:4px; overflow:hidden;
+      transition:transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease;
     }
-    .kdop-slot-btn:active{ transform:scale(.95); }
+    .kdop-slot-btn::before{
+      content:""; position:absolute; left:0; right:0; top:0; height:2px;
+      background-image:radial-gradient(circle, rgba(255,255,255,0.55) 1.5px, transparent 1.6px);
+      background-size:8px 2px;
+    }
+    .kdop-slot-ball{ font-size:16px; line-height:1; }
+    .kdop-slot-heure{ font-size:14px; font-weight:800; font-family:var(--font-display); color:#fff; }
     .kdop-slot-btn.dispo{ background:var(--green-vivid); }
-    .kdop-slot-btn.occupe{ background:#c0453f; cursor:default; }
+    .kdop-slot-btn.dispo:hover{ transform:translateY(-3px); box-shadow:0 10px 20px rgba(46,158,74,0.3); }
+    .kdop-slot-btn.dispo:active{ transform:scale(.94); }
+    .kdop-slot-btn.occupe{ background:#c0453f; cursor:default; opacity:.88; }
     .kdop-slot-btn.loading{ background:var(--green-line); color:var(--text-soft); cursor:wait; }
+    .kdop-slot-btn.just-booked{ animation:kdop-pop .45s cubic-bezier(.34,1.56,.64,1); }
+    @keyframes kdop-pop{
+      0%{ transform:scale(1); }
+      40%{ transform:scale(1.18) rotate(-6deg); }
+      70%{ transform:scale(.95) rotate(3deg); }
+      100%{ transform:scale(1) rotate(0); }
+    }
     .kdop-empty{ text-align:center; color:var(--text-soft); font-size:13.5px; padding:24px 0; }
 
-    .kdop-overlay{
-      display:none; position:fixed; inset:0; background:rgba(30,70,32,0.55);
-      align-items:center; justify-content:center; z-index:200; padding:20px;
+    /* Toast de confirmation avec "Annuler" */
+    .kdop-toast{
+      position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); opacity:0; pointer-events:none;
+      background:var(--green-dark); color:#fff; padding:14px 16px 14px 20px; border-radius:14px; font-weight:700; font-size:14px;
+      transition:transform .3s ease, opacity .3s ease; z-index:300; display:flex; align-items:center; gap:16px;
+      box-shadow:0 14px 34px rgba(0,0,0,0.25);
     }
-    .kdop-overlay.open{ display:flex; }
-    .kdop-panel{ background:#fff; border-radius:20px; padding:28px; max-width:380px; width:100%; }
-    .kdop-panel h3{ font-family:var(--font-display); font-size:20px; color:var(--green-dark); margin-bottom:16px; }
-    .kdop-panel label{ display:block; font-size:12.5px; font-weight:700; color:var(--text-soft); margin:12px 0 5px; }
-    .kdop-panel input{
-      width:100%; border:2px solid var(--green-line); border-radius:10px; padding:12px; font-size:15px; font-family:inherit;
+    .kdop-toast.show{ transform:translateX(-50%) translateY(0); opacity:1; pointer-events:auto; }
+    .kdop-toast-undo{
+      background:rgba(255,255,255,0.16); border:none; color:#fff; font-weight:800; font-size:13px;
+      padding:7px 14px; border-radius:8px; cursor:pointer; font-family:inherit; white-space:nowrap;
     }
-    .kdop-panel-actions{ display:flex; gap:10px; margin-top:20px; }
-    .kdop-panel-btn{
-      flex:1; border:none; border-radius:10px; padding:13px; font-size:14.5px; font-weight:800; cursor:pointer; font-family:inherit;
+    .kdop-toast-undo:hover{ background:rgba(255,255,255,0.28); }
+
+    @media (prefers-reduced-motion: reduce){
+      .kdop-slot-btn, .kdop-toast{ transition:none; animation:none !important; }
     }
-    .kdop-panel-btn.confirm{ background:var(--green-dark); color:#fff; }
-    .kdop-panel-btn.cancel{ background:var(--cream-2); color:var(--green-dark); }
 
     .kd-dash-stats{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px; margin-bottom:36px; }
     .kd-dash-stat-card{
@@ -227,6 +251,10 @@
 
         <h2 class="kd-dash-section-title">Réserver sur place</h2>
         <div class="kdop-card">
+          <div class="kdop-header">
+            <p>Touche un créneau vert — c'est réservé instantanément, aucune étape en plus.</p>
+            <span class="kdop-count-badge" id="kdop-count-badge">⚡ 0 réservé(s) aujourd'hui</span>
+          </div>
           <div class="kdop-picker" id="kdop-terrain-picker"></div>
           <div class="kdop-picker" id="kdop-subterrain-picker"></div>
           <div class="kdop-picker">
@@ -253,19 +281,10 @@
 
   </div>
 
-  <!-- Panneau de réservation rapide (sur place) -->
-  <div class="kdop-overlay" id="kdop-overlay">
-    <div class="kdop-panel">
-      <h3 id="kdop-panel-title">Réserver 18:00</h3>
-      <label>Nom du client (optionnel)</label>
-      <input type="text" id="kdop-panel-nom" placeholder="Ex: Yassine">
-      <label>Téléphone (optionnel)</label>
-      <input type="tel" id="kdop-panel-tel" placeholder="06 XX XX XX XX">
-      <div class="kdop-panel-actions">
-        <button type="button" class="kdop-panel-btn cancel" id="kdop-panel-cancel">Annuler</button>
-        <button type="button" class="kdop-panel-btn confirm" id="kdop-panel-confirm">Confirmer</button>
-      </div>
-    </div>
+  <!-- Toast de confirmation, avec "Annuler" (quelques secondes) -->
+  <div class="kdop-toast" id="kdop-toast">
+    <span id="kdop-toast-msg"></span>
+    <button type="button" class="kdop-toast-undo" id="kdop-toast-undo">Annuler</button>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

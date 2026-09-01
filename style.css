@@ -1415,3 +1415,86 @@ main{
     transform:none !important;
   }
 }
+/* =========================================================
+   AJOUT : Menu profil (regroupe mes réservations, espace
+   propriétaire, contact et déconnexion pour un utilisateur
+   connecté — remplace le simple bouton "Se déconnecter")
+   ========================================================= */
+
+.kd-profile-menu{ position:relative; }
+
+.kd-profile-trigger{
+  display:flex; align-items:center; gap:9px;
+  background:#fff; border:1px solid var(--green-line); border-radius:999px;
+  padding:6px 16px 6px 6px; cursor:pointer; font-family:inherit;
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+.kd-profile-trigger:hover{ border-color:var(--green-mid); }
+.kd-profile-menu.open .kd-profile-trigger{
+  border-color:var(--green-dark); box-shadow:0 0 0 3px rgba(47,93,52,0.12);
+}
+
+.kd-profile-avatar{
+  width:30px; height:30px; border-radius:50%; flex-shrink:0;
+  background:var(--green-dark); color:var(--cream);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-weight:800; font-size:13px;
+}
+.kd-profile-avatar-lg{ width:40px; height:40px; font-size:16px; }
+
+.kd-profile-name{
+  font-size:13.5px; font-weight:700; color:var(--green-dark);
+  max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+
+.kd-profile-chevron{ color:var(--text-soft); flex-shrink:0; transition:transform .2s ease; }
+.kd-profile-menu.open .kd-profile-chevron{ transform:rotate(180deg); }
+
+.kd-profile-dropdown{
+  position:absolute; top:calc(100% + 10px); right:0; width:250px; z-index:120;
+  background:#fff; border:1px solid var(--green-line); border-radius:14px; padding:8px;
+  box-shadow:0 16px 40px rgba(30,70,32,0.16);
+  opacity:0; visibility:hidden; transform:translateY(-6px) scale(.98);
+  transition:opacity .18s ease, transform .18s ease, visibility 0s linear .18s;
+}
+.kd-profile-menu.open .kd-profile-dropdown{
+  opacity:1; visibility:visible; transform:translateY(0) scale(1);
+  transition:opacity .18s ease, transform .18s ease, visibility 0s linear 0s;
+}
+
+.kd-profile-dropdown-head{
+  display:flex; align-items:center; gap:12px;
+  padding:8px 10px 14px; margin-bottom:6px; border-bottom:1px solid var(--green-line);
+}
+.kd-profile-dropdown-head strong{ display:block; font-size:13.5px; color:var(--green-dark); }
+.kd-profile-dropdown-head span{ display:block; font-size:11.5px; color:var(--text-soft); margin-top:1px; word-break:break-all; }
+
+.kd-profile-dropdown a,
+.kd-profile-logout{
+  display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+  padding:10px; border-radius:9px; font-size:13.5px; font-weight:600; color:var(--text-soft);
+  text-decoration:none; background:none; border:none; cursor:pointer; font-family:inherit;
+  transition:background .15s ease, color .15s ease;
+}
+.kd-profile-dropdown a:hover{ background:var(--cream-2); color:var(--green-dark); }
+
+.kd-profile-logout{
+  margin-top:4px; padding-top:12px; border-top:1px solid var(--green-line);
+  color:var(--red-accent);
+}
+.kd-profile-logout:hover{ background:#fdecec; }
+
+@media (max-width:768px){
+  .nav-menu .kd-profile-menu{ width:100%; }
+  .nav-menu .kd-profile-trigger{ width:100%; justify-content:space-between; padding:12px 14px; border-radius:12px; }
+  .nav-menu .kd-profile-name{ max-width:none; flex:1; text-align:left; }
+  .nav-menu .kd-profile-dropdown{
+    position:static; width:100%; margin-top:10px; box-shadow:none;
+    opacity:1; visibility:visible; transform:none; display:none;
+  }
+  .nav-menu .kd-profile-menu.open .kd-profile-dropdown{ display:block; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .kd-profile-trigger, .kd-profile-chevron, .kd-profile-dropdown{ transition:none !important; }
+}

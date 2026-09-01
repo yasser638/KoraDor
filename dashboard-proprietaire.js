@@ -2,7 +2,7 @@
 // KORADOR — Tableau de bord propriétaire
 // ==========================================================
 
-const HEURES = ['08:00','09:00','10:00','11:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00','23:00'];
+const HEURES = ['08:00','09:00','10:00','11:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00'];
 
 document.addEventListener('DOMContentLoaded', async function () {
 
@@ -461,15 +461,24 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // ---------- Grille des créneaux (billets de match, un seul tap pour réserver) ----------
     const slotsEl = document.getElementById('kdop-slots');
+    let slotIdByHeure = {}; // { "18:00": "uuid-de-la-réservation" }
 
     async function refreshSlots(){
       slotsEl.innerHTML = HEURES.map(h => `<button class="kdop-slot-btn loading" disabled>${h}</button>`).join('');
+      slotIdByHeure = {};
       try {
-        reservedSlots = await kdGetReservedSlots({
-          terrain_id: selectedTerrain.id,
-          numero_terrain: selectedNumeroTerrain,
-          date_reservation: formatDateISO(selectedDate),
-        });
+        // Requête directe (pas kdGetReservedSlots) pour récupérer aussi l'id de chaque
+        // réservation — nécessaire pour permettre au propriétaire d'annuler un créneau déjà pris.
+        const { data, error } = await supabaseClient
+          .from('reservations')
+          .select('id, heure_reservation')
+          .eq('terrain_id', selectedTerrain.id)
+          .eq('numero_terrain', selectedNumeroTerrain)
+          .eq('date_reservation', formatDateISO(selectedDate))
+          .neq('statut', 'annulee');
+        if (error) throw error;
+        reservedSlots = (data || []).map(r => r.heure_reservation);
+        (data || []).forEach(r => { slotIdByHeure[r.heure_reservation] = r.id; });
       } catch (err) {
         console.error('Korador: erreur chargement créneaux —', err);
         reservedSlots = [];
@@ -481,7 +490,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       slotsEl.innerHTML = HEURES.map(h => {
         const occupe = reservedSlots.includes(h);
         return `
-          <button type="button" class="kdop-slot-btn ${occupe ? 'occupe' : 'dispo'}" data-heure="${h}" ${occupe ? 'disabled' : ''}>
+          <button type="button" class="kdop-slot-btn ${occupe ? 'occupe' : 'dispo'}" data-heure="${h}">
             <span class="kdop-slot-ball">⚽</span>
             <span class="kdop-slot-heure">${h}</span>
           </button>
@@ -490,6 +499,36 @@ document.addEventListener('DOMContentLoaded', async function () {
       slotsEl.querySelectorAll('.kdop-slot-btn.dispo').forEach(btn => {
         btn.addEventListener('click', () => bookSlot(btn));
       });
+      // Un créneau déjà pris reste cliquable : ça permet au propriétaire de l'annuler
+      // lui-même (ex: client qui ne s'est finalement pas présenté), pas de délai limite.
+      slotsEl.querySelectorAll('.kdop-slot-btn.occupe').forEach(btn => {
+        btn.addEventListener('click', () => cancelSlot(btn));
+      });
+    }
+
+    async function cancelSlot(btn){
+      const heure = btn.dataset.heure;
+      const reservationId = slotIdByHeure[heure];
+      if (!reservationId) return;
+      if (!confirm(`Annuler la réservation de ${heure} ?`)) return;
+
+      btn.disabled = true;
+      const { error } = await supabaseClient
+        .from('reservations')
+        .update({ statut: 'annulee' })
+        .eq('id', reservationId);
+
+      if (error) {
+        console.error('Korador: erreur annulation créneau —', error);
+        btn.disabled = false;
+        return;
+      }
+
+      btn.classList.remove('occupe');
+      btn.classList.add('dispo', 'just-booked');
+      reservedSlots = reservedSlots.filter(h => h !== heure);
+      delete slotIdByHeure[heure];
+      btn.addEventListener('click', () => bookSlot(btn), { once: true });
     }
 
     // ---------- Toast de confirmation avec "Annuler" ----------

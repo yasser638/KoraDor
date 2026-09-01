@@ -81,6 +81,14 @@
     .kdop-slot-btn.occupe{ background:#c0453f; cursor:pointer; opacity:.88; }
     .kdop-slot-btn.occupe:hover{ opacity:1; transform:translateY(-2px); box-shadow:0 8px 18px rgba(192,69,63,0.3); }
     .kdop-slot-btn.occupe:active{ transform:scale(.94); }
+    .kdop-slot-btn.confirming{
+      background:#d98c2b !important; opacity:1 !important;
+      animation:kdop-pulse 1s ease-in-out infinite;
+    }
+    @keyframes kdop-pulse{
+      0%, 100%{ box-shadow:0 0 0 0 rgba(217,140,43,0.5); }
+      50%{ box-shadow:0 0 0 8px rgba(217,140,43,0); }
+    }
     .kdop-slot-btn.loading{ background:var(--green-line); color:var(--text-soft); cursor:wait; }
     .kdop-slot-btn.just-booked{ animation:kdop-pop .45s cubic-bezier(.34,1.56,.64,1); }
     @keyframes kdop-pop{
@@ -99,6 +107,10 @@
       box-shadow:0 14px 34px rgba(0,0,0,0.25);
     }
     .kdop-toast.show{ transform:translateX(-50%) translateY(0); opacity:1; pointer-events:auto; }
+    .kdop-toast-icon{
+      width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,0.18);
+      display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;
+    }
     .kdop-toast-undo{
       background:rgba(255,255,255,0.16); border:none; color:#fff; font-weight:800; font-size:13px;
       padding:7px 14px; border-radius:8px; cursor:pointer; font-family:inherit; white-space:nowrap;
@@ -285,6 +297,7 @@
 
   <!-- Toast de confirmation, avec "Annuler" (quelques secondes) -->
   <div class="kdop-toast" id="kdop-toast">
+    <span class="kdop-toast-icon">✓</span>
     <span id="kdop-toast-msg"></span>
     <button type="button" class="kdop-toast-undo" id="kdop-toast-undo">Annuler</button>
   </div>

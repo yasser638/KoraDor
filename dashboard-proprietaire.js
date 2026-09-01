@@ -622,9 +622,18 @@ document.addEventListener('DOMContentLoaded', async function () {
       btn.classList.remove('dispo');
       btn.classList.add('occupe', 'just-booked');
       reservedSlots.push(heure);
+      slotIdByHeure[heure] = newId; // nécessaire pour que cancelSlot() retrouve la réservation
       todayBookedCount++;
       updateCountBadge();
       showUndoToast(heure, newId);
+
+      // On clone le bouton pour retirer proprement l'ancien listener "bookSlot" (sinon un
+      // second clic tenterait de réserver à nouveau au lieu d'annuler), puis on le réactive
+      // (il avait été désactivé le temps de l'insertion) et on branche cancelSlot dessus.
+      const freshBtn = btn.cloneNode(true);
+      btn.replaceWith(freshBtn);
+      freshBtn.disabled = false;
+      freshBtn.addEventListener('click', () => cancelSlot(freshBtn));
     }
 
     updateCountBadge();

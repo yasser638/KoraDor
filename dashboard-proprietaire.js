@@ -510,8 +510,21 @@ document.addEventListener('DOMContentLoaded', async function () {
       const heure = btn.dataset.heure;
       const reservationId = slotIdByHeure[heure];
       if (!reservationId) return;
-      if (!confirm(`Annuler la réservation de ${heure} ?`)) return;
 
+      // Confirmation en 2 tapotements, directement sur le créneau (plus élégant qu'un
+      // popup natif du navigateur) : le 1er tap propose, le 2e (dans les 3s) confirme.
+      if (!btn.classList.contains('confirming')) {
+        btn.classList.add('confirming');
+        btn.querySelector('.kdop-slot-heure').textContent = 'Sûr ?';
+        btn.confirmTimer = setTimeout(() => {
+          btn.classList.remove('confirming');
+          btn.querySelector('.kdop-slot-heure').textContent = heure;
+        }, 3000);
+        return;
+      }
+
+      clearTimeout(btn.confirmTimer);
+      btn.classList.remove('confirming');
       btn.disabled = true;
       const { error } = await supabaseClient
         .from('reservations')
@@ -521,11 +534,14 @@ document.addEventListener('DOMContentLoaded', async function () {
       if (error) {
         console.error('Korador: erreur annulation créneau —', error);
         btn.disabled = false;
+        btn.querySelector('.kdop-slot-heure').textContent = heure;
         return;
       }
 
       btn.classList.remove('occupe');
       btn.classList.add('dispo', 'just-booked');
+      btn.disabled = false;
+      btn.querySelector('.kdop-slot-heure').textContent = heure;
       reservedSlots = reservedSlots.filter(h => h !== heure);
       delete slotIdByHeure[heure];
       btn.addEventListener('click', () => bookSlot(btn), { once: true });
@@ -557,12 +573,16 @@ document.addEventListener('DOMContentLoaded', async function () {
       clearTimeout(hideToastTimer);
       toastEl.classList.remove('show');
 
-      const { error } = await supabaseClient.from('reservations').delete().eq('id', idToUndo);
-      if (!error) {
-        todayBookedCount = Math.max(0, todayBookedCount - 1);
-        updateCountBadge();
-        refreshSlots();
+      // On annule (statut) plutôt que supprimer : cohérent avec le reste du site,
+      // et ne dépend pas d'une permission de suppression qui peut être bloquée.
+      const { error } = await supabaseClient.from('reservations').update({ statut: 'annulee' }).eq('id', idToUndo);
+      if (error) {
+        console.error('Korador: erreur annulation (undo) —', error);
+        return;
       }
+      todayBookedCount = Math.max(0, todayBookedCount - 1);
+      updateCountBadge();
+      refreshSlots();
     });
 
     // ---------- Réservation en un seul tap ----------

@@ -10,17 +10,24 @@ document.addEventListener('DOMContentLoaded', async function () {
   const pastWrap = document.getElementById('kd-mr-past');
   const logoutBtn = document.getElementById('kd-logout-btn');
 
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      if (typeof kdSignOut === 'function') kdSignOut();
-    });
-  }
-
   // ---------- 1) Vérifie la connexion ----------
   const session = await kdCheckSession();
   if (!session) {
     window.location.href = 'login.html';
     return;
+  }
+
+  // ---------- Menu profil (regroupe espace propriétaire si besoin, contact, déconnexion...) ----------
+  if (logoutBtn) {
+    let profileForMenu = null;
+    try { profileForMenu = await kdGetCurrentProfile(); } catch (err) { /* pas grave, fallback ci-dessous */ }
+    if (profileForMenu && typeof buildProfileMenu === 'function') {
+      buildProfileMenu(logoutBtn, profileForMenu);
+    } else {
+      logoutBtn.addEventListener('click', () => {
+        if (typeof kdSignOut === 'function') kdSignOut();
+      });
+    }
   }
 
   // ---------- 2) Charge les réservations ----------

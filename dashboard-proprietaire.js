@@ -121,22 +121,49 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     const months = Object.keys(byMonth).sort().slice(-6);
 
+    const monthLabel = (key, long) => {
+      const [y, m] = key.split('-');
+      const d = new Date(parseInt(y, 10), parseInt(m, 10) - 1, 1);
+      return d.toLocaleDateString('fr-FR', long ? { month: 'long', year: 'numeric' } : { month: 'short' });
+    };
+
+    // ---------- Aucune réservation facturée pour l'instant ----------
     if (!months.length) {
-      container.innerHTML = `<div class="kd-dash-chart-empty">Pas encore assez de données pour afficher un graphique.</div>`;
+      container.innerHTML = `
+        <div class="kd-dash-chart-empty">
+          <div class="kd-dash-chart-empty-icon">📈</div>
+          <p>Pas encore de revenu à afficher</p>
+          <span>Ta première réservation confirmée apparaîtra ici.</span>
+        </div>`;
       if (trendBadge) trendBadge.textContent = '';
       return;
     }
 
     const values = months.map(m => byMonth[m]);
-    const maxVal = Math.max(...values, 1);
-    const width = 640, height = 200, padding = 34;
-    const stepX = months.length > 1 ? (width - padding * 2) / (months.length - 1) : 0;
 
-    const points = values.map((val, i) => {
-      const x = months.length > 1 ? padding + i * stepX : width / 2;
-      const y = height - padding - (val / maxVal) * (height - padding * 2 - 20);
-      return { x, y, val };
-    });
+    // ---------- Un seul mois : pas de tendance à tracer, on met le chiffre en avant ----------
+    if (months.length === 1) {
+      container.innerHTML = `
+        <div class="kd-dash-chart-single">
+          <div class="kd-dash-chart-single-bar" aria-hidden="true"><span>⚽</span></div>
+          <div class="kd-dash-chart-single-info">
+            <span class="kd-dash-chart-single-value">${values[0].toLocaleString('fr-FR')} DH</span>
+            <span class="kd-dash-chart-single-label">${monthLabel(months[0], true)}</span>
+            <span class="kd-dash-chart-single-hint">Reviens le mois prochain pour voir ta tendance se dessiner ici.</span>
+          </div>
+        </div>`;
+      if (trendBadge) trendBadge.innerHTML = `<span class="kd-dash-trend-badge flat">🎉 Premier mois de revenu</span>`;
+      return;
+    }
+
+    // ---------- 2 mois ou plus : courbe lissée avec grille et étiquettes de valeur ----------
+    const niceMax = calcNiceMax(Math.max(...values, 1));
+    const width = 640, height = 220, padding = 30, leftPad = 46;
+    const plotRight = width - padding;
+    const stepX = (plotRight - leftPad) / (months.length - 1);
+    const yFor = (val) => height - padding - (val / niceMax) * (height - padding * 2);
+
+    const points = values.map((val, i) => ({ x: leftPad + i * stepX, y: yFor(val), val }));
 
     // Courbe lissée : on relie les points avec des courbes de Bézier plutôt que des lignes droites
     let linePath = `M ${points[0].x},${points[0].y}`;
@@ -147,44 +174,77 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
     const areaPath = `${linePath} L ${points[points.length - 1].x},${height - padding} L ${points[0].x},${height - padding} Z`;
 
-    const monthLabel = (key) => {
-      const [y, m] = key.split('-');
-      return new Date(parseInt(y, 10), parseInt(m, 10) - 1, 1).toLocaleDateString('fr-FR', { month: 'short' });
-    };
+    // Grille horizontale légère (bas / milieu / haut) avec les valeurs correspondantes
+    const gridLines = [0, 0.5, 1].map(step => {
+      const y = yFor(niceMax * step);
+      return `
+        <line x1="${leftPad}" y1="${y}" x2="${plotRight}" y2="${y}" class="kd-dash-chart-grid-line"></line>
+        <text x="${leftPad - 10}" y="${y + 4}" text-anchor="end" class="kd-dash-chart-axis-label">${formatCompactDH(niceMax * step)}</text>
+      `;
+    }).join('');
 
+    const lastIndex = points.length - 1;
     const dots = points.map((p, i) => `
-      <circle class="kd-dash-chart-dot" cx="${p.x}" cy="${p.y}" r="4"></circle>
-      <text x="${p.x}" y="${p.y - 12}" text-anchor="middle" class="kd-dash-chart-value-label">${p.val.toLocaleString('fr-FR')}</text>
-      <text x="${p.x}" y="${height - padding + 20}" text-anchor="middle" class="kd-dash-chart-bar-label">${monthLabel(months[i])}</text>
+      <g class="kd-dash-chart-point">
+        <circle class="kd-dash-chart-dot${i === lastIndex ? ' is-current' : ''}" cx="${p.x}" cy="${p.y}" r="${i === lastIndex ? 5.5 : 4}">
+          <title>${monthLabel(months[i], true)} — ${p.val.toLocaleString('fr-FR')} DH</title>
+        </circle>
+        <text x="${p.x}" y="${p.y - 14}" text-anchor="middle" class="kd-dash-chart-value-label">${p.val.toLocaleString('fr-FR')}</text>
+        <text x="${p.x}" y="${height - padding + 22}" text-anchor="middle" class="kd-dash-chart-bar-label${i === lastIndex ? ' is-current' : ''}">${monthLabel(months[i])}</text>
+      </g>
     `).join('');
 
     container.innerHTML = `
-      <svg viewBox="0 0 ${width} ${height}" style="width:100%; height:auto; max-height:220px;">
+      <svg viewBox="0 0 ${width} ${height}" class="kd-dash-chart-svg" role="img" aria-label="Évolution du revenu mensuel">
         <defs>
           <linearGradient id="kd-chart-fade" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#2F5D34" stop-opacity="0.28"></stop>
+            <stop offset="0%" stop-color="#2F5D34" stop-opacity="0.26"></stop>
             <stop offset="100%" stop-color="#2F5D34" stop-opacity="0"></stop>
           </linearGradient>
         </defs>
+        ${gridLines}
         <path d="${areaPath}" fill="url(#kd-chart-fade)"></path>
-        <path d="${linePath}" fill="none" stroke="#2F5D34" stroke-width="2.5" stroke-linecap="round"></path>
+        <path d="${linePath}" fill="none" class="kd-dash-chart-line"></path>
         ${dots}
       </svg>
     `;
 
+    // Anime le tracé de la courbe à l'affichage (respecte prefers-reduced-motion via CSS)
+    const lineEl = container.querySelector('.kd-dash-chart-line');
+    if (lineEl && typeof lineEl.getTotalLength === 'function') {
+      const length = lineEl.getTotalLength();
+      lineEl.style.strokeDasharray = length;
+      lineEl.style.strokeDashoffset = length;
+      requestAnimationFrame(() => { lineEl.style.strokeDashoffset = '0'; });
+    }
+
     // Badge de tendance : compare le dernier mois au précédent
     if (trendBadge) {
-      if (values.length < 2) {
-        trendBadge.textContent = '';
-      } else {
-        const last = values[values.length - 1];
-        const prev = values[values.length - 2];
-        const diff = prev === 0 ? 100 : Math.round(((last - prev) / prev) * 100);
-        const cls = diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat';
-        const arrow = diff > 0 ? '↗' : diff < 0 ? '↘' : '→';
-        trendBadge.innerHTML = `<span class="kd-dash-trend-badge ${cls}">${arrow} ${diff > 0 ? '+' : ''}${diff}% vs mois précédent</span>`;
-      }
+      const last = values[values.length - 1];
+      const prev = values[values.length - 2];
+      const diff = prev === 0 ? 100 : Math.round(((last - prev) / prev) * 100);
+      const cls = diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat';
+      const arrow = diff > 0 ? '↗' : diff < 0 ? '↘' : '→';
+      trendBadge.innerHTML = `<span class="kd-dash-trend-badge ${cls}">${arrow} ${diff > 0 ? '+' : ''}${diff}% vs mois précédent</span>`;
     }
+  }
+
+  // Arrondit un maximum à une valeur "ronde" (1/2/5/10 × une puissance de 10) pour une grille lisible
+  function calcNiceMax(val){
+    if (val <= 0) return 1;
+    const magnitude = Math.pow(10, Math.floor(Math.log10(val)));
+    const residual = val / magnitude;
+    let niceResidual = 1;
+    if (residual > 5) niceResidual = 10;
+    else if (residual > 2) niceResidual = 5;
+    else if (residual > 1) niceResidual = 2;
+    return niceResidual * magnitude;
+  }
+
+  // Formatte une valeur DH en version compacte pour les étiquettes de l'axe (ex: 3000 -> "3k")
+  function formatCompactDH(val){
+    if (val >= 1000) return (Math.round(val / 100) / 10).toLocaleString('fr-FR') + 'k';
+    return Math.round(val).toLocaleString('fr-FR');
   }
 
   function exportClientsToPDF(reservations, terrainsById, profile){
@@ -622,18 +682,9 @@ document.addEventListener('DOMContentLoaded', async function () {
       btn.classList.remove('dispo');
       btn.classList.add('occupe', 'just-booked');
       reservedSlots.push(heure);
-      slotIdByHeure[heure] = newId; // nécessaire pour que cancelSlot() retrouve la réservation
       todayBookedCount++;
       updateCountBadge();
       showUndoToast(heure, newId);
-
-      // On clone le bouton pour retirer proprement l'ancien listener "bookSlot" (sinon un
-      // second clic tenterait de réserver à nouveau au lieu d'annuler), puis on le réactive
-      // (il avait été désactivé le temps de l'insertion) et on branche cancelSlot dessus.
-      const freshBtn = btn.cloneNode(true);
-      btn.replaceWith(freshBtn);
-      freshBtn.disabled = false;
-      freshBtn.addEventListener('click', () => cancelSlot(freshBtn));
     }
 
     updateCountBadge();

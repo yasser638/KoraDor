@@ -93,51 +93,91 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // === Bouton "Se connecter" / "Se déconnecter" selon l'état de connexion ===
+  // === Bouton "Se connecter", ou menu profil regroupant tout (mes réservations, ===
+  // === espace propriétaire si besoin, contact, se déconnecter) une fois connecté ===
   const loginBtn = document.querySelector('.btn-login');
   if (loginBtn && !loginBtn.id) { // évite les pages où ce bouton a déjà son propre script (dashboard, mes-reservations)
-    (async function setupLoginLogoutButton(){
-      if (typeof kdCheckSession === 'undefined') {
+    (async function setupAuthNav(){
+      if (typeof kdGetCurrentProfile === 'undefined') {
         // auth.js pas chargé sur cette page : comportement par défaut
         loginBtn.addEventListener('click', () => { window.location.href = 'login.html'; });
         return;
       }
-      let session = null;
-      try { session = await kdCheckSession(); } catch (err) { /* pas connecté */ }
 
-      if (session) {
-        loginBtn.textContent = 'Se déconnecter';
-        loginBtn.addEventListener('click', () => {
-          if (typeof kdSignOut === 'function') kdSignOut();
-        });
-      } else {
+      let profile = null;
+      try { profile = await kdGetCurrentProfile(); } catch (err) { /* pas connecté */ }
+
+      if (!profile) {
         loginBtn.addEventListener('click', () => { window.location.href = 'login.html'; });
+        return;
       }
+
+      buildProfileMenu(loginBtn, profile);
     })();
   }
 
-  // === Lien "Espace propriétaire" dans le menu (visible seulement pour les comptes propriétaire connectés) ===
-  // Indépendant du bloc ci-dessus pour marcher aussi sur les pages qui ont leur propre script
-  // de connexion (mes-reservations.html, etc.).
-  (async function setupOwnerNavLink(){
-    if (typeof kdCheckSession === 'undefined' || typeof kdGetProfile === 'undefined') return;
-    if (window.location.pathname.endsWith('dashboard-proprietaire.html')) return; // déjà sur la page
+  function buildProfileMenu(loginBtn, profile){
+    const onDashboard = window.location.pathname.endsWith('dashboard-proprietaire.html');
+    const initial = (profile.nom || profile.email || '?').trim().charAt(0).toUpperCase() || '?';
+    const firstName = profile.nom ? profile.nom.split(' ')[0] : 'Mon compte';
 
-    let session = null;
-    try { session = await kdCheckSession(); } catch (err) { return; }
-    if (!session) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'kd-profile-menu';
+    wrap.innerHTML = `
+      <button type="button" class="kd-profile-trigger" id="kd-profile-trigger" aria-haspopup="true" aria-expanded="false">
+        <span class="kd-profile-avatar">${initial}</span>
+        <span class="kd-profile-name">${firstName}</span>
+        <svg class="kd-profile-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="kd-profile-dropdown" role="menu">
+        <div class="kd-profile-dropdown-head">
+          <span class="kd-profile-avatar kd-profile-avatar-lg">${initial}</span>
+          <div>
+            <strong>${profile.nom || 'Mon compte'}</strong>
+            <span>${profile.email || ''}</span>
+          </div>
+        </div>
+        <a href="mes-reservations.html" role="menuitem">⚽ Mes réservations</a>
+        ${profile.role === 'proprietaire' && !onDashboard ? '<a href="dashboard-proprietaire.html" role="menuitem">🏟️ Espace propriétaire</a>' : ''}
+        <a href="Contact.html" role="menuitem">✉️ Contact</a>
+        <button type="button" class="kd-profile-logout" id="kd-profile-logout" role="menuitem">🚪 Se déconnecter</button>
+      </div>
+    `;
 
-    let profile = null;
-    try { profile = await kdGetProfile(session.user.id); } catch (err) { return; }
-    if (!profile || profile.role !== 'proprietaire') return;
+    loginBtn.replaceWith(wrap);
 
-    const navLinks = document.querySelector('.nav-links');
-    if (!navLinks || navLinks.querySelector('a[href="dashboard-proprietaire.html"]')) return;
+    const trigger = wrap.querySelector('#kd-profile-trigger');
 
-    const li = document.createElement('li');
-    li.innerHTML = '<a href="dashboard-proprietaire.html">🏟️ Espace propriétaire</a>';
-    navLinks.appendChild(li);
-  })();
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = wrap.classList.toggle('open');
+      trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!wrap.contains(e.target)) wrap.classList.remove('open');
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { wrap.classList.remove('open'); trigger.focus(); }
+    });
+
+    wrap.querySelector('#kd-profile-logout').addEventListener('click', () => {
+      if (typeof kdSignOut === 'function') kdSignOut();
+    });
+
+    // Sur mobile, un lien du menu profil doit aussi refermer le panneau plein écran
+    // (le menu profil est ajouté après coup, donc en dehors du listener du burger).
+    wrap.querySelectorAll('.kd-profile-dropdown a, .kd-profile-logout').forEach(el => {
+      el.addEventListener('click', () => {
+        wrap.classList.remove('open');
+        const navMenu = document.querySelector('.nav-menu');
+        const burger = document.querySelector('.kd-burger');
+        if (navMenu) navMenu.classList.remove('kd-menu-open');
+        if (burger) { burger.classList.remove('kd-burger-open'); burger.setAttribute('aria-label', 'Ouvrir le menu'); }
+        document.body.classList.remove('kd-noscroll');
+      });
+    });
+  }
 
   // === Transitions natives entre pages (View Transitions API) ===
   // Rend la navigation entre pages fluide (fondu + léger scale) sans framework JS.

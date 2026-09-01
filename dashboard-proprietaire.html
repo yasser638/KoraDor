@@ -78,7 +78,9 @@
     .kdop-slot-btn.dispo{ background:var(--green-vivid); }
     .kdop-slot-btn.dispo:hover{ transform:translateY(-3px); box-shadow:0 10px 20px rgba(46,158,74,0.3); }
     .kdop-slot-btn.dispo:active{ transform:scale(.94); }
-    .kdop-slot-btn.occupe{ background:#c0453f; cursor:default; opacity:.88; }
+    .kdop-slot-btn.occupe{ background:#c0453f; cursor:pointer; opacity:.88; }
+    .kdop-slot-btn.occupe:hover{ opacity:1; transform:translateY(-2px); box-shadow:0 8px 18px rgba(192,69,63,0.3); }
+    .kdop-slot-btn.occupe:active{ transform:scale(.94); }
     .kdop-slot-btn.loading{ background:var(--green-line); color:var(--text-soft); cursor:wait; }
     .kdop-slot-btn.just-booked{ animation:kdop-pop .45s cubic-bezier(.34,1.56,.64,1); }
     @keyframes kdop-pop{
@@ -252,7 +254,7 @@
         <h2 class="kd-dash-section-title">Réserver sur place</h2>
         <div class="kdop-card">
           <div class="kdop-header">
-            <p>Touche un créneau vert — c'est réservé instantanément, aucune étape en plus.</p>
+            <p>Vert = réserve en un tap. Rouge = déjà pris — touche-le pour annuler.</p>
             <span class="kdop-count-badge" id="kdop-count-badge">⚡ 0 réservé(s) aujourd'hui</span>
           </div>
           <div class="kdop-picker" id="kdop-terrain-picker"></div>

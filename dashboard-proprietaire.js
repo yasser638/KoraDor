@@ -10,12 +10,6 @@ document.addEventListener('DOMContentLoaded', async function () {
   const contentEl = document.getElementById('kd-dash-content');
   const logoutBtn = document.getElementById('kd-logout-btn');
 
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      if (typeof kdSignOut === 'function') kdSignOut();
-    });
-  }
-
   function showMessage(text){
     loadingEl.textContent = text;
   }
@@ -43,6 +37,17 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   document.getElementById('kd-dash-greeting').textContent =
     profile.nom ? `Bienvenue ${profile.nom.split(' ')[0]}` : 'Bienvenue';
+
+  // ---------- Menu profil (regroupe mes réservations, contact, déconnexion...) ----------
+  if (logoutBtn) {
+    if (typeof buildProfileMenu === 'function') {
+      buildProfileMenu(logoutBtn, { ...profile, email: session.user.email });
+    } else {
+      logoutBtn.addEventListener('click', () => {
+        if (typeof kdSignOut === 'function') kdSignOut();
+      });
+    }
+  }
 
   // ---------- 3) Récupère les terrains de ce propriétaire ----------
   const { data: terrains, error: terrainsError } = await supabaseClient
@@ -682,9 +687,18 @@ document.addEventListener('DOMContentLoaded', async function () {
       btn.classList.remove('dispo');
       btn.classList.add('occupe', 'just-booked');
       reservedSlots.push(heure);
+      slotIdByHeure[heure] = newId; // nécessaire pour que cancelSlot() retrouve la réservation
       todayBookedCount++;
       updateCountBadge();
       showUndoToast(heure, newId);
+
+      // On clone le bouton pour retirer proprement l'ancien listener "bookSlot" (sinon un
+      // second clic tenterait de réserver à nouveau au lieu d'annuler), puis on le réactive
+      // (il avait été désactivé le temps de l'insertion) et on branche cancelSlot dessus.
+      const freshBtn = btn.cloneNode(true);
+      btn.replaceWith(freshBtn);
+      freshBtn.disabled = false;
+      freshBtn.addEventListener('click', () => cancelSlot(freshBtn));
     }
 
     updateCountBadge();
